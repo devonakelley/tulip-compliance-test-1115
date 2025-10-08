@@ -266,7 +266,7 @@ async def upload_qsp_document(file: UploadFile = File(...)):
         
         if file_ext not in allowed_extensions:
             raise HTTPException(
-                status_code=400, 
+                status_code=400,  # Changed from 500 to 400 for proper error code
                 detail=f"Unsupported file type. Allowed: {allowed_extensions}"
             )
         
