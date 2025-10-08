@@ -230,7 +230,15 @@ Provide detailed mappings with confidence scores."""
         
         # Parse JSON response
         try:
-            mappings = json.loads(response)
+            # Clean the response - remove markdown formatting if present
+            clean_response = response.strip()
+            if clean_response.startswith('```json'):
+                clean_response = clean_response[7:]  # Remove ```json
+            if clean_response.endswith('```'):
+                clean_response = clean_response[:-3]  # Remove ```
+            clean_response = clean_response.strip()
+            
+            mappings = json.loads(clean_response)
             return mappings if isinstance(mappings, list) else []
         except json.JSONDecodeError:
             logger.error(f"Failed to parse AI response as JSON: {response}")
