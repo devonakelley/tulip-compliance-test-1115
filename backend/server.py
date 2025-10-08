@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, UploadFile, File, HTTPException, Form
+from fastapi import FastAPI, APIRouter, UploadFile, File, HTTPException, Form, WebSocket
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 import json
 import io
 import re
+import base64
 from docx import Document
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
