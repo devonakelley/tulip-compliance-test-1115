@@ -665,6 +665,698 @@ async def get_clause_mappings():
 # Include the router in the main app
 app.include_router(api_router)
 
+# Store active WebSocket connections for MCP
+active_mcp_connections: Dict[str, WebSocket] = {}
+
+# MCP WebSocket endpoint
+@app.websocket("/mcp")
+async def mcp_websocket_endpoint(websocket: WebSocket):
+    """WebSocket endpoint for MCP protocol communication with Claude/ChatGPT"""
+    await websocket.accept()
+    connection_id = str(uuid.uuid4())
+    active_mcp_connections[connection_id] = websocket
+    
+    logger.info(f"New MCP connection: {connection_id}")
+    
+    try:
+        while True:
+            # Receive message from client (Claude/ChatGPT)
+            data = await websocket.receive_text()
+            message = json.loads(data)
+            
+            logger.info(f"Received MCP message: {message.get('method', 'unknown')}")
+            
+            # Handle MCP protocol messages
+            response = await handle_mcp_protocol_message(message)
+            
+            # Send response back
+            await websocket.send_text(json.dumps(response))
+            
+    except Exception as e:
+        logger.error(f"MCP WebSocket error: {e}")
+    finally:
+        if connection_id in active_mcp_connections:
+            del active_mcp_connections[connection_id]
+        logger.info(f"MCP connection closed: {connection_id}")
+
+async def handle_mcp_protocol_message(message: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle incoming MCP protocol messages"""
+    
+    method = message.get("method")
+    params = message.get("params", {})
+    message_id = message.get("id")
+    
+    try:
+        if method == "initialize":
+            return {
+                "jsonrpc": "2.0",
+                "id": message_id,
+                "result": {
+                    "protocolVersion": "2024-11-05",
+                    "capabilities": {
+                        "tools": {},
+                        "prompts": {},
+                        "resources": {}
+                    },
+                    "serverInfo": {
+                        "name": "qsp-compliance-checker",
+                        "version": "1.0.0"
+                    }
+                }
+            }
+        
+        elif method == "tools/list":
+            tools = [
+                {
+                    "name": "upload_qsp_document",
+                    "description": "Upload a QSP document for compliance analysis",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "filename": {"type": "string"},
+                            "content": {"type": "string", "description": "Base64 encoded file content"},
+                            "file_type": {"type": "string", "enum": ["txt", "docx"]}
+                        },
+                        "required": ["filename", "content", "file_type"]
+                    }
+                },
+                {
+                    "name": "upload_iso_summary", 
+                    "description": "Upload ISO 13485:2024 Summary of Changes",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "filename": {"type": "string"},
+                            "content": {"type": "string", "description": "Base64 encoded file content"},
+                            "file_type": {"type": "string", "enum": ["txt", "docx", "pdf"]}
+                        },
+                        "required": ["filename", "content", "file_type"]
+                    }
+                },
+                {
+                    "name": "list_documents",
+                    "description": "List all uploaded QSP documents",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "format": {"type": "string", "enum": ["summary", "detailed", "json"], "default": "summary"}
+                        }
+                    }
+                },
+                {
+                    "name": "run_clause_mapping",
+                    "description": "Run AI-powered clause mapping analysis",
+                    "inputSchema": {"type": "object", "properties": {}}
+                },
+                {
+                    "name": "run_compliance_analysis", 
+                    "description": "Run comprehensive compliance gap analysis",
+                    "inputSchema": {"type": "object", "properties": {}}
+                },
+                {
+                    "name": "get_compliance_status",
+                    "description": "Get current compliance status and metrics",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "format": {"type": "string", "enum": ["summary", "detailed", "json"], "default": "summary"}
+                        }
+                    }
+                },
+                {
+                    "name": "get_dashboard_summary",
+                    "description": "Get dashboard overview with key metrics",
+                    "inputSchema": {
+                        "type": "object", 
+                        "properties": {
+                            "format": {"type": "string", "enum": ["summary", "detailed", "json"], "default": "summary"}
+                        }
+                    }
+                },
+                {
+                    "name": "get_detailed_gaps",
+                    "description": "Get detailed compliance gaps with recommendations",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "severity": {"type": "string", "enum": ["all", "high", "medium", "low"], "default": "all"},
+                            "format": {"type": "string", "enum": ["summary", "detailed", "json"], "default": "summary"}
+                        }
+                    }
+                },
+                {
+                    "name": "get_clause_mappings",
+                    "description": "Get AI clause mappings between QSP and ISO clauses",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "document_id": {"type": "string", "description": "Filter by document ID"},
+                            "iso_clause": {"type": "string", "description": "Filter by ISO clause"},
+                            "min_confidence": {"type": "number", "minimum": 0, "maximum": 1},
+                            "format": {"type": "string", "enum": ["summary", "detailed", "json"], "default": "summary"}
+                        }
+                    }
+                },
+                {
+                    "name": "query_specific_clause",
+                    "description": "Query compliance for specific ISO clause",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "clause": {"type": "string", "description": "ISO clause to query"},
+                            "include_recommendations": {"type": "boolean", "default": True}
+                        },
+                        "required": ["clause"]
+                    }
+                }
+            ]
+            
+            return {
+                "jsonrpc": "2.0",
+                "id": message_id,
+                "result": {"tools": tools}
+            }
+        
+        elif method == "tools/call":
+            tool_name = params.get("name")
+            arguments = params.get("arguments", {})
+            
+            # Convert base64 content for file uploads
+            if tool_name in ["upload_qsp_document", "upload_iso_summary"] and "content" in arguments:
+                arguments["base64_content"] = arguments.pop("content", "")
+            
+            # Call the appropriate tool
+            result_text = await call_mcp_tool(tool_name, arguments)
+            
+            return {
+                "jsonrpc": "2.0", 
+                "id": message_id,
+                "result": {
+                    "content": [{"type": "text", "text": result_text}]
+                }
+            }
+        
+        else:
+            return {
+                "jsonrpc": "2.0",
+                "id": message_id,
+                "error": {
+                    "code": -32601,
+                    "message": f"Method not found: {method}"
+                }
+            }
+    
+    except Exception as e:
+        logger.error(f"Error handling MCP message: {e}")
+        return {
+            "jsonrpc": "2.0",
+            "id": message_id, 
+            "error": {
+                "code": -32603,
+                "message": f"Internal error: {str(e)}"
+            }
+        }
+
+async def call_mcp_tool(tool_name: str, arguments: dict) -> str:
+    """Call MCP tool and return formatted response"""
+    try:
+        if tool_name == "upload_qsp_document":
+            return await mcp_upload_qsp_document(arguments)
+        elif tool_name == "upload_iso_summary":
+            return await mcp_upload_iso_summary(arguments)
+        elif tool_name == "list_documents":
+            return await mcp_list_documents(arguments)
+        elif tool_name == "run_clause_mapping":
+            return await mcp_run_clause_mapping(arguments)
+        elif tool_name == "run_compliance_analysis":
+            return await mcp_run_compliance_analysis(arguments)
+        elif tool_name == "get_compliance_status":
+            return await mcp_get_compliance_status(arguments)
+        elif tool_name == "get_dashboard_summary":
+            return await mcp_get_compliance_status(arguments)  # Same as status
+        elif tool_name == "get_detailed_gaps":
+            return await mcp_get_detailed_gaps(arguments)
+        elif tool_name == "get_clause_mappings":
+            return await mcp_get_clause_mappings(arguments)
+        elif tool_name == "query_specific_clause":
+            return await mcp_query_specific_clause(arguments)
+        else:
+            return f"❌ Unknown tool: {tool_name}"
+    except Exception as e:
+        logger.error(f"Error executing MCP tool {tool_name}: {e}")
+        return f"❌ Error executing {tool_name}: {str(e)}"
+
+# MCP Tool Implementations (simplified versions of existing functions)
+async def mcp_upload_qsp_document(args: dict) -> str:
+    """MCP version of document upload"""
+    filename = args["filename"]
+    file_type = args["file_type"]
+    base64_content = args["base64_content"]
+    
+    try:
+        # Decode base64 content
+        content = base64.b64decode(base64_content)
+        
+        # Extract text
+        if file_type == "docx":
+            doc = Document(io.BytesIO(content))
+            text_content = '\n'.join([p.text for p in doc.paragraphs if p.text.strip()])
+        else:  # txt
+            text_content = content.decode('utf-8')
+        
+        # Parse into sections (simplified)
+        sections = {}
+        lines = text_content.split('\n')
+        current_section = "Introduction"
+        current_content = []
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            if any(pattern in line.upper() for pattern in ['PURPOSE', 'SCOPE', 'PROCEDURE', 'RESPONSIBILITIES']):
+                if current_content:
+                    sections[current_section] = '\n'.join(current_content)
+                current_section = line
+                current_content = []
+            else:
+                current_content.append(line)
+        
+        if current_content:
+            sections[current_section] = '\n'.join(current_content)
+        
+        if not sections:
+            sections[f"{filename} - Full Content"] = text_content
+        
+        # Create QSP document
+        qsp_doc = QSPDocument(
+            filename=filename,
+            content=text_content,
+            sections=sections,
+            processed=True
+        )
+        
+        # Store in MongoDB
+        doc_dict = prepare_for_mongo(qsp_doc.model_dump())
+        await db.qsp_documents.insert_one(doc_dict)
+        
+        return f"✅ **QSP Document Uploaded Successfully**\n\n**File:** {filename}\n**Sections:** {len(sections)}\n**Content:** {len(text_content)} characters\n\nReady for clause mapping analysis!"
+        
+    except Exception as e:
+        return f"❌ Upload failed: {str(e)}"
+
+async def mcp_upload_iso_summary(args: dict) -> str:
+    """MCP version of ISO summary upload"""
+    filename = args["filename"] 
+    file_type = args["file_type"]
+    base64_content = args["base64_content"]
+    
+    try:
+        # Decode base64 content
+        content = base64.b64decode(base64_content)
+        
+        # Extract text
+        if file_type == "docx":
+            doc = Document(io.BytesIO(content))
+            text_content = '\n'.join([p.text for p in doc.paragraphs if p.text.strip()])
+        else:  # txt
+            text_content = content.decode('utf-8')
+        
+        # Parse clauses (simplified)
+        new_clauses = []
+        modified_clauses = []
+        
+        lines = text_content.split('\n')
+        current_section = ""
+        
+        for line in lines:
+            line = line.strip()
+            if 'NEW CLAUSES' in line.upper():
+                current_section = "new"
+            elif 'MODIFIED CLAUSES' in line.upper():
+                current_section = "modified"
+            elif line and current_section and re.match(r'\d+\.\d+', line):
+                clause_info = {"clause": line, "description": line}
+                if current_section == "new":
+                    new_clauses.append(clause_info)
+                elif current_section == "modified":
+                    modified_clauses.append(clause_info)
+        
+        # Create ISO summary
+        iso_summary = ISOSummary(
+            content=text_content,
+            new_clauses=new_clauses,
+            modified_clauses=modified_clauses
+        )
+        
+        # Store in MongoDB
+        summary_dict = prepare_for_mongo(iso_summary.model_dump())
+        await db.iso_summaries.insert_one(summary_dict)
+        
+        return f"✅ **ISO 13485:2024 Summary Uploaded**\n\n**File:** {filename}\n**New Clauses:** {len(new_clauses)}\n**Modified Clauses:** {len(modified_clauses)}\n\nCompliance analysis enabled!"
+        
+    except Exception as e:
+        return f"❌ Upload failed: {str(e)}"
+
+async def mcp_list_documents(args: dict) -> str:
+    """MCP version of list documents"""
+    try:
+        docs = await db.qsp_documents.find({}, {"_id": 0}).to_list(length=None)
+        
+        if not docs:
+            return "📄 **No QSP Documents Found**\n\nUpload documents to get started with compliance analysis."
+        
+        result = f"📄 **{len(docs)} QSP Documents**\n\n"
+        for doc in docs:
+            doc = parse_from_mongo(doc)
+            result += f"• **{doc['filename']}** - {len(doc.get('sections', {}))} sections\n"
+            result += f"  Uploaded: {doc['upload_date'].strftime('%Y-%m-%d %H:%M')}\n\n"
+        
+        return result
+        
+    except Exception as e:
+        return f"❌ Error listing documents: {str(e)}"
+
+async def mcp_run_clause_mapping(args: dict) -> str:
+    """MCP version of clause mapping"""
+    try:
+        qsp_docs = await db.qsp_documents.find({}, {"_id": 0}).to_list(length=None)
+        if not qsp_docs:
+            return "❌ No QSP documents found. Upload documents first."
+        
+        # Clear existing mappings
+        await db.clause_mappings.delete_many({})
+        
+        # Standard ISO clauses
+        iso_clauses = [
+            "4.1 General requirements", "4.2 Documentation requirements",
+            "5.1 Management commitment", "7.3 Design and development",
+            "7.4 Purchasing", "8.1 General", "8.5 Improvement"
+        ]
+        
+        total_mappings = 0
+        
+        # Process each document
+        for qsp_doc in qsp_docs:
+            qsp_doc = parse_from_mongo(qsp_doc)
+            
+            for section_title, section_content in qsp_doc['sections'].items():
+                if len(section_content) < 50:
+                    continue
+                
+                mappings = await analyze_clause_mapping(
+                    section_content, qsp_doc['filename'], iso_clauses
+                )
+                
+                for mapping in mappings:
+                    if mapping.get('confidence_score', 0) > 0.3:
+                        clause_mapping = ClauseMapping(
+                            qsp_id=qsp_doc['id'],
+                            qsp_filename=qsp_doc['filename'],
+                            section_title=section_title,
+                            section_content=section_content[:500],
+                            iso_clause=mapping['iso_clause'],
+                            confidence_score=mapping['confidence_score'],
+                            evidence_text=mapping['evidence_text']
+                        )
+                        
+                        mapping_dict = prepare_for_mongo(clause_mapping.model_dump())
+                        await db.clause_mappings.insert_one(mapping_dict)
+                        total_mappings += 1
+        
+        return f"🤖 **AI Clause Mapping Complete**\n\n**Documents Processed:** {len(qsp_docs)}\n**Mappings Generated:** {total_mappings}\n\nYour QSP documents have been analyzed and mapped to ISO clauses. Run compliance analysis next!"
+        
+    except Exception as e:
+        return f"❌ Mapping failed: {str(e)}"
+
+async def mcp_run_compliance_analysis(args: dict) -> str:
+    """MCP version of compliance analysis"""
+    try:
+        # Get data
+        iso_summary = await db.iso_summaries.find_one({}, {"_id": 0})
+        if not iso_summary:
+            return "❌ No ISO summary found. Upload ISO 13485:2024 Summary first."
+        
+        mappings = await db.clause_mappings.find({}, {"_id": 0}).to_list(length=None)
+        if not mappings:
+            return "❌ No clause mappings found. Run clause mapping first."
+        
+        qsp_docs = await db.qsp_documents.find({}, {"_id": 0}).to_list(length=None)
+        
+        # Extract changed clauses
+        changed_clauses = set()
+        iso_summary = parse_from_mongo(iso_summary)
+        
+        for clause in iso_summary.get('new_clauses', []):
+            changed_clauses.add(clause.get('clause', ''))
+        for clause in iso_summary.get('modified_clauses', []):
+            changed_clauses.add(clause.get('clause', ''))
+        
+        # Find gaps
+        gaps = []
+        mapped_clauses = {mapping['iso_clause'] for mapping in mappings}
+        
+        for changed_clause in changed_clauses:
+            if not changed_clause:
+                continue
+            
+            found_mapping = any(changed_clause in clause for clause in mapped_clauses)
+            
+            if not found_mapping:
+                gap = ComplianceGap(
+                    qsp_id="",
+                    qsp_filename="Multiple",
+                    iso_clause=changed_clause,
+                    gap_type="missing",
+                    description=f"No QSP documents address the clause: {changed_clause}",
+                    severity="high",
+                    recommendations=[
+                        f"Create documentation for {changed_clause}",
+                        "Review existing procedures for gaps",
+                        "Assign implementation responsibility"
+                    ]
+                )
+                gaps.append(gap)
+        
+        # Calculate score
+        total_changed = len([c for c in changed_clauses if c])
+        high_conf_mappings = sum(1 for m in mappings if m['confidence_score'] > 0.7)
+        overall_score = min(high_conf_mappings / max(total_changed, 1) * 100, 100)
+        
+        # Create analysis
+        analysis = ComplianceAnalysis(
+            overall_score=round(overall_score, 2),
+            total_documents=len(qsp_docs),
+            compliant_documents=len(qsp_docs) - len(set(g.qsp_filename for g in gaps if g.qsp_filename != "Multiple")),
+            gaps=gaps,
+            affected_documents=[]
+        )
+        
+        # Store analysis
+        analysis_dict = prepare_for_mongo(analysis.model_dump())
+        await db.compliance_analyses.delete_many({})
+        await db.compliance_analyses.insert_one(analysis_dict)
+        
+        high_gaps = len([g for g in gaps if g.severity == "high"])
+        
+        return f"📊 **Compliance Analysis Complete**\n\n**Overall Score:** {analysis.overall_score}%\n**Documents Analyzed:** {analysis.total_documents}\n**High Priority Gaps:** {high_gaps}\n\nAnalysis complete! Check detailed gaps for specific recommendations."
+        
+    except Exception as e:
+        return f"❌ Analysis failed: {str(e)}"
+
+async def mcp_get_compliance_status(args: dict) -> str:
+    """MCP version of compliance status"""
+    try:
+        # Get latest analysis
+        analysis = await db.compliance_analyses.find_one({}, {"_id": 0}, sort=[("analysis_date", -1)])
+        total_docs = await db.qsp_documents.count_documents({})
+        total_mappings = await db.clause_mappings.count_documents({})
+        iso_summary = await db.iso_summaries.find_one({}, {"_id": 0})
+        
+        if analysis:
+            analysis = parse_from_mongo(analysis)
+        
+        score = analysis['overall_score'] if analysis else 0
+        gaps = len(analysis['gaps']) if analysis else 0
+        
+        status = f"📊 **QSP Compliance Status**\n\n"
+        status += f"**Overall Compliance Score:** {score}%\n"
+        status += f"**Documents Analyzed:** {total_docs}\n" 
+        status += f"**Compliance Gaps:** {gaps} issues identified\n"
+        status += f"**AI Clause Mappings:** {total_mappings} generated\n"
+        status += f"**ISO Summary:** {'✅ Loaded' if iso_summary else '❌ Not uploaded'}\n\n"
+        
+        if analysis:
+            status += f"Last Analysis: {analysis['analysis_date'].strftime('%Y-%m-%d %H:%M')}"
+        else:
+            status += "⚠️ No analysis run yet. Upload documents and run analysis."
+        
+        return status
+        
+    except Exception as e:
+        return f"❌ Error getting status: {str(e)}"
+
+async def mcp_get_detailed_gaps(args: dict) -> str:
+    """MCP version of detailed gaps"""
+    try:
+        analysis = await db.compliance_analyses.find_one({}, {"_id": 0}, sort=[("analysis_date", -1)])
+        
+        if not analysis:
+            return "❌ No compliance analysis found. Run analysis first."
+        
+        analysis = parse_from_mongo(analysis)
+        gaps = analysis['gaps']
+        
+        severity_filter = args.get("severity", "all")
+        if severity_filter != "all":
+            gaps = [gap for gap in gaps if gap['severity'] == severity_filter]
+        
+        if not gaps:
+            return "✅ **No Compliance Gaps Found**\n\nExcellent! Your QSP documents appear to be compliant."
+        
+        result = f"⚠️ **{len(gaps)} Compliance Gaps**\n\n"
+        
+        for i, gap in enumerate(gaps[:5], 1):  # Show first 5
+            result += f"**{i}. {gap['iso_clause']}** ({gap['severity'].upper()})\n"
+            result += f"📋 Document: {gap['qsp_filename']}\n"
+            result += f"📝 Issue: {gap['description']}\n"
+            
+            if gap['recommendations']:
+                result += f"💡 Recommendations:\n"
+                for rec in gap['recommendations'][:2]:
+                    result += f"   • {rec}\n"
+            result += "\n"
+        
+        if len(gaps) > 5:
+            result += f"... and {len(gaps) - 5} more gaps"
+        
+        return result
+        
+    except Exception as e:
+        return f"❌ Error getting gaps: {str(e)}"
+
+async def mcp_get_clause_mappings(args: dict) -> str:
+    """MCP version of clause mappings"""
+    try:
+        query = {}
+        if args.get("document_id"):
+            query["qsp_id"] = args["document_id"]
+        if args.get("iso_clause"):
+            query["iso_clause"] = {"$regex": args["iso_clause"], "$options": "i"}
+        if args.get("min_confidence", 0) > 0:
+            query["confidence_score"] = {"$gte": args["min_confidence"]}
+        
+        mappings = await db.clause_mappings.find(query, {"_id": 0}).to_list(length=None)
+        
+        if not mappings:
+            return "🔗 **No Clause Mappings Found**\n\nRun clause mapping analysis first."
+        
+        result = f"🔗 **{len(mappings)} Clause Mappings**\n\n"
+        
+        for mapping in mappings[:8]:  # Show first 8
+            result += f"• **{mapping['iso_clause']}** (confidence: {mapping['confidence_score']:.2f})\n"
+            result += f"  📄 {mapping['qsp_filename']} - {mapping['section_title']}\n"
+            result += f"  📝 Evidence: {mapping['evidence_text'][:80]}...\n\n"
+        
+        if len(mappings) > 8:
+            result += f"... and {len(mappings) - 8} more mappings"
+        
+        return result
+        
+    except Exception as e:
+        return f"❌ Error getting mappings: {str(e)}"
+
+async def mcp_query_specific_clause(args: dict) -> str:
+    """MCP version of specific clause query"""
+    try:
+        clause = args["clause"]
+        
+        # Find mappings
+        mappings = await db.clause_mappings.find(
+            {"iso_clause": {"$regex": clause, "$options": "i"}},
+            {"_id": 0}
+        ).to_list(length=None)
+        
+        # Find gaps
+        analysis = await db.compliance_analyses.find_one({}, {"_id": 0}, sort=[("analysis_date", -1)])
+        relevant_gaps = []
+        
+        if analysis:
+            analysis = parse_from_mongo(analysis)
+            relevant_gaps = [gap for gap in analysis['gaps'] if clause in gap['iso_clause']]
+        
+        result = f"🔍 **Analysis for ISO Clause {clause}**\n\n"
+        
+        if mappings:
+            result += f"**📋 QSP Coverage ({len(mappings)} mappings):**\n"
+            for mapping in mappings[:3]:
+                result += f"• **{mapping['qsp_filename']}** - {mapping['section_title']}\n"
+                result += f"  Confidence: {mapping['confidence_score']:.2f}\n"
+                result += f"  Evidence: {mapping['evidence_text'][:60]}...\n\n"
+        else:
+            result += "**📋 No QSP Coverage Found**\n\n"
+        
+        if relevant_gaps:
+            result += f"**⚠️ Compliance Gaps ({len(relevant_gaps)}):**\n"
+            for gap in relevant_gaps:
+                result += f"• **{gap['severity'].upper()}:** {gap['description']}\n"
+                if args.get("include_recommendations", True) and gap['recommendations']:
+                    result += f"  💡 Recommendation: {gap['recommendations'][0]}\n"
+                result += "\n"
+        else:
+            result += "**✅ No compliance gaps found for this clause**\n"
+        
+        return result
+        
+    except Exception as e:
+        return f"❌ Error querying clause: {str(e)}"
+
+# MCP Setup endpoint
+@api_router.get("/mcp/setup")
+async def get_mcp_setup_instructions():
+    """Get MCP setup instructions for Claude Desktop and ChatGPT"""
+    domain = os.environ.get('DOMAIN', 'qsp-compliance.preview.emergentagent.com')
+    
+    return {
+        "title": "QSP Compliance Checker - MCP Setup",
+        "status": "ready",
+        "websocket_endpoint": f"wss://{domain}/mcp",
+        "claude_desktop_config": {
+            "instructions": "Add this to your Claude Desktop configuration file:",
+            "config": {
+                "mcpServers": {
+                    "qsp-compliance": {
+                        "url": f"wss://{domain}/mcp",
+                        "name": "QSP Compliance Checker"
+                    }
+                }
+            },
+            "config_file_locations": {
+                "macOS": "~/Library/Application Support/Claude/claude_desktop_config.json",
+                "Windows": "%APPDATA%/Claude/claude_desktop_config.json",
+                "Linux": "~/.config/claude/claude_desktop_config.json"
+            }
+        },
+        "chatgpt_config": {
+            "instructions": "When ChatGPT supports MCP, use this WebSocket URL:",
+            "url": f"wss://{domain}/mcp"
+        },
+        "test_commands": [
+            "What QSP compliance tools do you have access to?",
+            "Show me the current compliance status",
+            "List all uploaded QSP documents",
+            "Upload this QSP document: [paste document content]"
+        ],
+        "tools_available": 10,
+        "features": [
+            "Document upload via base64 encoding",
+            "AI-powered clause mapping", 
+            "Compliance gap analysis",
+            "ISO 13485:2024 compliance checking",
+            "Real-time status reporting"
+        ]
+    }
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
