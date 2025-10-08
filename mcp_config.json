@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "qsp-compliance-checker": {
+      "command": "python3",
+      "args": ["/app/backend/mcp_server.py"],
+      "env": {
+        "MONGO_URL": "mongodb://localhost:27017",
+        "DB_NAME": "test_database", 
+        "EMERGENT_LLM_KEY": "sk-emergent-f33C62eB0958b4547F"
+      }
+    }
+  }
+}
