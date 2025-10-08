@@ -304,6 +304,8 @@ async def upload_qsp_document(file: UploadFile = File(...)):
             "content_length": len(text_content)
         }
         
+    except HTTPException:
+        raise  # Re-raise HTTPExceptions to preserve status codes
     except Exception as e:
         logger.error(f"Error uploading document: {e}")
         raise HTTPException(status_code=500, detail=str(e))
