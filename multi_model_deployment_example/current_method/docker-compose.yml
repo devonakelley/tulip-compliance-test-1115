@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  main-api:
+    build: .
+    container_name: universal-task-manager-main
+    ports:
+      - "8001:8001"
+    environment:
+      - DOMAIN=your-app.com
+      - NODE_ENV=production
+      - LOG_LEVEL=info
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    command: python multi_model_server.py
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/api/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  
+  gemini-service:
+    build: .
+    container_name: universal-task-manager-gemini
+    ports:
+      - "8002:8002"
+    environment:
+      - DOMAIN=your-app.com
+      - SERVICE_TYPE=gemini
+    depends_on:
+      - main-api
+    command: python gemini_extension.py
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  
+  copilot-service:
+    build: .
+    container_name: universal-task-manager-copilot
+    ports:
+      - "8003:8003"
+    environment:
+      - DOMAIN=your-app.com
+      - SERVICE_TYPE=copilot
+    depends_on:
+      - main-api
+    command: python copilot_plugin.py
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/copilot/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  
+  nginx:
+    image: nginx:alpine
+    container_name: universal-task-manager-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - main-api
+      - gemini-service
+      - copilot-service
+    restart: unless-stopped
+
+  redis:
+    image: redis:alpine
+    container_name: universal-task-manager-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+
+networks:
+  default:
+    name: universal-task-manager-network
