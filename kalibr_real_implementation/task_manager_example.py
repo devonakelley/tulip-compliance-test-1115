@@ -10,10 +10,7 @@ from datetime import datetime
 import uuid
 
 # Initialize Kalibr App
-app = KalibrApp(
-    title="Universal Task Manager",
-    description="Simple task management that works with all AI models"
-)
+app = KalibrApp(title="Universal Task Manager")
 
 # Data model
 class Task(BaseModel):
