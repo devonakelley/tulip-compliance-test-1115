@@ -4,7 +4,7 @@
 
 Your QSP Compliance Checker now has **dual interface** support:
 
-1. **Web UI**: https://qsp-compliance.preview.emergentagent.com (Active ✅)
+1. **Web UI**: https://qsp-compliance-1.preview.emergentagent.com (Active ✅)
 2. **MCP WebSocket**: `wss://qsp-compliance.preview.emergentagent.com/mcp` (Active ✅)
 
 ---
@@ -152,7 +152,7 @@ Family and friends can now:
 
 ### If WebSocket fails:
 1. **Check internet connection**
-2. **Try https://qsp-compliance.preview.emergentagent.com** - Should show web interface
+2. **Try https://qsp-compliance-1.preview.emergentagent.com** - Should show web interface
 3. **Contact us** - We can check server logs
 
 **The system is now ready for production use with both traditional and AI-native interfaces! 🎉**
