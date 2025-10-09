@@ -19,10 +19,7 @@ import os
 import re
 
 # Initialize Kalibr App
-app = KalibrApp(
-    title="QSP Compliance Checker",
-    description="AI-powered ISO 13485:2024 compliance analysis for medical device QSPs"
-)
+app = KalibrApp(title="QSP Compliance Checker")
 
 # Data Models
 class QSPDocument(BaseModel):
