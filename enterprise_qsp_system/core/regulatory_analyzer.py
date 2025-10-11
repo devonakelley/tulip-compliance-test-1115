@@ -265,7 +265,7 @@ class RegulatoryAnalyzer:
     
     # Private methods
     
-    async def _initialize_iso_framework(self, session: AsyncSession):
+    async def _initialize_iso_framework(self, session):
         """Initialize ISO 13485:2024 framework"""
         try:
             # Check if framework exists
