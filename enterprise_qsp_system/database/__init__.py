@@ -2,7 +2,7 @@
 Database module for Enterprise QSP Compliance System
 """
 
-from .manager import DatabaseManager, get_db_session
+from .mongodb_manager import MongoDBManager as DatabaseManager, get_db_session
 from .models import (
     Base,
     User, UserSession,
