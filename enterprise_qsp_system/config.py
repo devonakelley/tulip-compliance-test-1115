@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     # AI/LLM settings
     OPENAI_API_KEY: Optional[str] = None
     ANTHROPIC_API_KEY: Optional[str] = None
-    EMERGENT_LLM_KEY: str = "sk-emergent-f33C62eB0958b4547F"
+    EMERGENT_LLM_KEY: Optional[str] = os.getenv("EMERGENT_LLM_KEY")
     DEFAULT_LLM_MODEL: str = "gpt-4o"
     LLM_MAX_TOKENS: int = 4000
     LLM_TEMPERATURE: float = 0.1
