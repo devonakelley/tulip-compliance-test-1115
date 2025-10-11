@@ -338,41 +338,7 @@ class LLMService:
             logger.error(f"Document comparison failed: {e}")
             return {"error": str(e)}
     
-    async def _make_api_call(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Make API call to LLM service"""
-        try:
-            # Use emergentintegrations client
-            response = await asyncio.to_thread(
-                self.client.chat.completions.create,
-                **params
-            )
-            return response
-        except Exception as e:
-            logger.error(f"LLM API call failed: {e}")
-            raise
-    
-    def _extract_content(self, response: Any) -> str:
-        """Extract content from LLM response"""
-        try:
-            if hasattr(response, 'choices') and response.choices:
-                choice = response.choices[0]
-                if hasattr(choice, 'message') and hasattr(choice.message, 'content'):
-                    return choice.message.content
-                elif hasattr(choice, 'text'):
-                    return choice.text
-            
-            # Fallback for different response formats
-            if isinstance(response, dict):
-                if 'choices' in response and response['choices']:
-                    return response['choices'][0].get('message', {}).get('content', '')
-                elif 'content' in response:
-                    return response['content']
-            
-            return str(response)
-            
-        except Exception as e:
-            logger.error(f"Failed to extract content from response: {e}")
-            return ""
+    # Note: _make_api_call and _extract_content methods removed as we now use emergentintegrations directly
     
     def get_usage_stats(self) -> Dict[str, Any]:
         """Get usage statistics"""
