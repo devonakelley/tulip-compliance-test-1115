@@ -255,7 +255,7 @@ async def root():
     return {"message": "QSP Compliance Checker API", "version": "1.0.0"}
 
 # Health check endpoint (as requested in review)
-@app.get("/health")
+@api_router.get("/health")
 async def health_check():
     """Health check endpoint for database and AI services"""
     try:
