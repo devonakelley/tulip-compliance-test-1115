@@ -43,7 +43,7 @@ class QSPComplianceAPITester:
     def test_health_check(self):
         """Test health check endpoint"""
         try:
-            response = requests.get(f"{self.base_url}/health", timeout=10)
+            response = requests.get(f"{self.api_url}/health", timeout=10)
             success = response.status_code == 200
             
             if success:
