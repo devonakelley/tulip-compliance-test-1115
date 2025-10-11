@@ -71,7 +71,7 @@ class RegulatoryAnalyzer:
     async def initialize_system(
         self,
         user_id: str,
-        session: AsyncSession
+        session
     ) -> Dict[str, Any]:
         """
         Initialize regulatory analysis system
