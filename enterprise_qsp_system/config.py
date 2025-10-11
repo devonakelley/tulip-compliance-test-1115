@@ -17,7 +17,8 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     
     # Database settings
-    DATABASE_URL: str = "postgresql://localhost:5432/qsp_enterprise"
+    MONGO_URL: str = "mongodb://localhost:27017"
+    DB_NAME: str = "qsp_enterprise"
     DATABASE_POOL_SIZE: int = 10
     DATABASE_MAX_OVERFLOW: int = 20
     DATABASE_POOL_TIMEOUT: int = 30
