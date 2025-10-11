@@ -179,7 +179,7 @@ class DocumentProcessor:
         try:
             query = select(Document).where(
                 Document.user_id == uuid.UUID(user_id),
-                Document.is_active == True
+                Document.is_active
             )
             
             if document_type:
