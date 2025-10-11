@@ -63,6 +63,8 @@ class LLMService:
             logger.error("emergentintegrations package not found. Please install: pip install emergentintegrations")
         except Exception as e:
             logger.error(f"Failed to initialize LLM service: {e}")
+            import traceback
+            logger.error(f"Full traceback: {traceback.format_exc()}")
     
     def is_available(self) -> bool:
         """Check if LLM service is available"""
