@@ -114,7 +114,7 @@ class RegulatoryAnalyzer:
         framework: str,
         summary_version: str,
         user_id: str,
-        session: AsyncSession
+        session
     ) -> str:
         """
         Start processing of regulatory summary
