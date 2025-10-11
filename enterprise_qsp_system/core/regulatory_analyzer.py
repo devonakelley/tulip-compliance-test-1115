@@ -11,9 +11,7 @@ import uuid
 import json
 import re
 
-# Database imports
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete, text
+# Database imports - MongoDB session
 # MongoDB collections will be accessed directly via session
 from ..models import RegulatoryChange as RegulatoryChangeModel
 from ..config import settings
