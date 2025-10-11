@@ -14,10 +14,7 @@ import re
 # Database imports
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete, text
-from ..database.models import (
-    RegulatoryFramework, RegulatoryChange, Document, 
-    DocumentSection, ClauseMapping, ComplianceAnalysis
-)
+# MongoDB collections will be accessed directly via session
 from ..models import RegulatoryChange as RegulatoryChangeModel
 from ..config import settings
 from ..ai import LLMService
