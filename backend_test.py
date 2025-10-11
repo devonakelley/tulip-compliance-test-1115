@@ -40,6 +40,25 @@ class QSPComplianceAPITester:
             print(f"    Response: {response_data}")
         print()
 
+    def test_health_check(self):
+        """Test health check endpoint"""
+        try:
+            response = requests.get(f"{self.base_url}/health", timeout=10)
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                details = f"Database: {data.get('database', 'N/A')}, AI: {data.get('ai_service', 'N/A')}"
+            else:
+                details = f"Status: {response.status_code}"
+                
+            self.log_test("Health Check", success, details, response.json() if success else response.text)
+            return success
+            
+        except Exception as e:
+            self.log_test("Health Check", False, f"Exception: {str(e)}")
+            return False
+
     def test_api_root(self):
         """Test API root endpoint"""
         try:
@@ -57,6 +76,87 @@ class QSPComplianceAPITester:
             
         except Exception as e:
             self.log_test("API Root Endpoint", False, f"Exception: {str(e)}")
+            return False
+
+    def test_database_connectivity(self):
+        """Test database connectivity endpoint"""
+        try:
+            response = requests.get(f"{self.api_url}/test/database", timeout=10)
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                details = f"MongoDB Status: {data.get('status', 'N/A')}"
+            else:
+                details = f"Status: {response.status_code}"
+                
+            self.log_test("Database Connectivity", success, details, response.json() if success else response.text)
+            return success
+            
+        except Exception as e:
+            self.log_test("Database Connectivity", False, f"Exception: {str(e)}")
+            return False
+
+    def test_ai_service(self):
+        """Test AI service functionality"""
+        try:
+            response = requests.get(f"{self.api_url}/test/ai", timeout=30)
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                details = f"AI Response: {data.get('response', 'N/A')[:100]}..."
+            else:
+                details = f"Status: {response.status_code}"
+                
+            self.log_test("AI Service", success, details, response.json() if success else response.text)
+            return success
+            
+        except Exception as e:
+            self.log_test("AI Service", False, f"Exception: {str(e)}")
+            return False
+
+    def test_document_upload_simple(self):
+        """Test simple document upload endpoint"""
+        try:
+            test_content = "This is a test QSP document for compliance checking."
+            params = {
+                'filename': 'test_document.txt',
+                'content': test_content
+            }
+            response = requests.post(f"{self.api_url}/test/upload", params=params, timeout=10)
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                details = f"Upload Status: {data.get('status', 'N/A')}"
+            else:
+                details = f"Status: {response.status_code}"
+                
+            self.log_test("Simple Document Upload", success, details, response.json() if success else response.text)
+            return success
+            
+        except Exception as e:
+            self.log_test("Simple Document Upload", False, f"Exception: {str(e)}")
+            return False
+
+    def test_list_test_documents(self):
+        """Test list documents endpoint"""
+        try:
+            response = requests.get(f"{self.api_url}/test/documents", timeout=10)
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                details = f"Documents Found: {len(data) if isinstance(data, list) else 'N/A'}"
+            else:
+                details = f"Status: {response.status_code}"
+                
+            self.log_test("List Test Documents", success, details, response.json() if success else response.text)
+            return success
+            
+        except Exception as e:
+            self.log_test("List Test Documents", False, f"Exception: {str(e)}")
             return False
 
     def test_dashboard_endpoint(self):
