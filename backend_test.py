@@ -430,6 +430,10 @@ software lifecycle processes, and cybersecurity considerations for medical devic
         print(f"📍 Testing against: {self.base_url}")
         print("=" * 60)
         
+        # Health and system tests (as requested in review)
+        print("🏥 Testing System Health...")
+        health_success = self.test_health_check()
+        
         # Basic connectivity tests
         print("📡 Testing Basic Connectivity...")
         api_available = self.test_api_root()
@@ -437,6 +441,16 @@ software lifecycle processes, and cybersecurity considerations for medical devic
         if not api_available:
             print("❌ API not available. Stopping tests.")
             return False
+        
+        # Database and AI service tests (as requested in review)
+        print("🗄️ Testing Database & AI Services...")
+        db_success = self.test_database_connectivity()
+        ai_success = self.test_ai_service()
+        
+        # Simple upload and list tests (as requested in review)
+        print("📤 Testing Simple Upload & List...")
+        simple_upload_success = self.test_document_upload_simple()
+        list_docs_success = self.test_list_test_documents()
         
         # Dashboard test (should work even without data)
         print("📊 Testing Dashboard...")
