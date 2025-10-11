@@ -150,7 +150,7 @@ class RegulatoryAnalyzer:
         framework: str,
         summary_version: str,
         user_id: str,
-        session: AsyncSession
+        session
     ) -> Dict[str, Any]:
         """
         Asynchronously process regulatory summary
