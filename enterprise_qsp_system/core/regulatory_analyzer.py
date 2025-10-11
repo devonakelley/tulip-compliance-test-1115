@@ -215,7 +215,7 @@ class RegulatoryAnalyzer:
         self,
         framework: str,
         limit: int = 50,
-        session: AsyncSession
+        session
     ) -> List[RegulatoryChangeModel]:
         """
         Get regulatory changes for a framework
