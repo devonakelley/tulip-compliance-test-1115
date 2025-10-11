@@ -269,34 +269,33 @@ class RegulatoryAnalyzer:
         """Initialize ISO 13485:2024 framework"""
         try:
             # Check if framework exists
-            query = select(RegulatoryFramework).where(
-                RegulatoryFramework.framework_name == "ISO_13485",
-                RegulatoryFramework.version == "2024"
-            )
-            result = await session.execute(query)
-            existing = result.scalar_one_or_none()
+            existing = await session.regulatory_frameworks.find_one({
+                "framework_name": "ISO_13485",
+                "version": "2024"
+            })
             
             if existing:
                 logger.info("ISO 13485:2024 framework already exists")
                 return
             
             # Create framework
-            framework = RegulatoryFramework(
-                id=uuid.uuid4(),
-                framework_name="ISO_13485",
-                version="2024",
-                description="ISO 13485:2024 - Medical devices - Quality management systems - Requirements for regulatory purposes",
-                effective_date=datetime(2024, 1, 1, tzinfo=timezone.utc),
-                is_active=True,
-                framework_content={
+            framework = {
+                "_id": str(uuid.uuid4()),
+                "framework_name": "ISO_13485",
+                "version": "2024",
+                "description": "ISO 13485:2024 - Medical devices - Quality management systems - Requirements for regulatory purposes",
+                "effective_date": datetime(2024, 1, 1, tzinfo=timezone.utc),
+                "is_active": True,
+                "framework_content": {
                     "clauses": list(self.iso_clause_patterns.values()),
                     "keywords": self.keyword_map
                 },
-                clauses_count=len(self.iso_clause_patterns)
-            )
+                "clauses_count": len(self.iso_clause_patterns),
+                "created_date": datetime.now(timezone.utc),
+                "last_updated": datetime.now(timezone.utc)
+            }
             
-            session.add(framework)
-            await session.commit()
+            await session.regulatory_frameworks.insert_one(framework)
             
             logger.info("ISO 13485:2024 framework initialized")
             
