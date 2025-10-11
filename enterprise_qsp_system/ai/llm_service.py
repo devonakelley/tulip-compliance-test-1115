@@ -95,40 +95,40 @@ class LLMService:
         try:
             start_time = time.time()
             
-            # Prepare parameters
-            params = {
-                "messages": [],
-                "max_tokens": max_tokens or settings.LLM_MAX_TOKENS,
-                "temperature": temperature or settings.LLM_TEMPERATURE
-            }
+            # Create chat session
+            session_id = f"qsp_analysis_{int(time.time())}"
+            system_message = system_prompt or "You are a helpful AI assistant specialized in regulatory compliance analysis."
             
-            # Add system prompt if provided
-            if system_prompt:
-                params["messages"].append({
-                    "role": "system",
-                    "content": system_prompt
-                })
+            chat = self.LlmChat(
+                api_key=self.api_key,
+                session_id=session_id,
+                system_message=system_message
+            )
             
-            # Add user prompt
-            params["messages"].append({
-                "role": "user", 
-                "content": prompt
-            })
-            
-            # Use specified model or default
+            # Set model if specified
             if model and model in self.available_models:
-                params["model"] = model
+                # Determine provider based on model
+                if model.startswith("gpt") or model.startswith("o1") or model.startswith("o3"):
+                    provider = "openai"
+                elif model.startswith("claude"):
+                    provider = "anthropic"
+                elif model.startswith("gemini"):
+                    provider = "gemini"
+                else:
+                    provider = "openai"  # default
+                
+                chat = chat.with_model(provider, model)
             
-            # Make API call
-            response = await self._make_api_call(params)
+            # Create user message
+            user_message = self.UserMessage(text=prompt)
+            
+            # Send message and get response
+            response = await chat.send_message(user_message)
             
             response_time = time.time() - start_time
             
-            # Extract content
-            content = self._extract_content(response)
-            
             logger.info(f"LLM generation completed in {response_time:.2f}s")
-            return content
+            return response
             
         except Exception as e:
             logger.error(f"LLM generation failed: {e}")
