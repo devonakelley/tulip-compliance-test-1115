@@ -7,11 +7,5 @@ from .mongodb_manager import MongoDBManager as DatabaseManager, get_db_session
 
 __all__ = [
     "DatabaseManager",
-    "get_db_session", 
-    "Base",
-    "User", "UserSession",
-    "Document", "DocumentSection", 
-    "RegulatoryFramework", "RegulatoryChange",
-    "ComplianceAnalysis", "ClauseMapping", "ComplianceGap",
-    "SystemConfiguration", "AuditLog", "BackgroundTask", "SystemMetric"
+    "get_db_session"
 ]
