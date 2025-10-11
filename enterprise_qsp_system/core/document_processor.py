@@ -342,7 +342,7 @@ class DocumentProcessor:
         query = select(Document).where(
             Document.file_hash == file_hash,
             Document.user_id == uuid.UUID(user_id),
-            Document.is_active == True
+            Document.is_active
         )
         
         result = await session.execute(query)
