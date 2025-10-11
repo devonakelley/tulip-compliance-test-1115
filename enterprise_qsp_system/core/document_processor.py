@@ -158,10 +158,10 @@ class DocumentProcessor:
     async def list_documents(
         self,
         user_id: str,
+        session: AsyncSession,
         document_type: Optional[str] = None,
         limit: int = 50,
-        offset: int = 0,
-        session: AsyncSession
+        offset: int = 0
     ) -> List[DocumentMetadata]:
         """
         List user documents with filtering
