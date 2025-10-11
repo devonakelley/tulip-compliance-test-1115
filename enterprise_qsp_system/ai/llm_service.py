@@ -68,7 +68,7 @@ class LLMService:
     
     def is_available(self) -> bool:
         """Check if LLM service is available"""
-        return self._initialized and self.client is not None
+        return self._initialized and hasattr(self, 'api_key') and self.api_key is not None
     
     async def generate(
         self,
