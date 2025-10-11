@@ -254,6 +254,142 @@ Provide detailed mappings with confidence scores."""
 async def root():
     return {"message": "QSP Compliance Checker API", "version": "1.0.0"}
 
+# Health check endpoint (as requested in review)
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for database and AI services"""
+    try:
+        # Test database connection
+        db_status = "healthy"
+        try:
+            await db.command("ping")
+        except Exception as e:
+            db_status = f"unhealthy: {str(e)}"
+        
+        # Test AI service
+        ai_status = "healthy"
+        try:
+            chat = LlmChat(
+                api_key=os.environ.get('EMERGENT_LLM_KEY'),
+                session_id=f"health_{uuid.uuid4()}",
+                system_message="You are a health check assistant."
+            ).with_model("openai", "gpt-4o")
+            
+            user_message = UserMessage(text="Respond with 'OK' if you're working.")
+            response = await chat.send_message(user_message)
+            if "OK" not in response:
+                ai_status = "unhealthy: unexpected response"
+        except Exception as e:
+            ai_status = f"unhealthy: {str(e)}"
+        
+        return {
+            "status": "healthy" if db_status == "healthy" and ai_status == "healthy" else "degraded",
+            "database": db_status,
+            "ai_service": ai_status,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+
+# Test endpoints (as requested in review)
+@api_router.get("/test/database")
+async def test_database():
+    """Test MongoDB connectivity and operations"""
+    try:
+        # Test basic connection
+        await db.command("ping")
+        
+        # Test collection operations
+        test_doc = {"test": True, "timestamp": datetime.now(timezone.utc)}
+        result = await db.test_collection.insert_one(test_doc)
+        
+        # Clean up test document
+        await db.test_collection.delete_one({"_id": result.inserted_id})
+        
+        return {
+            "status": "healthy",
+            "message": "MongoDB connectivity and operations successful",
+            "operations_tested": ["ping", "insert", "delete"]
+        }
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "error": str(e)
+        }
+
+@api_router.get("/test/ai")
+async def test_ai_service():
+    """Test LLM service functionality with ISO 13485 explanation"""
+    try:
+        chat = LlmChat(
+            api_key=os.environ.get('EMERGENT_LLM_KEY'),
+            session_id=f"test_{uuid.uuid4()}",
+            system_message="You are an expert in ISO 13485 medical device quality management."
+        ).with_model("openai", "gpt-4o")
+        
+        user_message = UserMessage(
+            text="Briefly explain what ISO 13485:2024 is and why it's important for medical device companies."
+        )
+        
+        response = await chat.send_message(user_message)
+        
+        return {
+            "status": "healthy",
+            "message": "AI service is functioning correctly",
+            "response": response,
+            "model": "gpt-4o"
+        }
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "error": str(e)
+        }
+
+@api_router.post("/test/upload")
+async def test_document_upload(filename: str, content: str):
+    """Simple test document upload endpoint"""
+    try:
+        # Create a simple test document
+        test_doc = {
+            "id": str(uuid.uuid4()),
+            "filename": filename,
+            "content": content,
+            "upload_date": datetime.now(timezone.utc),
+            "test_document": True
+        }
+        
+        # Store in test collection
+        await db.test_documents.insert_one(prepare_for_mongo(test_doc))
+        
+        return {
+            "status": "success",
+            "message": "Test document uploaded successfully",
+            "document_id": test_doc["id"],
+            "filename": filename,
+            "content_length": len(content)
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e)
+        }
+
+@api_router.get("/test/documents")
+async def get_test_documents():
+    """Retrieve uploaded test documents"""
+    try:
+        docs = await db.test_documents.find({}, {"_id": 0}).to_list(length=None)
+        return [parse_from_mongo(doc) for doc in docs]
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e)
+        }
+
 @api_router.post("/documents/upload")
 async def upload_qsp_document(file: UploadFile = File(...)):
     """Upload a QSP document (.docx or .txt)"""
