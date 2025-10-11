@@ -34,16 +34,17 @@ class LLMService:
     def _initialize_client(self):
         """Initialize LLM client with Emergent integration"""
         try:
-            # Import emergentintegrations for LLM support
-            from emergentintegrations import LLMClient
+            # Import emergentintegrations LLM chat
+            from emergentintegrations.llm.chat import LlmChat, UserMessage
             
             config = settings.get_llm_config()
             
             if config.get("provider") == "emergent" and config.get("api_key"):
-                self.client = LLMClient(
-                    api_key=config["api_key"],
-                    default_model=config.get("model", "gpt-4o")
-                )
+                # Store the API key and create client reference
+                self.api_key = config["api_key"]
+                self.default_model = config.get("model", "gpt-4o")
+                self.LlmChat = LlmChat
+                self.UserMessage = UserMessage
                 
                 # Set available models for emergent integration
                 self.available_models = [
