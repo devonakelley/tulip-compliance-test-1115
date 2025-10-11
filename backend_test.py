@@ -10,7 +10,7 @@ import tempfile
 import os
 
 class QSPComplianceAPITester:
-    def __init__(self, base_url="https://qsp-compliance-1.preview.emergentagent.com"):
+    def __init__(self, base_url="https://iso13485-tool.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
