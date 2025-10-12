@@ -375,9 +375,160 @@ async def process_regulatory_summary(
         
         return {
             "task_id": task_id,
-            "message": "Regulatory summary processing started",
+            "message": "Regulatory summary processing started", 
             "status": "processing"
         }
+
+# RAG-powered endpoints
+@app.post("/api/documents/{document_id}/process-rag")
+async def process_document_with_rag(
+    document_id: str,
+    background_tasks: BackgroundTasks,
+    db_session=Depends(get_db_session)
+):
+    """Process document with RAG system for semantic search capabilities"""
+    try:
+        # Schedule RAG processing
+        background_tasks.add_task(
+            document_processor.process_document_with_rag,
+            document_id,
+            db_session
+        )
+        
+        return {
+            "document_id": document_id,
+            "message": "Document queued for RAG processing",
+            "status": "processing"
+        }
+        
+    except Exception as e:
+        logger.error(f"RAG processing request failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/regulatory/analyze-impact")
+async def analyze_regulatory_impact(
+    regulatory_change: Dict[str, Any],
+    target_documents: Optional[List[str]] = None,
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    db_session=Depends(get_db_session)
+):
+    """Analyze impact of regulatory change on QSP documents"""
+    try:
+        # Schedule impact analysis
+        analysis_task = asyncio.create_task(
+            impact_analyzer.analyze_regulatory_change_impact(
+                regulatory_change=regulatory_change,
+                target_documents=target_documents,
+                session=db_session
+            )
+        )
+        
+        result = await analysis_task
+        
+        if result.get('success'):
+            return {
+                "success": True,
+                "analysis_id": result.get('analysis_id'),
+                "message": f"Found {result.get('total_impacted_sections', 0)} impacted sections",
+                "impact_summary": result.get('impact_summary', {}),
+                "alerts": result.get('alerts', [])
+            }
+        else:
+            raise HTTPException(status_code=500, detail=result.get('error', 'Analysis failed'))
+            
+    except Exception as e:
+        logger.error(f"Regulatory impact analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/regulatory/batch-analyze")
+async def batch_analyze_regulatory_changes(
+    changes: List[Dict[str, Any]],
+    target_documents: Optional[List[str]] = None,
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    db_session=Depends(get_db_session)
+):
+    """Analyze impact of multiple regulatory changes"""
+    try:
+        result = await impact_analyzer.batch_analyze_regulatory_changes(
+            regulatory_changes=changes,
+            target_documents=target_documents,
+            session=db_session
+        )
+        
+        if result.get('success'):
+            return {
+                "success": True,
+                "summary": result.get('summary', {}),
+                "total_alerts": len(result.get('all_alerts', [])),
+                "alerts": result.get('all_alerts', [])
+            }
+        else:
+            raise HTTPException(status_code=500, detail=result.get('error'))
+            
+    except Exception as e:
+        logger.error(f"Batch regulatory analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/alerts/open")
+async def get_open_alerts(
+    document_id: Optional[str] = None,
+    priority: Optional[str] = None,
+    db_session=Depends(get_db_session)
+):
+    """Get open regulatory impact alerts"""
+    try:
+        alerts = await impact_analyzer.get_open_alerts(
+            document_id=document_id,
+            priority_filter=priority,
+            session=db_session
+        )
+        
+        return {
+            "success": True,
+            "alerts": alerts,
+            "total_count": len(alerts)
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get open alerts: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/documents/{document_id}/impact-history")
+async def get_document_impact_history(
+    document_id: str,
+    db_session=Depends(get_db_session)
+):
+    """Get regulatory impact history for a specific document"""
+    try:
+        history = await impact_analyzer.get_document_impact_history(
+            document_id=document_id,
+            session=db_session
+        )
+        
+        return {
+            "success": True,
+            "document_id": document_id,
+            "impact_history": history,
+            "total_analyses": len(history)
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get document impact history: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/rag/statistics")
+async def get_rag_statistics():
+    """Get RAG system statistics"""
+    try:
+        stats = await rag_engine.get_system_statistics()
+        return {
+            "success": True,
+            "statistics": stats
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get RAG statistics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
         
     except Exception as e:
         logger.error(f"Regulatory summary processing failed: {e}")
