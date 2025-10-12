@@ -62,7 +62,7 @@ class Settings(BaseSettings):
     METRICS_RETENTION_DAYS: int = 30
     
     # Security
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
+    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:8000"
     SECURE_COOKIES: bool = True
     SESSION_TIMEOUT_MINUTES: int = 480  # 8 hours
     
