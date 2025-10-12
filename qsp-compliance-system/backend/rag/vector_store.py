@@ -11,7 +11,7 @@ import asyncio
 import json
 from datetime import datetime, timezone
 
-from .document_chunker import DocumentChunk
+from document_chunker import DocumentChunk
 
 logger = logging.getLogger(__name__)
 

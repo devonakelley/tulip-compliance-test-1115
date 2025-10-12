@@ -195,7 +195,7 @@ class MetricsCollector:
                 pass  # psutil not available
             
             # Application metrics
-            from ..database import mongodb_manager
+            from database import mongodb_manager
             
             if mongodb_manager._initialized:
                 db_stats = await mongodb_manager.get_stats()

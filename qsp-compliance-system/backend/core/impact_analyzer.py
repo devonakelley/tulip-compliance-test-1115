@@ -9,8 +9,8 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone
 import uuid
 
-from ..rag import RAGEngine
-from ..ai import LLMService
+from rag import RAGEngine
+from ai import LLMService
 
 logger = logging.getLogger(__name__)
 

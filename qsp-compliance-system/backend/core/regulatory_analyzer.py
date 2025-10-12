@@ -13,10 +13,10 @@ import re
 
 # Database imports - MongoDB session
 # MongoDB collections will be accessed directly via session
-from ..models import RegulatoryChange as RegulatoryChangeModel
-from ..config import settings
-from ..ai import LLMService
-from ..utils import TextProcessor
+from models import RegulatoryChange as RegulatoryChangeModel
+from config import settings
+from ai import LLMService
+from utils import TextProcessor
 
 logger = logging.getLogger(__name__)
 

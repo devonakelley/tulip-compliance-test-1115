@@ -13,7 +13,7 @@ from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
 
-from ..config import settings
+from config import settings
 
 logger = logging.getLogger(__name__)
 

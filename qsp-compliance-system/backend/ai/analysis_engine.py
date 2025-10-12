@@ -11,9 +11,9 @@ import uuid
 import json
 import re
 
-from .llm_service import LLMService
-from ..utils import TextProcessor
-from ..config import settings
+from llm_service import LLMService
+from utils import TextProcessor
+from config import settings
 
 logger = logging.getLogger(__name__)
 

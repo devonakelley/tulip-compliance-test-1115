@@ -23,11 +23,11 @@ from bs4 import BeautifulSoup
 # Database imports
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete
-from ..database.models import Document, DocumentSection, DocumentTypeEnum
-from ..models import DocumentMetadata, DocumentType, UploadResponse
-from ..config import settings
-from ..utils import FileUtils, TextProcessor
-from ..rag import RAGEngine
+from database.models import Document, DocumentSection, DocumentTypeEnum
+from models import DocumentMetadata, DocumentType, UploadResponse
+from config import settings
+from utils import FileUtils, TextProcessor
+from rag import RAGEngine
 
 logger = logging.getLogger(__name__)
 

@@ -10,10 +10,10 @@ from datetime import datetime, timezone
 import uuid
 import json
 
-from ..ai import LLMService, AnalysisEngine
-from ..database.models import ComplianceAnalysis, ComplianceGap, Document, DocumentSection
-from ..models import ComplianceReport, AnalysisStatus, ComplianceLevel, SeverityLevel
-from ..config import settings
+from ai import LLMService, AnalysisEngine
+from database.models import ComplianceAnalysis, ComplianceGap, Document, DocumentSection
+from models import ComplianceReport, AnalysisStatus, ComplianceLevel, SeverityLevel
+from config import settings
 
 logger = logging.getLogger(__name__)
 

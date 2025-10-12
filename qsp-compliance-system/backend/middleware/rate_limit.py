@@ -10,7 +10,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response, JSONResponse
 
-from ..config import settings
+from config import settings
 
 logger = logging.getLogger(__name__)
 

@@ -9,8 +9,8 @@ from typing import Optional, Dict, Any
 from passlib.context import CryptContext
 import uuid
 
-from ..config import settings
-from ..database.models import User, UserSession
+from config import settings
+from database.models import User, UserSession
 
 logger = logging.getLogger(__name__)
 

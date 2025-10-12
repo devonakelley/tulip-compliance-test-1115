@@ -10,7 +10,7 @@ import json
 from dataclasses import dataclass
 import time
 
-from ..config import settings
+from config import settings
 
 logger = logging.getLogger(__name__)
 

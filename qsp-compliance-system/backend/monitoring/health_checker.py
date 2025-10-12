@@ -8,7 +8,7 @@ from typing import Dict, Any, List
 from datetime import datetime, timezone
 import aiohttp
 
-from ..config import settings
+from config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +111,7 @@ class HealthChecker:
     async def _check_database(self) -> Dict[str, Any]:
         """Check database connectivity"""
         try:
-            from ..database import mongodb_manager
+            from database import mongodb_manager
             
             health = await mongodb_manager.health_check()
             
@@ -150,7 +150,7 @@ class HealthChecker:
     async def _check_ai_service(self) -> Dict[str, Any]:
         """Check AI service availability"""
         try:
-            from ..ai import LLMService
+            from ai import LLMService
             
             llm_service = LLMService()
             

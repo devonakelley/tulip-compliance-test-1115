@@ -9,12 +9,12 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 import uuid
 
-from .document_processor import DocumentProcessor
-from .regulatory_analyzer import RegulatoryAnalyzer
-from .compliance_engine import ComplianceEngine
-from ..cache import CacheManager
-from ..models import SystemStatus
-from ..config import settings
+from document_processor import DocumentProcessor
+from regulatory_analyzer import RegulatoryAnalyzer
+from compliance_engine import ComplianceEngine
+from cache import CacheManager
+from models import SystemStatus
+from config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ class SystemOrchestrator:
             System status
         """
         try:
-            from ..database import mongodb_manager
+            from database import mongodb_manager
             
             # Get database stats
             db_stats = await mongodb_manager.get_stats()
