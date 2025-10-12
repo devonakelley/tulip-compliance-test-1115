@@ -378,6 +378,9 @@ async def process_regulatory_summary(
             "message": "Regulatory summary processing started", 
             "status": "processing"
         }
+    except Exception as e:
+        logger.error(f"Regulatory summary processing failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # RAG-powered endpoints
 @app.post("/api/documents/{document_id}/process-rag")
