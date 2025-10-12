@@ -11,7 +11,7 @@ import uuid
 import json
 import re
 
-from llm_service import LLMService
+from .llm_service import LLMService
 from utils import TextProcessor
 from config import settings
 
