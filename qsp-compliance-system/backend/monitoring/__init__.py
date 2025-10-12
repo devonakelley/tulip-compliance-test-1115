@@ -1,8 +1,11 @@
 """
-Monitoring modules for Enterprise QSP System
+Monitoring and health check modules
 """
 
-from health_checker import HealthChecker
-from metrics_collector import MetricsCollector
+from .health_checker import HealthChecker
+from .metrics_collector import MetricsCollector
 
-__all__ = ['HealthChecker', 'MetricsCollector']
+__all__ = [
+    'HealthChecker',
+    'MetricsCollector'
+]

@@ -1,7 +1,7 @@
 """
-Cache modules for Enterprise QSP System
+Cache management module
 """
 
-from cache_manager import CacheManager
+from .cache_manager import CacheManager
 
 __all__ = ['CacheManager']
