@@ -108,11 +108,11 @@ class Settings(BaseSettings):
         os.makedirs("/app/backups", exist_ok=True)
         
     @property
-    def database_url_async(self) -> str:
-        """Get async database URL"""
-        if self.DATABASE_URL.startswith("postgresql://"):
-            return self.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
-        return self.DATABASE_URL
+    def allowed_origins_list(self) -> List[str]:
+        """Parse ALLOWED_ORIGINS string into list"""
+        if isinstance(self.ALLOWED_ORIGINS, str):
+            return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",")]
+        return self.ALLOWED_ORIGINS
         
     @property
     def is_production(self) -> bool:
