@@ -1,185 +1,282 @@
-# Enterprise QSP Compliance System
+# QSP Compliance Checker
 
-A robust, enterprise-grade QSP Compliance Checker that takes regulatory standard changes and alerts companies where their internal QSP documents need updates.
+**Automated regulatory impact analysis for medical device Quality System Procedures (QSPs)**
 
-## 🎯 Overview
+## 🎯 What This System Does
 
-The Enterprise QSP Compliance System helps medical device companies:
-- **Monitor regulatory changes** (like ISO 13485:2024 updates) 
-- **Analyze internal QSP documents** for compliance gaps
-- **Generate specific alerts** like "ISO change detected that impacts QSP doc X in section X"
-- **Provide actionable recommendations** for compliance teams
+The QSP Compliance Checker automatically identifies when regulatory changes (like ISO 13485:2024 updates) impact your internal QSP documents, generating specific alerts like:
 
-## 🚀 Features
+> **"ISO change detected that impacts QSP doc 4.2-1 in section 2.3 (Document Approval)"**
 
-- **Document Processing**: Upload QSP documents (.docx, .txt, PDF) and regulatory change summaries
-- **AI-Powered Analysis**: Multi-model AI integration (GPT, Claude, Gemini) for compliance assessment
-- **Impact Detection**: Automated analysis of how regulatory changes affect existing QSP documents
-- **Comprehensive Dashboard**: Real-time compliance metrics and gap analysis
-- **Alert System**: Dashboard notifications, detailed reports, and email alerts
-- **Enterprise Security**: Role-based access, audit logging, rate limiting
+### Core Problem Solved
+Medical device companies have 40+ QSP documents that must comply with evolving regulations. When ISO/FDA/EU releases updates, compliance teams need to know exactly which QSP sections require review and updates.
 
-## 🏗️ Architecture
+## 🚀 Key Features
 
-- **Backend**: FastAPI + MongoDB + Emergent LLM integration
-- **Frontend**: React with professional UI components
-- **Database**: MongoDB with optimized collections and indexing
-- **AI Integration**: Multi-model support via emergentintegrations library
-- **Deployment**: Docker-ready with Kubernetes support
+### 📄 **Document Processing**
+- Upload QSP documents (.docx, .txt, PDF) 
+- Upload regulatory change summaries from ISO/FDA/EU
+- Intelligent parsing preserves QSP section structure
+- RAG-powered semantic analysis for accuracy
 
-## 📋 Prerequisites
+### 🤖 **AI-Powered Impact Analysis** 
+- Multi-model AI (GPT, Claude, Gemini) via Emergent LLM
+- Semantic search finds relevant sections (not just keywords)
+- Confidence scoring ensures reliable alerts (70%+ threshold)
+- Handles unlimited document sizes via chunking strategy
 
+### 🚨 **Specific Alert Generation**
+- Pinpoints exact QSP document and section affected
+- Provides actionable recommendations for compliance teams
+- Prioritizes alerts by impact level (critical/high/medium/low)
+- Tracks alert status and resolution
+
+### 📊 **Compliance Dashboard**
+- Real-time view of open regulatory alerts
+- Document impact history tracking  
+- Compliance status overview across all QSPs
+- Progress monitoring for alert resolution
+
+## 🏗️ System Architecture
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   React UI      │────│   FastAPI        │────│   MongoDB       │
+│   (Dashboard)   │    │   (RAG Engine)   │    │   (Documents)   │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                              │
+                       ┌──────────────────┐    ┌─────────────────┐
+                       │ ChromaDB         │────│ Emergent LLM    │
+                       │ (Vector Store)   │    │ (Multi-Model)   │
+                       └──────────────────┘    └─────────────────┘
+```
+
+### Technology Stack
+- **Backend**: FastAPI + MongoDB + ChromaDB (vector database)
+- **Frontend**: React + Tailwind CSS + Professional UI components
+- **AI**: Emergent LLM integration (GPT/Claude/Gemini)
+- **RAG Engine**: Sentence transformers + semantic search
+- **Deployment**: Docker + Docker Compose
+
+## 🛠️ Quick Start
+
+### Prerequisites
 - Python 3.11+
-- Node.js 18+
+- Node.js 18+  
 - MongoDB 7.0+
+- Docker & Docker Compose
 - Emergent LLM API Key
 
-## 🛠️ Installation
-
-### 1. Clone and Setup
-
+### 1. Automated Setup
 ```bash
 git clone <repository-url>
 cd qsp-compliance-system
+chmod +x scripts/deploy.sh
+./scripts/deploy.sh
 ```
 
-### 2. Backend Setup
-
+### 2. Manual Setup
 ```bash
-cd backend
-pip install -r requirements.txt
+# Environment configuration
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
 
-# Create .env file
-cp .env.example .env
-# Edit .env with your configuration
+# Add your Emergent LLM key to backend/.env
+EMERGENT_LLM_KEY=your-emergent-llm-key-here
+
+# Start services
+docker-compose up --build -d
+
+# Verify system
+./scripts/test.sh
 ```
 
-### 3. Frontend Setup
+### 3. Access Application
+- **Frontend Dashboard**: http://localhost:3000
+- **API Documentation**: http://localhost:8001/api/docs  
+- **System Health**: http://localhost:8001/health
 
+## 📋 Usage Workflow
+
+### Step 1: Upload QSP Documents
 ```bash
-cd frontend
-npm install
+curl -X POST "http://localhost:8001/api/documents/upload" \
+  -F "file=@QSP_4.2-1_Document_Control.docx" \
+  -F "document_type=qsp"
 ```
 
-### 4. Environment Configuration
-
-Create `backend/.env`:
-```env
-MONGO_URL=mongodb://localhost:27017
-DB_NAME=qsp_compliance
-EMERGENT_LLM_KEY=your-emergent-llm-key
-CORS_ORIGINS=http://localhost:3000
-```
-
-Create `frontend/.env`:
-```env
-REACT_APP_BACKEND_URL=http://localhost:8001
-```
-
-## 🚀 Running the Application
-
-### Development Mode
-
-**Terminal 1 - Backend:**
+### Step 2: Process Documents for RAG
 ```bash
-cd backend
-python -m uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+curl -X POST "http://localhost:8001/api/documents/{document_id}/process-rag"
 ```
 
-**Terminal 2 - Frontend:**
+### Step 3: Upload Regulatory Changes  
 ```bash
-cd frontend
-npm start
+curl -X POST "http://localhost:8001/api/regulatory/batch-analyze" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "changes": [
+      {
+        "clause_id": "4.2.3",
+        "clause_title": "Document Control", 
+        "description": "New electronic document control requirements...",
+        "impact_level": "high"
+      }
+    ]
+  }'
 ```
 
-### Production Mode
-
+### Step 4: View Generated Alerts
 ```bash
-# Build and run with Docker
-docker-compose up --build
+curl "http://localhost:8001/api/alerts/open"
 ```
 
-## 📊 API Documentation
+## 🔧 Key API Endpoints
 
-Once running, visit:
-- **API Docs**: http://localhost:8001/api/docs
-- **Frontend**: http://localhost:3000
-- **Health Check**: http://localhost:8001/health
+### Document Management
+- `POST /api/documents/upload` - Upload QSP or regulatory documents
+- `POST /api/documents/{id}/process-rag` - Process document for semantic search
+- `GET /api/documents` - List uploaded documents
+- `DELETE /api/documents/{id}` - Delete document
 
-## 🔧 Key Endpoints
+### Regulatory Impact Analysis  
+- `POST /api/regulatory/analyze-impact` - Analyze single regulatory change
+- `POST /api/regulatory/batch-analyze` - Analyze multiple changes
+- `GET /api/alerts/open` - Get open regulatory alerts
+- `GET /api/documents/{id}/impact-history` - View document impact history
 
-- `POST /api/documents/upload` - Upload QSP documents
-- `POST /api/regulatory/process-summary` - Process regulatory changes
-- `POST /api/analysis/run` - Run compliance analysis
-- `GET /api/analysis/{analysis_id}` - Get analysis results
+### System Monitoring
 - `GET /health` - System health check
+- `GET /api/rag/statistics` - RAG system statistics
+- `GET /metrics` - Prometheus metrics
 
-## 📁 Project Structure
+## 📊 Example Alert Output
 
+```json
+{
+  "alert_id": "alert_12345",
+  "message": "ISO change detected that impacts QSP 4.2-1 Document Control in section 2.3 (Document Approval). Regulatory change in clause 4.2.3 (Document Control) requires review and potential updates.",
+  "priority": "high",
+  "regulatory_change": {
+    "clause_id": "4.2.3",
+    "clause_title": "Document Control",
+    "description": "New electronic document control requirements..."
+  },
+  "affected_document": {
+    "document_id": "qsp_4_2_1", 
+    "document_title": "QSP 4.2-1 Document Control.docx",
+    "section_number": "2.3",
+    "section_title": "Document Approval"
+  },
+  "impact_details": {
+    "impact_level": "high",
+    "confidence_score": 0.87,
+    "required_actions": [
+      "Update document approval procedures for electronic signatures",
+      "Implement audit trail requirements",
+      "Review version control processes"
+    ],
+    "compliance_risk": "High risk of non-compliance if not addressed within 90 days"
+  }
+}
 ```
-qsp-compliance-system/
-├── backend/
-│   ├── main.py              # FastAPI application
-│   ├── config.py            # Configuration management
-│   ├── models.py            # Pydantic models
-│   ├── database/            # MongoDB integration
-│   ├── core/               # Business logic
-│   ├── middleware/         # Custom middleware
-│   ├── auth/               # Authentication
-│   └── requirements.txt    # Dependencies
-├── frontend/
-│   ├── src/
-│   │   ├── App.js          # Main React component
-│   │   ├── components/     # UI components
-│   │   └── services/       # API services
-│   └── package.json        # Dependencies
-├── docker-compose.yml      # Container orchestration
-└── README.md              # This file
-```
 
-## 🔐 Security Features
+## 🔍 RAG System Benefits
 
-- JWT-based authentication
-- Rate limiting and request validation
-- Audit logging for all operations
-- Secure file upload with validation
-- MongoDB injection protection
+### Why RAG vs Traditional Keyword Search?
 
-## 🧪 Testing
+**Traditional Approach Problems:**
+- ❌ Can't fit 48 QSP files in LLM context window (4K-32K tokens)
+- ❌ Keyword matching misses paraphrased requirements  
+- ❌ No confidence scoring for reliability
+- ❌ Misses semantic relationships between concepts
 
+**Our RAG Solution:**
+- ✅ **Unlimited document processing** via intelligent chunking
+- ✅ **Semantic understanding** finds related concepts, not just exact matches
+- ✅ **Section-level precision** maps to specific QSP sections  
+- ✅ **High confidence alerts** (70%+ threshold) reduces false positives
+- ✅ **Scalable architecture** handles growing document sets
+
+### RAG Architecture Components
+
+1. **Document Chunker**: Preserves QSP structure while creating searchable chunks
+2. **Embedding Service**: Converts text to semantic vectors for similarity search
+3. **Vector Store**: ChromaDB for efficient storage and retrieval  
+4. **Impact Analyzer**: Uses retrieval + AI generation for accurate impact assessment
+
+## 🔐 Security & Compliance
+
+- **JWT Authentication** with role-based access control
+- **API Rate Limiting** prevents abuse
+- **Audit Logging** tracks all document and analysis actions  
+- **Secure File Upload** with validation and virus scanning
+- **Data Encryption** in transit and at rest
+- **GDPR Compliant** data handling practices
+
+## 📈 Monitoring & Operations
+
+### Health Monitoring
+- System health checks for database, AI services, storage
+- Real-time performance metrics via Prometheus
+- Automated alerting for system issues
+- Uptime monitoring and SLA tracking
+
+### Backup & Recovery
 ```bash
-# Backend tests
-cd backend
-python -m pytest tests/
+# Create backup
+./scripts/backup.sh
 
-# Frontend tests
-cd frontend
-npm test
+# Restore from backup  
+./scripts/restore.sh /app/backups/qsp_backup_YYYYMMDD_HHMMSS.tar.gz
 ```
 
-## 📈 Monitoring
+### Performance Optimization
+- MongoDB indexing for fast document queries
+- Vector database optimization for similarity search
+- Async processing for large document sets
+- Caching layer for frequently accessed data
 
-The system includes comprehensive monitoring:
-- Health checks for all services
-- Performance metrics collection
-- Error tracking and alerting
-- Database connection monitoring
+## 🤝 Support & Maintenance
 
-## 🤝 Contributing
+### Troubleshooting
+```bash
+# Check system status
+./scripts/test.sh
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
+# View logs
+docker-compose logs -f
+
+# Restart services
+docker-compose restart
+```
+
+### Updates
+```bash
+# Pull latest changes
+git pull origin main
+
+# Update and restart
+docker-compose down
+docker-compose up --build -d
+```
+
+### Common Issues
+1. **LLM Service Not Available**: Check `EMERGENT_LLM_KEY` in backend/.env
+2. **Documents Not Processing**: Verify MongoDB connection and disk space
+3. **Slow Analysis**: Increase RAG system resources in docker-compose.yml
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT License - see LICENSE file for details.
 
-## 🆘 Support
+## 🆘 Getting Help
 
-For support and questions:
-- Create an issue in the repository
-- Check the API documentation at `/api/docs`
-- Review the health status at `/health`
+1. **System Issues**: Check `/health` endpoint and system logs
+2. **API Questions**: Visit `/api/docs` for interactive documentation  
+3. **Performance**: Use `/metrics` endpoint for system diagnostics
+4. **Bug Reports**: Create GitHub issue with logs and reproduction steps
+
+---
+
+**Built for medical device compliance teams to automate regulatory impact analysis and ensure QSP documents stay current with evolving standards.**
