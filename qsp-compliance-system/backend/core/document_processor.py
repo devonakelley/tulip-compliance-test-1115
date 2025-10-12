@@ -580,6 +580,61 @@ class DocumentProcessor:
             await session.commit()
             
         except Exception as e:
-            await session.rollback()
             logger.error(f"Failed to update document content: {e}")
             raise
+    
+    async def process_document_with_rag(
+        self,
+        document_id: str,
+        session
+    ) -> Dict[str, Any]:
+        """
+        Process document with RAG system for semantic search
+        
+        Args:
+            document_id: Document ID to process
+            session: Database session
+            
+        Returns:
+            Processing results
+        """
+        try:
+            # Get document from database
+            document = await session.documents.find_one({"_id": document_id})
+            
+            if not document:
+                raise ValueError(f"Document not found: {document_id}")
+            
+            if document.get("processing_status") != "completed":
+                raise ValueError(f"Document not ready for RAG processing: {document_id}")
+            
+            logger.info(f"Processing document with RAG: {document_id}")
+            
+            # Process with RAG engine
+            rag_result = await self.rag_engine.process_qsp_document(document)
+            
+            if rag_result.get('success'):
+                # Update document status
+                await session.documents.update_one(
+                    {"_id": document_id},
+                    {
+                        "$set": {
+                            "rag_processed": True,
+                            "rag_processing_date": datetime.now(timezone.utc),
+                            "rag_chunks_count": rag_result.get('chunks_created', 0),
+                            "rag_sections_count": rag_result.get('sections_identified', 0)
+                        }
+                    }
+                )
+                
+                logger.info(f"Document RAG processing completed: {document_id}")
+            
+            return rag_result
+            
+        except Exception as e:
+            logger.error(f"Failed to process document with RAG: {e}")
+            return {
+                'success': False,
+                'error': str(e),
+                'document_id': document_id
+            }
