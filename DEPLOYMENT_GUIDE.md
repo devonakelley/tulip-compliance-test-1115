@@ -3,7 +3,7 @@
 ## 🎯 For Non-Technical Users: How to Use This with Claude/ChatGPT
 
 ### Current Status:
-- ✅ **Web Interface**: Ready to use at https://iso13485-tool.preview.emergentagent.com
+- ✅ **Web Interface**: Ready to use at https://doccom-analyzer.preview.emergentagent.com
 - ⚠️ **MCP Integration**: Needs packaging for end-user deployment
 
 ## 📦 What We Need to Create for Distribution

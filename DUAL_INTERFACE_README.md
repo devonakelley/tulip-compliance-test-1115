@@ -9,7 +9,7 @@ The QSP Compliance Checker provides **two interfaces** for maximum flexibility:
 ## 🌐 Web Interface
 
 ### Access
-- **URL**: https://iso13485-tool.preview.emergentagent.com
+- **URL**: https://doccom-analyzer.preview.emergentagent.com
 - **Features**: Dashboard, Document Upload, Analysis Workflow, Gap Reports
 
 ### Web UI Capabilities
