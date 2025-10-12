@@ -57,6 +57,9 @@ metrics_collector = MetricsCollector()
 document_processor = DocumentProcessor()
 regulatory_analyzer = RegulatoryAnalyzer()
 compliance_engine = ComplianceEngine()
+impact_analyzer = ImpactAnalyzer()
+rag_engine = RAGEngine()
+
 system_orchestrator = SystemOrchestrator(
     document_processor=document_processor,
     regulatory_analyzer=regulatory_analyzer,
