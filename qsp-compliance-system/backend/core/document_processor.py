@@ -46,6 +46,7 @@ class DocumentProcessor:
         }
         self.file_utils = FileUtils()
         self.text_processor = TextProcessor()
+        self.rag_engine = RAGEngine()
         
     async def process_upload(
         self,
