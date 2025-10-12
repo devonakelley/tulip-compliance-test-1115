@@ -19,6 +19,8 @@ from core.document_processor import DocumentProcessor
 from core.compliance_engine import ComplianceEngine
 from core.regulatory_analyzer import RegulatoryAnalyzer
 from core.system_orchestrator import SystemOrchestrator
+from core.impact_analyzer import ImpactAnalyzer
+from rag import RAGEngine
 from database.mongodb_manager import MongoDBManager, get_db_session
 from models import (
     SystemStatus, UploadResponse, AnalysisRequest, ComplianceReport,
