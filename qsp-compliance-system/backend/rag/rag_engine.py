@@ -12,7 +12,12 @@ import json
 from .vector_store import VectorStore
 from .document_chunker import DocumentChunker, DocumentChunk
 from .embedding_service import EmbeddingService
-from ..ai.llm_service import LLMService
+
+# Handle imports for both package and module level execution
+try:
+    from ..ai.llm_service import LLMService
+except ImportError:
+    from ai.llm_service import LLMService
 
 logger = logging.getLogger(__name__)
 
