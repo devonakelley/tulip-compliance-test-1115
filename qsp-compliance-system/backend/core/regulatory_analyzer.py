@@ -14,6 +14,7 @@ import re
 # Database imports - MongoDB session
 # MongoDB collections will be accessed directly via session
 from models import RegulatoryChange as RegulatoryChangeModel
+from database.models import DocumentSection
 from config import settings
 from ai import LLMService
 from utils import TextProcessor
