@@ -214,8 +214,8 @@ class RegulatoryAnalyzer:
     async def get_regulatory_changes(
         self,
         framework: str,
-        limit: int = 50,
-        session
+        session,
+        limit: int = 50
     ) -> List[RegulatoryChangeModel]:
         """
         Get regulatory changes for a framework
