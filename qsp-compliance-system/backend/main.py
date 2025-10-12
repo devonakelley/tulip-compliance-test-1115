@@ -86,6 +86,9 @@ async def lifespan(app: FastAPI):
     # Initialize metrics collection
     await metrics_collector.initialize()
     
+    # Initialize RAG engine
+    await rag_engine.initialize()
+    
     logger.info("System startup completed successfully")
     
     yield
