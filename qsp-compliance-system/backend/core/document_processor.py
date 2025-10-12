@@ -27,6 +27,7 @@ from ..database.models import Document, DocumentSection, DocumentTypeEnum
 from ..models import DocumentMetadata, DocumentType, UploadResponse
 from ..config import settings
 from ..utils import FileUtils, TextProcessor
+from ..rag import RAGEngine
 
 logger = logging.getLogger(__name__)
 
