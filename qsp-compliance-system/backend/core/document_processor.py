@@ -21,7 +21,6 @@ import pandas as pd
 from bs4 import BeautifulSoup
 
 # Database imports
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete
 from database.models import Document, DocumentSection, DocumentTypeEnum
 from models import DocumentMetadata, DocumentType, UploadResponse
@@ -54,7 +53,7 @@ class DocumentProcessor:
         filename: str,
         document_type: str,
         user_id: str,
-        session: AsyncSession,
+        session,
         metadata: Optional[Dict[str, Any]] = None
     ) -> str:
         """
@@ -114,7 +113,7 @@ class DocumentProcessor:
     async def process_document_async(
         self,
         document_id: str,
-        session: AsyncSession
+        session
     ) -> bool:
         """
         Asynchronously process document content
@@ -160,7 +159,7 @@ class DocumentProcessor:
     async def list_documents(
         self,
         user_id: str,
-        session: AsyncSession,
+        session,
         document_type: Optional[str] = None,
         limit: int = 50,
         offset: int = 0
@@ -220,7 +219,7 @@ class DocumentProcessor:
         self,
         document_id: str,
         user_id: str,
-        session: AsyncSession
+        session
     ) -> bool:
         """
         Delete document and associated data
@@ -263,7 +262,7 @@ class DocumentProcessor:
         self,
         document_id: str,
         user_id: str,
-        session: AsyncSession
+        session
     ) -> Optional[Dict[str, Any]]:
         """
         Get document content and sections
@@ -338,7 +337,7 @@ class DocumentProcessor:
         self, 
         file_hash: str, 
         user_id: str, 
-        session: AsyncSession
+        session
     ) -> Optional[Document]:
         """Check for duplicate files"""
         query = select(Document).where(
@@ -376,7 +375,7 @@ class DocumentProcessor:
         except Exception as e:
             logger.warning(f"Failed to delete file {file_path}: {e}")
     
-    async def _get_document(self, document_id: str, session: AsyncSession) -> Optional[Document]:
+    async def _get_document(self, document_id: str, session) -> Optional[Document]:
         """Get document by ID"""
         query = select(Document).where(Document.id == uuid.UUID(document_id))
         result = await session.execute(query)
@@ -386,7 +385,7 @@ class DocumentProcessor:
         self, 
         document_id: str, 
         status: str, 
-        session: AsyncSession,
+        session,
         error_message: Optional[str] = None
     ):
         """Update document processing status"""
@@ -545,7 +544,7 @@ class DocumentProcessor:
         document_id: str,
         content: str,
         sections: List[Dict[str, Any]],
-        session: AsyncSession
+        session
     ):
         """Update document with processed content and sections"""
         try:

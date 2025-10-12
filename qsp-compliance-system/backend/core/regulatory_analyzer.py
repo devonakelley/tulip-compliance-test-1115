@@ -303,7 +303,7 @@ class RegulatoryAnalyzer:
             logger.error(f"Failed to initialize ISO framework: {e}")
             raise
     
-    async def _parse_qsp_documents(self, user_id: str, session: AsyncSession):
+    async def _parse_qsp_documents(self, user_id: str, session):
         """Parse existing QSP documents for sections"""
         try:
             # Get user's QSP documents
@@ -329,7 +329,7 @@ class RegulatoryAnalyzer:
     async def _create_initial_mappings(
         self, 
         user_id: str, 
-        session: AsyncSession
+        session
     ) -> int:
         """Create initial clause mappings for QSP documents"""
         try:
@@ -368,7 +368,7 @@ class RegulatoryAnalyzer:
         self,
         section: DocumentSection,
         framework: RegulatoryFramework,
-        session: AsyncSession
+        session
     ) -> List[ClauseMapping]:
         """Map document section to regulatory clauses"""
         try:
@@ -546,7 +546,7 @@ class RegulatoryAnalyzer:
     async def _get_framework(
         self, 
         framework_name: str, 
-        session: AsyncSession
+        session
     ) -> Optional[RegulatoryFramework]:
         """Get regulatory framework by name"""
         query = select(RegulatoryFramework).where(
@@ -562,7 +562,7 @@ class RegulatoryAnalyzer:
         framework: str,
         summary_version: str,
         user_id: str,
-        session: AsyncSession
+        session
     ) -> Optional[Document]:
         """Get regulatory summary document"""
         query = select(Document).where(
@@ -653,7 +653,7 @@ class RegulatoryAnalyzer:
         self,
         changes: List[Dict[str, Any]],
         framework_id: uuid.UUID,
-        session: AsyncSession
+        session
     ) -> List[uuid.UUID]:
         """Store regulatory changes in database"""
         change_ids = []
@@ -687,7 +687,7 @@ class RegulatoryAnalyzer:
         self,
         change_ids: List[uuid.UUID],
         user_id: str,
-        session: AsyncSession
+        session
     ) -> Dict[str, Any]:
         """Analyze impact of regulatory changes on existing QSPs"""
         try:
