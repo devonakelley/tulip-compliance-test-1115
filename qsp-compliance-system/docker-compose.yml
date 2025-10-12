@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: qsp-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: qsp_compliance
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - qsp-network
+
+  backend:
+    build: ./backend
+    container_name: qsp-backend
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+      - DB_NAME=qsp_compliance
+      - EMERGENT_LLM_KEY=${EMERGENT_LLM_KEY}
+      - CORS_ORIGINS=http://localhost:3000
+    depends_on:
+      - mongodb
+    volumes:
+      - ./uploads:/app/uploads
+    networks:
+      - qsp-network
+
+  frontend:
+    build: ./frontend
+    container_name: qsp-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_BACKEND_URL=http://localhost:8001
+    depends_on:
+      - backend
+    networks:
+      - qsp-network
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  qsp-network:
+    driver: bridge
