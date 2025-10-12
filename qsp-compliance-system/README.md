@@ -131,6 +131,49 @@ curl -X POST "http://localhost:8001/api/regulatory/batch-analyze" \
 curl "http://localhost:8001/api/alerts/open"
 ```
 
+## 📁 Project Structure
+
+```
+qsp-compliance-system/
+├── backend/                 # Python FastAPI Backend
+│   ├── main.py             # FastAPI application with RAG endpoints
+│   ├── config.py           # Environment configuration
+│   ├── models.py           # Pydantic data models
+│   ├── requirements.txt    # Python dependencies
+│   ├── rag/               # RAG System Components
+│   │   ├── embedding_service.py   # Semantic embeddings
+│   │   ├── document_chunker.py    # QSP document parsing
+│   │   ├── vector_store.py        # ChromaDB integration  
+│   │   └── rag_engine.py          # RAG orchestration
+│   ├── core/              # Business Logic
+│   │   ├── document_processor.py  # Document upload/processing
+│   │   ├── impact_analyzer.py     # Regulatory impact analysis
+│   │   ├── compliance_engine.py   # Compliance assessment
+│   │   └── system_orchestrator.py # Workflow coordination
+│   ├── database/          # MongoDB Integration
+│   │   └── mongodb_manager.py     # Database operations
+│   ├── ai/               # AI Services
+│   │   └── llm_service.py         # Emergent LLM integration
+│   ├── middleware/       # Request Processing
+│   ├── auth/             # Authentication
+│   └── monitoring/       # Health & Metrics
+├── frontend/             # React Dashboard
+│   ├── src/
+│   │   ├── App.js        # Main React application
+│   │   ├── components/   # UI components for QSP management
+│   │   └── services/     # API client services
+│   └── package.json      # Node.js dependencies
+├── scripts/              # Operations Scripts
+│   ├── deploy.sh         # Automated deployment
+│   ├── backup.sh         # Database backup
+│   ├── restore.sh        # Data restoration
+│   └── test.sh          # System testing
+├── docker-compose.yml    # Container orchestration
+├── DEPLOYMENT.md         # Deployment guide
+├── ARCHITECTURE.md       # Technical architecture
+└── README.md            # This documentation
+```
+
 ## 🔧 Key API Endpoints
 
 ### Document Management
