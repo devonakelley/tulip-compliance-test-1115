@@ -780,15 +780,15 @@ async def get_dashboard_data(current_user: dict = Depends(get_current_user)):
     """Get dashboard overview data - Tenant-aware"""
     try:
         tenant_id = current_user["tenant_id"]
-        # Get latest analysis
-        analysis = await db.compliance_analyses.find_one({}, {"_id": 0}, sort=[("analysis_date", -1)])
+        # Get latest analysis (tenant-specific)
+        analysis = await db.compliance_analyses.find_one({"tenant_id": tenant_id}, {"_id": 0}, sort=[("analysis_date", -1)])
         
-        # Get document counts
-        total_docs = await db.qsp_documents.count_documents({})
-        total_mappings = await db.clause_mappings.count_documents({})
+        # Get document counts (tenant-specific)
+        total_docs = await db.qsp_documents.count_documents({"tenant_id": tenant_id})
+        total_mappings = await db.clause_mappings.count_documents({"tenant_id": tenant_id})
         
-        # Get ISO summary
-        iso_summary = await db.iso_summaries.find_one({}, {"_id": 0})
+        # Get ISO summary (tenant-specific)
+        iso_summary = await db.iso_summaries.find_one({"tenant_id": tenant_id}, {"_id": 0})
         
         if analysis:
             analysis = parse_from_mongo(analysis)
