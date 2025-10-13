@@ -620,6 +620,7 @@ async def run_clause_mapping(current_user: dict = Depends(get_current_user)):
                 for mapping in mappings:
                     if mapping.get('confidence_score', 0) > 0.3:  # Only store high-confidence mappings
                         clause_mapping = ClauseMapping(
+                            tenant_id=tenant_id,
                             qsp_id=qsp_doc['id'],
                             qsp_filename=qsp_doc['filename'],
                             section_title=section_title,
