@@ -850,7 +850,7 @@ async def get_clause_mappings(current_user: dict = Depends(get_current_user)):
     """Get all clause mappings - Tenant-aware"""
     try:
         tenant_id = current_user["tenant_id"]
-        mappings = await db.clause_mappings.find({}, {"_id": 0}).to_list(length=None)
+        mappings = await db.clause_mappings.find({"tenant_id": tenant_id}, {"_id": 0}).to_list(length=None)
         return [parse_from_mongo(mapping) for mapping in mappings]
     except Exception as e:
         logger.error(f"Error getting mappings: {e}")
