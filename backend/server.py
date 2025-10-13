@@ -599,8 +599,8 @@ async def run_clause_mapping(current_user: dict = Depends(get_current_user)):
             "8.5 Improvement"
         ]
         
-        # Clear existing mappings
-        await db.clause_mappings.delete_many({})
+        # Clear existing mappings for this tenant
+        await db.clause_mappings.delete_many({"tenant_id": tenant_id})
         
         total_mappings = 0
         
