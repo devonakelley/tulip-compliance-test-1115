@@ -846,9 +846,10 @@ async def get_compliance_gaps(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/mappings")
-async def get_clause_mappings():
-    """Get all clause mappings"""
+async def get_clause_mappings(current_user: dict = Depends(get_current_user)):
+    """Get all clause mappings - Tenant-aware"""
     try:
+        tenant_id = current_user["tenant_id"]
         mappings = await db.clause_mappings.find({}, {"_id": 0}).to_list(length=None)
         return [parse_from_mongo(mapping) for mapping in mappings]
     except Exception as e:
