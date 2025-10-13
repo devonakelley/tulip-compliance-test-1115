@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, UploadFile, File, HTTPException, Form, WebSocket
+from fastapi import FastAPI, APIRouter, UploadFile, File, HTTPException, Form, WebSocket, Depends
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -16,6 +16,11 @@ import re
 import base64
 from docx import Document
 from emergentintegrations.llm.chat import LlmChat, UserMessage
+
+# Import multi-tenant components
+from api import auth as auth_router_module
+from core.auth import get_current_user, get_current_user_optional
+from core.storage_service import storage_service
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
