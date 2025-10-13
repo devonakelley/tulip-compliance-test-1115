@@ -702,6 +702,7 @@ async def run_compliance_analysis(current_user: dict = Depends(get_current_user)
             
             if not found_mapping:
                 gap = ComplianceGap(
+                    tenant_id=tenant_id,
                     qsp_id="",
                     qsp_filename="Multiple",
                     iso_clause=changed_clause,
