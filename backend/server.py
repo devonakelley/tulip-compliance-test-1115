@@ -38,16 +38,18 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Pydantic Models
+# Pydantic Models - Multi-tenant aware
 class QSPDocument(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str  # Multi-tenant isolation
     filename: str
     content: str
     sections: Dict[str, str] = Field(default_factory=dict)
     upload_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     processed: bool = False
+    uploaded_by: Optional[str] = None  # user_id
 
 class ISOSummary(BaseModel):
     model_config = ConfigDict(extra="ignore")
