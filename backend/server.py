@@ -95,6 +95,7 @@ class ComplianceAnalysis(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str  # Multi-tenant isolation
     overall_score: float
     total_documents: int
     compliant_documents: int
