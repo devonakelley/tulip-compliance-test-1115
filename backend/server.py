@@ -522,11 +522,20 @@ async def upload_iso_summary(
                 elif current_section == "modified":
                     modified_clauses.append(clause_info)
         
-        # Create ISO summary
+        # Save file to storage (local or S3)
+        file_path = storage_service.save_file(
+            tenant_id=tenant_id,
+            file_obj=io.BytesIO(content),
+            filename=file.filename
+        )
+        
+        # Create ISO summary with tenant_id
         iso_summary = ISOSummary(
+            tenant_id=tenant_id,
             content=text_content,
             new_clauses=new_clauses,
-            modified_clauses=modified_clauses
+            modified_clauses=modified_clauses,
+            uploaded_by=user_id
         )
         
         # Store in MongoDB
