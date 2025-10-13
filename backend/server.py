@@ -776,9 +776,10 @@ async def run_compliance_analysis(current_user: dict = Depends(get_current_user)
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/dashboard")
-async def get_dashboard_data():
-    """Get dashboard overview data"""
+async def get_dashboard_data(current_user: dict = Depends(get_current_user)):
+    """Get dashboard overview data - Tenant-aware"""
     try:
+        tenant_id = current_user["tenant_id"]
         # Get latest analysis
         analysis = await db.compliance_analyses.find_one({}, {"_id": 0}, sort=[("analysis_date", -1)])
         
