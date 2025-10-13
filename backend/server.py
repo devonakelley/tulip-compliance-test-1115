@@ -824,10 +824,11 @@ async def get_qsp_documents(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/gaps")
-async def get_compliance_gaps():
-    """Get detailed compliance gaps"""
+async def get_compliance_gaps(current_user: dict = Depends(get_current_user)):
+    """Get detailed compliance gaps - Tenant-aware"""
     try:
-        analysis = await db.compliance_analyses.find_one({}, {"_id": 0}, sort=[("analysis_date", -1)])
+        tenant_id = current_user["tenant_id"]
+        analysis = await db.compliance_analyses.find_one({"tenant_id": tenant_id}, {"_id": 0}, sort=[("analysis_date", -1)])
         
         if not analysis:
             return {"gaps": [], "message": "No compliance analysis found. Run analysis first."}
