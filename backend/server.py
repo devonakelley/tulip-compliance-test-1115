@@ -556,11 +556,13 @@ async def upload_iso_summary(
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.post("/analysis/run-mapping")
-async def run_clause_mapping():
-    """Run AI-powered clause mapping for all QSP documents"""
+async def run_clause_mapping(current_user: dict = Depends(get_current_user)):
+    """Run AI-powered clause mapping for all QSP documents - Tenant-aware"""
     try:
-        # Get all QSP documents
-        qsp_docs = await db.qsp_documents.find({}, {"_id": 0}).to_list(length=None)
+        tenant_id = current_user["tenant_id"]
+        
+        # Get all QSP documents for this tenant only
+        qsp_docs = await db.qsp_documents.find({"tenant_id": tenant_id}, {"_id": 0}).to_list(length=None)
         
         if not qsp_docs:
             raise HTTPException(status_code=404, detail="No QSP documents found")
