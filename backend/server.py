@@ -31,7 +31,7 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # Create the main app without a prefix
-app = FastAPI(title="QSP Compliance Checker", version="1.0.0")
+app = FastAPI(title="QSP Compliance Checker - Multi-Tenant", version="2.0.0")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
@@ -42,6 +42,10 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Setup auth router with database
+auth_router_module.set_database(db)
+api_router.include_router(auth_router_module.router)
 
 # Pydantic Models - Multi-tenant aware
 class QSPDocument(BaseModel):
