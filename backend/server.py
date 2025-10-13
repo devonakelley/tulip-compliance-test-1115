@@ -813,10 +813,11 @@ async def get_dashboard_data(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/documents", response_model=List[Dict[str, Any]])
-async def get_qsp_documents():
-    """Get all QSP documents"""
+async def get_qsp_documents(current_user: dict = Depends(get_current_user)):
+    """Get all QSP documents - Tenant-aware"""
     try:
-        docs = await db.qsp_documents.find({}, {"_id": 0}).to_list(length=None)
+        tenant_id = current_user["tenant_id"]
+        docs = await db.qsp_documents.find({"tenant_id": tenant_id}, {"_id": 0}).to_list(length=None)
         return [parse_from_mongo(doc) for doc in docs]
     except Exception as e:
         logger.error(f"Error getting documents: {e}")
