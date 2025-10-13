@@ -407,9 +407,15 @@ async def get_test_documents():
         }
 
 @api_router.post("/documents/upload")
-async def upload_qsp_document(file: UploadFile = File(...)):
-    """Upload a QSP document (.docx or .txt)"""
+async def upload_qsp_document(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload a QSP document (.docx or .txt) - Tenant-aware"""
     try:
+        tenant_id = current_user["tenant_id"]
+        user_id = current_user["user_id"]
+        
         if not file.filename:
             raise HTTPException(status_code=400, detail="No filename provided")
         
@@ -419,12 +425,19 @@ async def upload_qsp_document(file: UploadFile = File(...)):
         
         if file_ext not in allowed_extensions:
             raise HTTPException(
-                status_code=400,  # Changed from 500 to 400 for proper error code
+                status_code=400,
                 detail=f"Unsupported file type. Allowed: {allowed_extensions}"
             )
         
         # Read file content
         content = await file.read()
+        
+        # Save file to storage (local or S3)
+        file_path = storage_service.save_file(
+            tenant_id=tenant_id,
+            file_obj=io.BytesIO(content),
+            filename=file.filename
+        )
         
         # Extract text
         if file_ext == '.docx':
@@ -435,12 +448,14 @@ async def upload_qsp_document(file: UploadFile = File(...)):
         # Parse into sections
         sections = await parse_document_sections(text_content, file.filename)
         
-        # Create QSP document
+        # Create QSP document with tenant_id
         qsp_doc = QSPDocument(
+            tenant_id=tenant_id,
             filename=file.filename,
             content=text_content,
             sections=sections,
-            processed=True
+            processed=True,
+            uploaded_by=user_id
         )
         
         # Store in MongoDB
