@@ -55,12 +55,14 @@ class ISOSummary(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str  # Multi-tenant isolation
     framework: str = "ISO_13485"
     version: str = "2024_summary"
     content: str
     new_clauses: List[Dict[str, str]] = Field(default_factory=list)
     modified_clauses: List[Dict[str, str]] = Field(default_factory=list)
     upload_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    uploaded_by: Optional[str] = None  # user_id
 
 class ClauseMapping(BaseModel):
     model_config = ConfigDict(extra="ignore")
