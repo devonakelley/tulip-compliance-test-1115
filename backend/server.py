@@ -479,9 +479,15 @@ async def upload_qsp_document(
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.post("/iso-summary/upload")
-async def upload_iso_summary(file: UploadFile = File(...)):
-    """Upload ISO 13485:2024 Summary of Changes"""
+async def upload_iso_summary(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload ISO 13485:2024 Summary of Changes - Tenant-aware"""
     try:
+        tenant_id = current_user["tenant_id"]
+        user_id = current_user["user_id"]
+        
         if not file.filename:
             raise HTTPException(status_code=400, detail="No filename provided")
         
