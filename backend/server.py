@@ -719,6 +719,7 @@ async def run_compliance_analysis(current_user: dict = Depends(get_current_user)
             elif low_confidence:
                 for mapping in low_confidence:
                     gap = ComplianceGap(
+                        tenant_id=tenant_id,
                         qsp_id=mapping['qsp_id'],
                         qsp_filename=mapping['qsp_filename'],
                         iso_clause=mapping['iso_clause'],
