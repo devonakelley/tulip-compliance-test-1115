@@ -567,8 +567,8 @@ async def run_clause_mapping(current_user: dict = Depends(get_current_user)):
         if not qsp_docs:
             raise HTTPException(status_code=404, detail="No QSP documents found")
         
-        # Get ISO summary for clauses
-        iso_summary = await db.iso_summaries.find_one({}, {"_id": 0})
+        # Get ISO summary for clauses (tenant-specific)
+        iso_summary = await db.iso_summaries.find_one({"tenant_id": tenant_id}, {"_id": 0})
         if not iso_summary:
             raise HTTPException(status_code=404, detail="No ISO summary found")
         
