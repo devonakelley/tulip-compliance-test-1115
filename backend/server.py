@@ -647,16 +647,18 @@ async def run_clause_mapping(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.post("/analysis/run-compliance")
-async def run_compliance_analysis():
-    """Run compliance gap analysis"""
+async def run_compliance_analysis(current_user: dict = Depends(get_current_user)):
+    """Run compliance gap analysis - Tenant-aware"""
     try:
-        # Get ISO summary and mappings
-        iso_summary = await db.iso_summaries.find_one({}, {"_id": 0})
+        tenant_id = current_user["tenant_id"]
+        
+        # Get ISO summary and mappings (tenant-specific)
+        iso_summary = await db.iso_summaries.find_one({"tenant_id": tenant_id}, {"_id": 0})
         if not iso_summary:
             raise HTTPException(status_code=404, detail="No ISO summary found")
         
-        mappings = await db.clause_mappings.find({}, {"_id": 0}).to_list(length=None)
-        qsp_docs = await db.qsp_documents.find({}, {"_id": 0}).to_list(length=None)
+        mappings = await db.clause_mappings.find({"tenant_id": tenant_id}, {"_id": 0}).to_list(length=None)
+        qsp_docs = await db.qsp_documents.find({"tenant_id": tenant_id}, {"_id": 0}).to_list(length=None)
         
         if not mappings:
             raise HTTPException(status_code=404, detail="No clause mappings found. Run mapping first.")
