@@ -746,8 +746,9 @@ async def run_compliance_analysis(current_user: dict = Depends(get_current_user)
         # Get affected documents
         affected_docs = list(set(gap.qsp_filename for gap in gaps if gap.qsp_filename != "Multiple"))
         
-        # Create analysis
+        # Create analysis with tenant_id
         analysis = ComplianceAnalysis(
+            tenant_id=tenant_id,
             overall_score=round(overall_score, 2),
             total_documents=len(qsp_docs),
             compliant_documents=len(qsp_docs) - len(affected_docs),
@@ -757,7 +758,7 @@ async def run_compliance_analysis(current_user: dict = Depends(get_current_user)
         
         # Store analysis
         analysis_dict = prepare_for_mongo(analysis.model_dump())
-        await db.compliance_analyses.delete_many({})  # Keep only latest
+        await db.compliance_analyses.delete_many({"tenant_id": tenant_id})  # Keep only latest for this tenant
         await db.compliance_analyses.insert_one(analysis_dict)
         
         logger.info(f"Compliance analysis completed. Found {len(gaps)} gaps.")
