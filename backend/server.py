@@ -561,6 +561,15 @@ async def upload_iso_summary(
         
         logger.info(f"Uploaded ISO summary: {file.filename}")
         
+        # Log audit event
+        await audit_logger.log_upload(
+            tenant_id=tenant_id,
+            user_id=user_id,
+            filename=file.filename,
+            file_type="iso_summary",
+            file_size=len(content)
+        )
+        
         return {
             "message": "ISO summary uploaded successfully",
             "summary_id": iso_summary.id,
