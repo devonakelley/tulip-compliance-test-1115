@@ -134,6 +134,13 @@ async def login(credentials: UserLogin):
         
         logger.info(f"User logged in: {user.email} (tenant: {user.tenant_id})")
         
+        # Log audit event
+        await audit_logger.log_login(
+            tenant_id=user.tenant_id,
+            user_id=user.id,
+            email=user.email
+        )
+        
         return Token(
             access_token=token,
             user_id=user.id,
