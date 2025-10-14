@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from models.user import User, UserCreate, UserLogin, Token
 from models.tenant import Tenant, TenantCreate
 from core.auth import auth_service, get_current_user
+from core.audit_logger import audit_logger
 
 logger = logging.getLogger(__name__)
 
