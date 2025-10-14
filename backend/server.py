@@ -662,11 +662,34 @@ async def run_clause_mapping(current_user: dict = Depends(get_current_user)):
         
         logger.info(f"Generated {total_mappings} clause mappings")
         
-        return {
+        # Prepare report results
+        results = {
             "message": "Clause mapping completed successfully",
             "total_documents_processed": len(qsp_docs),
-            "total_mappings_generated": total_mappings
+            "total_mappings_generated": total_mappings,
+            "summary": f"Analyzed {len(qsp_docs)} documents and generated {total_mappings} clause mappings"
         }
+        
+        # Save report
+        report_service = ReportService(db)
+        report_path = await report_service.save_report(
+            tenant_id=tenant_id,
+            user_id=current_user["user_id"],
+            filename=f"{len(qsp_docs)}_documents",
+            analysis_type="clause_mapping",
+            results=results
+        )
+        
+        # Log audit event
+        await audit_logger.log_analysis(
+            tenant_id=tenant_id,
+            user_id=current_user["user_id"],
+            analysis_type="clause_mapping",
+            document_count=len(qsp_docs),
+            report_path=report_path
+        )
+        
+        return results
         
     except Exception as e:
         logger.error(f"Error running clause mapping: {e}")
