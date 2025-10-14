@@ -757,16 +757,56 @@ function App() {
   return (
     <div className="App min-h-screen bg-gray-50">
       <BrowserRouter>
-        <Navigation />
-        <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/upload" element={<DocumentUpload />} />
-            <Route path="/analysis" element={<Analysis />} />
-            <Route path="/gaps" element={<Gaps />} />
-          </Routes>
-        </main>
-        <Toaster />
+        <AuthProvider>
+          <Navigation />
+          <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/upload" 
+                element={
+                  <ProtectedRoute>
+                    <DocumentUpload />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/analysis" 
+                element={
+                  <ProtectedRoute>
+                    <Analysis />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/gaps" 
+                element={
+                  <ProtectedRoute>
+                    <Gaps />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/reports" 
+                element={
+                  <ProtectedRoute>
+                    <Reports />
+                  </ProtectedRoute>
+                } 
+              />
+            </Routes>
+          </main>
+          <Toaster />
+        </AuthProvider>
       </BrowserRouter>
     </div>
   );
