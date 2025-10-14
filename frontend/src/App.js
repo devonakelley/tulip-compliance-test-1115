@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import '@/App.css';
+
+// Auth Context & Components
+import { AuthProvider, useAuth } from './context/AuthContext';
+import Login from './components/Login';
+import ProtectedRoute from './components/ProtectedRoute';
+import Reports from './components/Reports';
 
 // Shadcn UI Components
 import { Button } from '@/components/ui/button';
@@ -28,7 +34,9 @@ import {
   TrendingUp,
   Shield,
   FileCheck,
-  AlertCircle
+  AlertCircle,
+  LogOut,
+  User
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
