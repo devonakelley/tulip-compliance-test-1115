@@ -678,12 +678,23 @@ const Gaps = () => {
 // Navigation Component
 const Navigation = () => {
   const location = useLocation();
+  const { user, logout, isAuthenticated } = useAuth();
+  
+  // Don't show navigation on login page
+  if (location.pathname === '/login') {
+    return null;
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
   
   const navItems = [
-    { path: '/', label: 'Dashboard', icon: Home },
+    { path: '/dashboard', label: 'Dashboard', icon: Home },
     { path: '/upload', label: 'Documents', icon: Upload },
     { path: '/analysis', label: 'Analysis', icon: BarChart3 },
-    { path: '/gaps', label: 'Gaps', icon: AlertTriangle }
+    { path: '/gaps', label: 'Gaps', icon: AlertTriangle },
+    { path: '/reports', label: 'Reports', icon: FileText }
   ];
 
   return (
@@ -717,6 +728,23 @@ const Navigation = () => {
                 );
               })}
             </div>
+          </div>
+          
+          {/* User Menu */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <User className="h-4 w-4" />
+              <span>{user?.email}</span>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={logout}
+              className="flex items-center gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </Button>
           </div>
         </div>
       </div>
