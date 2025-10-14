@@ -190,7 +190,7 @@ class AuditLogger:
         Returns:
             Statistics dictionary
         """
-        if not self.collection:
+        if self.collection is None:
             return {}
         
         try:
