@@ -19,8 +19,11 @@ from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 # Import multi-tenant components
 from api import auth as auth_router_module
+from api import reports as reports_router_module
 from core.auth import get_current_user, get_current_user_optional
 from core.storage_service import storage_service
+from core.report_service import ReportService
+from core.audit_logger import audit_logger
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
