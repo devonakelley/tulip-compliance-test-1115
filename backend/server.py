@@ -812,6 +812,37 @@ async def run_compliance_analysis(current_user: dict = Depends(get_current_user)
         
         logger.info(f"Compliance analysis completed. Found {len(gaps)} gaps.")
         
+        # Prepare report results
+        results = {
+            "message": "Compliance analysis completed successfully",
+            "overall_score": analysis.overall_score,
+            "gaps_found": len(gaps),
+            "affected_documents": len(affected_docs),
+            "analysis_id": analysis.id,
+            "total_documents": len(qsp_docs),
+            "gaps": [gap.model_dump() for gap in gaps],
+            "summary": f"Analyzed {len(qsp_docs)} documents. Compliance score: {analysis.overall_score}%. Found {len(gaps)} gaps."
+        }
+        
+        # Save report
+        report_service = ReportService(db)
+        report_path = await report_service.save_report(
+            tenant_id=tenant_id,
+            user_id=current_user["user_id"],
+            filename=f"compliance_analysis_{analysis.id}",
+            analysis_type="compliance_gap_analysis",
+            results=results
+        )
+        
+        # Log audit event
+        await audit_logger.log_analysis(
+            tenant_id=tenant_id,
+            user_id=current_user["user_id"],
+            analysis_type="compliance_gap_analysis",
+            document_count=len(qsp_docs),
+            report_path=report_path
+        )
+        
         return {
             "message": "Compliance analysis completed successfully",
             "overall_score": analysis.overall_score,
