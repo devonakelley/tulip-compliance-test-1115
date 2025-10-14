@@ -472,6 +472,15 @@ async def upload_qsp_document(
         
         logger.info(f"Uploaded QSP document: {file.filename}")
         
+        # Log audit event
+        await audit_logger.log_upload(
+            tenant_id=tenant_id,
+            user_id=user_id,
+            filename=file.filename,
+            file_type="qsp_document",
+            file_size=len(content)
+        )
+        
         return {
             "message": "Document uploaded successfully",
             "document_id": qsp_doc.id,
