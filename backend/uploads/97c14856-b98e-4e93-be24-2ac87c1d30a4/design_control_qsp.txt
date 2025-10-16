@@ -1,0 +1,39 @@
+Quality System Procedure - Design Control
+
+1. PURPOSE
+This procedure establishes requirements for design control activities to ensure that medical devices meet specified requirements and are safe and effective.
+
+2. SCOPE
+This procedure applies to all design and development activities for medical devices.
+
+3. DESIGN PLANNING
+3.1 Design and development planning shall be documented and updated as the design evolves.
+3.2 Planning shall identify:
+- Design stages and milestones
+- Review, verification, and validation activities
+- Responsibilities and authorities
+- Resource requirements
+
+4. DESIGN INPUTS
+4.1 Design inputs shall be documented and include:
+- Functional and performance requirements
+- Applicable regulatory requirements
+- Safety requirements
+- Risk management requirements
+
+5. DESIGN OUTPUTS
+5.1 Design outputs shall be documented and include:
+- Specifications for the device
+- Manufacturing specifications
+- Acceptance criteria
+- Risk analysis results
+
+6. DESIGN REVIEW
+6.1 Design reviews shall be conducted at appropriate stages of design development.
+6.2 Reviews shall evaluate the ability of the design to meet requirements.
+
+7. DESIGN VERIFICATION
+7.1 Design verification shall confirm that design outputs meet design inputs.
+
+8. DESIGN VALIDATION
+8.1 Design validation shall confirm that the device meets user needs and intended use.
