@@ -282,18 +282,20 @@ const DocumentUpload = () => {
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
               <Upload className="mx-auto h-12 w-12 text-gray-400" />
               <div className="mt-4">
+                <input
+                  id="qsp-file"
+                  type="file"
+                  accept=".docx,.txt"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => handleFileUpload(e, 'qsp')}
+                />
                 <label htmlFor="qsp-file" className="cursor-pointer">
-                  <Button disabled={uploading} data-testid="qsp-upload-btn">
-                    {uploading ? 'Uploading...' : 'Select QSP Files'}
+                  <Button asChild disabled={uploading} data-testid="qsp-upload-btn">
+                    <span>
+                      {uploading ? 'Uploading...' : 'Select QSP Files'}
+                    </span>
                   </Button>
-                  <input
-                    id="qsp-file"
-                    type="file"
-                    accept=".docx,.txt"
-                    multiple
-                    className="hidden"
-                    onChange={(e) => handleFileUpload(e, 'qsp')}
-                  />
                 </label>
               </div>
               <p className="mt-2 text-sm text-muted-foreground">
