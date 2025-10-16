@@ -42,6 +42,14 @@ class RAGService:
         Uses text-embedding-3-small (1536 dimensions)
         """
         try:
+            # Lazy load OpenAI client
+            if self.openai_client is None:
+                self.emergent_key = os.getenv("EMERGENT_LLM_KEY")
+                if not self.emergent_key:
+                    raise Exception("EMERGENT_LLM_KEY not found in environment")
+                self.openai_client = OpenAI(api_key=self.emergent_key)
+                logger.info("OpenAI client initialized with Emergent LLM key")
+            
             # Clean text - remove excessive whitespace
             text = ' '.join(text.split())
             
