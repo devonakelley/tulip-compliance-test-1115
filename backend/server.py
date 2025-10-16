@@ -55,12 +55,14 @@ logger = logging.getLogger(__name__)
 auth_router_module.set_database(db)
 reports_router_module.set_database(db)
 regulatory_router_module.set_database(db)
+rag_router_module.set_database(db)
 audit_logger.set_database(db)
 
 # Register routers
 api_router.include_router(auth_router_module.router)
 api_router.include_router(reports_router_module.router)
 api_router.include_router(regulatory_router_module.router)
+api_router.include_router(rag_router_module.router)
 
 # Pydantic Models - Multi-tenant aware
 class QSPDocument(BaseModel):
