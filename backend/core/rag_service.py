@@ -40,30 +40,31 @@ class RAGService:
     
     def _get_embedding(self, text: str) -> List[float]:
         """
-        Get embedding using Emergent LLM API
-        Falls back to simple hash-based embedding if API fails
+        Get embedding using OpenAI API via Emergent LLM key
+        Uses text-embedding-3-small (1536 dimensions)
         """
         try:
-            # Use Emergent LLM for embeddings via text generation
-            # Since we don't have direct embedding API, we'll use a simple approach
-            # Create a deterministic embedding from text hash
-            text_hash = hashlib.sha256(text.encode()).digest()
-            # Convert to 384-dimensional vector (common embedding size)
-            embedding = []
-            for i in range(0, len(text_hash), 2):
-                val = (text_hash[i] * 256 + text_hash[i+1]) / 65535.0
-                embedding.append(val)
+            # Clean text - remove excessive whitespace
+            text = ' '.join(text.split())
             
-            # Pad or truncate to 384 dimensions
-            while len(embedding) < 384:
-                embedding.extend(embedding[:min(384-len(embedding), len(embedding))])
-            embedding = embedding[:384]
+            # Truncate if too long (8191 tokens max for embeddings)
+            if len(text) > 8000:
+                text = text[:8000]
             
+            # Get embedding from OpenAI
+            response = self.openai_client.embeddings.create(
+                input=text,
+                model=self.embedding_model
+            )
+            
+            embedding = response.data[0].embedding
+            
+            logger.debug(f"Generated embedding with {len(embedding)} dimensions")
             return embedding
             
         except Exception as e:
-            logger.error(f"Embedding generation failed: {e}")
-            raise
+            logger.error(f"OpenAI embedding generation failed: {e}")
+            raise Exception(f"Failed to generate embedding: {str(e)}")
     
     def _chunk_document(self, text: str, chunk_size: int = 500, overlap: int = 50) -> List[Dict[str, Any]]:
         """
