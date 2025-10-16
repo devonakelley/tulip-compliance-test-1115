@@ -335,42 +335,54 @@ const DocumentUpload = () => {
           </CardContent>
         </Card>
 
-        {/* ISO Summary Upload */}
-        <Card data-testid="iso-upload-card">
+        {/* Regulatory Document Upload */}
+        <Card data-testid="regulatory-upload-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
-              ISO 13485:2024 Summary
+              Regulatory Documents
             </CardTitle>
             <CardDescription>
-              Upload the Summary of Changes document
+              Upload full regulatory standards (ISO, FDA, MDR, etc.)
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
               <Upload className="mx-auto h-12 w-12 text-gray-400" />
-              <div className="mt-4">
+              <div className="mt-4 space-y-3">
+                <select
+                  id="regulatory-framework"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  disabled={uploading}
+                >
+                  <option value="ISO_13485">ISO 13485 (Medical Devices QMS)</option>
+                  <option value="ISO_14971">ISO 14971 (Risk Management)</option>
+                  <option value="FDA_21CFR820">FDA 21 CFR Part 820 (QSR)</option>
+                  <option value="MDR">EU MDR 2017/745</option>
+                  <option value="ISO_62304">ISO 62304 (Software Lifecycle)</option>
+                  <option value="OTHER">Other Regulatory Standard</option>
+                </select>
                 <input
-                  id="iso-file"
+                  id="regulatory-file"
                   type="file"
-                  accept=".docx,.txt,.pdf"
+                  accept=".pdf,.docx,.txt"
                   className="hidden"
-                  onChange={(e) => handleFileUpload(e, 'iso')}
+                  onChange={(e) => handleFileUpload(e, 'regulatory')}
                 />
                 <label 
-                  htmlFor="iso-file" 
+                  htmlFor="regulatory-file" 
                   className={`inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
                     uploading 
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                       : 'bg-secondary text-secondary-foreground hover:bg-secondary/80 cursor-pointer'
                   } h-10 px-4 py-2`}
-                  data-testid="iso-upload-btn"
+                  data-testid="regulatory-upload-btn"
                 >
-                  {uploading ? 'Uploading...' : 'Select ISO Summary'}
+                  {uploading ? 'Uploading...' : 'Select Regulatory Document'}
                 </label>
               </div>
               <p className="mt-2 text-sm text-muted-foreground">
-                ISO 13485:2024 Summary of Changes
+                Upload complete regulatory standards for accurate compliance checking
               </p>
             </div>
           </CardContent>
