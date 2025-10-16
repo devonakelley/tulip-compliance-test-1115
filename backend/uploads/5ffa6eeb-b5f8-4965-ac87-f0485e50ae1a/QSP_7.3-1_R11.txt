@@ -1,0 +1,63 @@
+
+    QSP 7.3-1 Design Control Procedure R11
+    
+    1.0 PURPOSE
+    This procedure establishes requirements for design and development of medical devices
+    to ensure compliance with regulatory requirements.
+    
+    2.0 SCOPE
+    Applies to all design and development activities for Class II and Class III medical devices.
+    
+    3.0 RESPONSIBILITIES
+    - Design Manager: Overall responsibility for design control
+    - Quality Assurance: Review and approval of design documentation
+    - Regulatory Affairs: Ensure regulatory compliance
+    
+    4.0 PROCEDURE
+    
+    4.1 Design Planning
+    All design projects shall have a documented design plan including:
+    - Project timeline and milestones
+    - Resource allocation
+    - Design review schedule
+    - Verification and validation activities
+    - Risk management activities per ISO 14971
+    
+    4.2 Design Inputs
+    Design inputs shall be documented on Form 7.3-1-A Design Input Checklist.
+    Inputs shall include:
+    - User requirements and intended use
+    - Performance specifications
+    - Regulatory requirements (FDA 510(k), ISO 13485)
+    - Safety requirements
+    
+    4.3 Design Outputs
+    Design outputs shall be documented and include:
+    - Design specifications (see WI-ENG-003)
+    - Manufacturing drawings
+    - Bill of materials
+    - Assembly procedures
+    
+    4.4 Design Review
+    Design reviews shall be conducted at defined stages.
+    Reviews documented on Form 7.3-2-B Design Review Report.
+    
+    4.5 Design Verification
+    Verification testing per WI-TEST-015 shall confirm outputs meet inputs.
+    
+    4.6 Design Validation
+    Clinical evaluation or usability testing shall validate device meets user needs.
+    
+    4.7 Design Changes
+    All design changes shall follow QSP 4.3-2 Change Control.
+    
+    5.0 DOCUMENTATION
+    - F-7.3-1-A: Design Input Checklist
+    - F-7.3-2-B: Design Review Report
+    - F-7.3-3-C: Verification Test Report
+    
+    6.0 REFERENCES
+    - ISO 13485:2016 Clause 7.3
+    - FDA 21 CFR 820.30
+    - ISO 14971 Risk Management
+    
