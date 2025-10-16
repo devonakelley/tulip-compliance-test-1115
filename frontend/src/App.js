@@ -320,17 +320,19 @@ const DocumentUpload = () => {
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
               <Upload className="mx-auto h-12 w-12 text-gray-400" />
               <div className="mt-4">
+                <input
+                  id="iso-file"
+                  type="file"
+                  accept=".docx,.txt,.pdf"
+                  className="hidden"
+                  onChange={(e) => handleFileUpload(e, 'iso')}
+                />
                 <label htmlFor="iso-file" className="cursor-pointer">
-                  <Button variant="secondary" disabled={uploading} data-testid="iso-upload-btn">
-                    {uploading ? 'Uploading...' : 'Select ISO Summary'}
+                  <Button asChild variant="secondary" disabled={uploading} data-testid="iso-upload-btn">
+                    <span>
+                      {uploading ? 'Uploading...' : 'Select ISO Summary'}
+                    </span>
                   </Button>
-                  <input
-                    id="iso-file"
-                    type="file"
-                    accept=".docx,.txt,.pdf"
-                    className="hidden"
-                    onChange={(e) => handleFileUpload(e, 'iso')}
-                  />
                 </label>
               </div>
               <p className="mt-2 text-sm text-muted-foreground">
