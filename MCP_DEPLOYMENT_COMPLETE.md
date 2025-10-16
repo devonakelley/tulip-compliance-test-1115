@@ -5,7 +5,7 @@
 ### ✅ What's Available Now
 
 #### 1. Web Interface (Active)
-- **URL**: https://doccom-analyzer.preview.emergentagent.com
+- **URL**: https://compliancerag-1.preview.emergentagent.com
 - **Status**: ✅ Fully functional
 - **Users**: Quality teams, auditors, managers
 - **Features**: Visual dashboard, document upload, interactive reports
