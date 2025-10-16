@@ -288,11 +288,17 @@ software lifecycle processes, and cybersecurity considerations for medical devic
         """Test ISO summary upload"""
         test_file = None
         try:
+            if not self.auth_token:
+                self.log_test("ISO Summary Upload", False, "No authentication token")
+                return False, {}
+            
             test_file = self.create_test_iso_summary()
+            
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
             
             with open(test_file, 'rb') as f:
                 files = {'file': ('iso_13485_2024_summary.txt', f, 'text/plain')}
-                response = requests.post(f"{self.api_url}/iso-summary/upload", files=files, timeout=30)
+                response = requests.post(f"{self.api_url}/iso-summary/upload", files=files, headers=headers, timeout=30)
             
             success = response.status_code == 200
             
