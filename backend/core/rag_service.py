@@ -39,7 +39,7 @@ class RAGService:
     def _get_embedding(self, text: str) -> List[float]:
         """
         Get embedding using OpenAI API
-        Uses text-embedding-3-small (1536 dimensions)
+        Uses text-embedding-3-large (3072 dimensions) for highest accuracy
         """
         try:
             # Lazy load OpenAI client
