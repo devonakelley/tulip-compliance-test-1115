@@ -254,11 +254,17 @@ software lifecycle processes, and cybersecurity considerations for medical devic
         """Test QSP document upload"""
         test_file = None
         try:
+            if not self.auth_token:
+                self.log_test("QSP Document Upload", False, "No authentication token")
+                return False, {}
+            
             test_file = self.create_test_qsp_file()
+            
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
             
             with open(test_file, 'rb') as f:
                 files = {'file': ('test_qsp_document.txt', f, 'text/plain')}
-                response = requests.post(f"{self.api_url}/documents/upload", files=files, timeout=30)
+                response = requests.post(f"{self.api_url}/documents/upload", files=files, headers=headers, timeout=30)
             
             success = response.status_code == 200
             
