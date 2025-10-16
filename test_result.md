@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: Build a robust, enterprise-grade QSP Compliance Checker that takes regulatory standard changes (like ISO 13485:2024) and alerts companies where their internal QSP documents need updates. System processes manual G-drive uploads of both QSP docs and regulatory change summaries, uses AI-powered impact analysis with Emergent LLM key, and generates specific alerts like "ISO change detected that impacts QSP doc X in section X" via dashboard notifications, email alerts, and detailed reports.
+user_problem_statement: Build a robust, enterprise-grade QSP Compliance Checker that takes regulatory standard changes (like ISO 13485:2024) and alerts companies where their internal QSP documents need updates. System processes manual uploads of both QSP docs and regulatory change summaries, uses AI-powered impact analysis with RAG (Retrieval Augmented Generation) using OpenAI text-embedding-3-large for accurate semantic matching, and generates specific alerts via dashboard notifications and detailed reports.
 
 backend:
   - task: "Enterprise QSP system foundation setup"
@@ -140,6 +140,18 @@ backend:
       - working: true
         agent: "main"
         comment: "Installed all required packages: motor, pymongo, AI libraries, middleware dependencies"
+
+  - task: "OpenAI text-embedding-3-large integration for RAG"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/core/rag_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Updated RAG service to use OpenAI text-embedding-3-large (3072 dimensions) for highest accuracy semantic matching. Replaced text-embedding-3-small. OpenAI API key configured in .env file. Backend restarted successfully. Ready for comprehensive testing of document upload, embedding generation, and semantic search capabilities."
 
   - task: "Test basic system functionality"
     implemented: true
