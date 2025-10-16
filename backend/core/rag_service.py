@@ -38,17 +38,18 @@ class RAGService:
     
     def _get_embedding(self, text: str) -> List[float]:
         """
-        Get embedding using OpenAI API via Emergent LLM key
+        Get embedding using OpenAI API
         Uses text-embedding-3-small (1536 dimensions)
         """
         try:
             # Lazy load OpenAI client
             if self.openai_client is None:
-                self.emergent_key = os.getenv("EMERGENT_LLM_KEY")
-                if not self.emergent_key:
-                    raise Exception("EMERGENT_LLM_KEY not found in environment")
-                self.openai_client = OpenAI(api_key=self.emergent_key)
-                logger.info("OpenAI client initialized with Emergent LLM key")
+                # Use dedicated OpenAI key for embeddings
+                openai_key = os.getenv("OPENAI_API_KEY")
+                if not openai_key:
+                    raise Exception("OPENAI_API_KEY not found in environment")
+                self.openai_client = OpenAI(api_key=openai_key)
+                logger.info("OpenAI client initialized for embeddings")
             
             # Clean text - remove excessive whitespace
             text = ' '.join(text.split())
