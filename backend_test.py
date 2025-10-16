@@ -347,7 +347,8 @@ software lifecycle processes, and cybersecurity considerations for medical devic
     def test_clause_mapping_analysis(self):
         """Test AI clause mapping analysis"""
         try:
-            response = requests.post(f"{self.api_url}/analysis/run-mapping", timeout=60)
+            headers = {"Authorization": f"Bearer {self.auth_token}"} if self.auth_token else {}
+            response = requests.post(f"{self.api_url}/analysis/run-mapping", headers=headers, timeout=60)
             success = response.status_code == 200
             
             if success:
