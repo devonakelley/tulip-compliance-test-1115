@@ -165,7 +165,8 @@ class QSPComplianceAPITester:
     def test_dashboard_endpoint(self):
         """Test dashboard data endpoint"""
         try:
-            response = requests.get(f"{self.api_url}/dashboard", timeout=10)
+            headers = {"Authorization": f"Bearer {self.auth_token}"} if self.auth_token else {}
+            response = requests.get(f"{self.api_url}/dashboard", headers=headers, timeout=10)
             success = response.status_code == 200
             
             if success:
