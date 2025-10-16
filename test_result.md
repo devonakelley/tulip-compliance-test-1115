@@ -143,15 +143,18 @@ backend:
 
   - task: "OpenAI text-embedding-3-large integration for RAG"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/core/rag_service.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Updated RAG service to use OpenAI text-embedding-3-large (3072 dimensions) for highest accuracy semantic matching. Replaced text-embedding-3-small. OpenAI API key configured in .env file. Backend restarted successfully. Ready for comprehensive testing of document upload, embedding generation, and semantic search capabilities."
+      - working: true
+        agent: "testing"
+        comment: "COMPREHENSIVE RAG TESTING COMPLETED SUCCESSFULLY! ✅ OpenAI text-embedding-3-large (3072 dimensions) integration fully operational. Tested: 1) Document upload with embedding generation (11 chunks created), 2) Regulatory document listing (working), 3) Semantic search with distance scores (returning relevant results with proper similarity calculations), 4) Compliance checking between QSP and regulatory documents (functional), 5) Error handling for invalid frameworks and authentication. OpenAI API calls confirmed in logs - multiple successful POST requests to https://api.openai.com/v1/embeddings. All RAG endpoints (/api/rag/*) working correctly with proper authentication. System achieving high accuracy semantic matching as expected with 3072-dimensional embeddings."
 
   - task: "Test basic system functionality"
     implemented: true
