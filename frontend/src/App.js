@@ -290,12 +290,16 @@ const DocumentUpload = () => {
                   className="hidden"
                   onChange={(e) => handleFileUpload(e, 'qsp')}
                 />
-                <label htmlFor="qsp-file" className="cursor-pointer">
-                  <Button asChild disabled={uploading} data-testid="qsp-upload-btn">
-                    <span>
-                      {uploading ? 'Uploading...' : 'Select QSP Files'}
-                    </span>
-                  </Button>
+                <label 
+                  htmlFor="qsp-file" 
+                  className={`inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                    uploading 
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                      : 'bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer'
+                  } h-10 px-4 py-2`}
+                  data-testid="qsp-upload-btn"
+                >
+                  {uploading ? 'Uploading...' : 'Select QSP Files'}
                 </label>
               </div>
               <p className="mt-2 text-sm text-muted-foreground">
