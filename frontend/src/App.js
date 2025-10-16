@@ -329,7 +329,7 @@ const DocumentUpload = () => {
                 </label>
               </div>
               <p className="mt-2 text-sm text-muted-foreground">
-                Supports .docx and .txt files
+                Supports .docx and .txt files • Select multiple files at once
               </p>
             </div>
           </CardContent>
