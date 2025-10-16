@@ -4,21 +4,23 @@ Uses Emergent LLM API for embeddings (deployment-safe, no local ML)
 ChromaDB for vector storage
 """
 import logging
-import hashlib
 import chromadb
 from chromadb.config import Settings
 from typing import List, Dict, Optional, Any
 import os
-from emergentintegrations.llm.chat import LlmChat, UserMessage
+from openai import OpenAI
 
 logger = logging.getLogger(__name__)
 
 class RAGService:
-    """RAG service using Emergent LLM for embeddings"""
+    """RAG service using OpenAI embeddings via Emergent LLM key"""
     
     def __init__(self):
         self.emergent_key = os.getenv("EMERGENT_LLM_KEY")
-        self.llm_client = None
+        
+        # Initialize OpenAI client with Emergent key
+        self.openai_client = OpenAI(api_key=self.emergent_key)
+        self.embedding_model = "text-embedding-3-small"  # 1536 dimensions, cost-effective
         
         # Initialize ChromaDB with persistent storage
         persist_dir = os.getenv("CHROMADB_DIR", "./chromadb_data")
