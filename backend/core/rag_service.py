@@ -13,7 +13,7 @@ from openai import OpenAI
 logger = logging.getLogger(__name__)
 
 class RAGService:
-    """RAG service using OpenAI embeddings via Emergent LLM key"""
+    """RAG service using OpenAI text-embedding-3-large for highest accuracy semantic matching"""
     
     def __init__(self):
         self.emergent_key = None
