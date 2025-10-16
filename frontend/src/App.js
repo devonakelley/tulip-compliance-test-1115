@@ -231,7 +231,16 @@ const DocumentUpload = () => {
     if (files.length === 0) return;
 
     setUploading(true);
-    const endpoint = type === 'qsp' ? '/documents/upload' : '/iso-summary/upload';
+    
+    // Determine endpoint based on type
+    let endpoint;
+    if (type === 'qsp') {
+      endpoint = '/documents/upload';
+    } else if (type === 'regulatory') {
+      endpoint = '/rag/upload-regulatory-doc';
+    } else {
+      endpoint = '/iso-summary/upload';
+    }
     
     let successCount = 0;
     let failCount = 0;
@@ -241,6 +250,14 @@ const DocumentUpload = () => {
       const file = files[i];
       const formData = new FormData();
       formData.append('file', file);
+      
+      // For regulatory documents, add framework selection
+      if (type === 'regulatory') {
+        const frameworkSelect = document.getElementById('regulatory-framework');
+        const framework = frameworkSelect ? frameworkSelect.value : 'ISO_13485';
+        formData.append('framework', framework);
+        formData.append('doc_name', file.name);
+      }
 
       try {
         const response = await axios.post(`${API}${endpoint}`, formData, {
@@ -255,7 +272,7 @@ const DocumentUpload = () => {
         if (files.length > 1) {
           toast.success(`Uploaded ${file.name} (${i + 1}/${files.length})`);
         } else {
-          toast.success(response.data.message);
+          toast.success(response.data.message || `Successfully uploaded ${file.name}`);
         }
       } catch (error) {
         console.error(`Upload error for ${file.name}:`, error);
