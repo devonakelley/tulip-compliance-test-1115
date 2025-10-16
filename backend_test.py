@@ -411,7 +411,8 @@ software lifecycle processes, and cybersecurity considerations for medical devic
     def test_get_mappings(self):
         """Test get clause mappings endpoint"""
         try:
-            response = requests.get(f"{self.api_url}/mappings", timeout=10)
+            headers = {"Authorization": f"Bearer {self.auth_token}"} if self.auth_token else {}
+            response = requests.get(f"{self.api_url}/mappings", headers=headers, timeout=10)
             success = response.status_code == 200
             
             if success:
@@ -426,6 +427,398 @@ software lifecycle processes, and cybersecurity considerations for medical devic
         except Exception as e:
             self.log_test("Get Clause Mappings", False, f"Exception: {str(e)}")
             return False, []
+
+    def create_test_tenant(self):
+        """Create a test tenant for authentication"""
+        try:
+            tenant_data = {
+                "name": "Test Company for RAG Testing",
+                "plan": "enterprise"
+            }
+            response = requests.post(f"{self.api_url}/auth/tenant/create", json=tenant_data, timeout=10)
+            
+            if response.status_code == 200:
+                tenant = response.json()
+                return tenant["id"]
+            else:
+                # Tenant might already exist, use a default one
+                return "test-tenant-rag-001"
+                
+        except Exception as e:
+            logger.error(f"Failed to create tenant: {e}")
+            return "test-tenant-rag-001"
+
+    def register_test_user(self):
+        """Register a test user and get authentication token"""
+        try:
+            # Create tenant first
+            tenant_id = self.create_test_tenant()
+            
+            # Register user
+            user_data = {
+                "email": "ragtest@example.com",
+                "password": "SecurePassword123!",
+                "tenant_id": tenant_id,
+                "full_name": "RAG Test User"
+            }
+            
+            response = requests.post(f"{self.api_url}/auth/register", json=user_data, timeout=10)
+            
+            if response.status_code == 200:
+                token_data = response.json()
+                self.auth_token = token_data["access_token"]
+                self.tenant_id = token_data["tenant_id"]
+                self.user_id = token_data["user_id"]
+                self.log_test("User Registration", True, f"Registered user: {user_data['email']}")
+                return True
+            else:
+                # Try to login instead (user might already exist)
+                return self.login_test_user()
+                
+        except Exception as e:
+            self.log_test("User Registration", False, f"Exception: {str(e)}")
+            return self.login_test_user()
+
+    def login_test_user(self):
+        """Login with test user credentials"""
+        try:
+            login_data = {
+                "email": "ragtest@example.com",
+                "password": "SecurePassword123!"
+            }
+            
+            response = requests.post(f"{self.api_url}/auth/login", json=login_data, timeout=10)
+            
+            if response.status_code == 200:
+                token_data = response.json()
+                self.auth_token = token_data["access_token"]
+                self.tenant_id = token_data["tenant_id"]
+                self.user_id = token_data["user_id"]
+                self.log_test("User Login", True, f"Logged in user: {login_data['email']}")
+                return True
+            else:
+                self.log_test("User Login", False, f"Status: {response.status_code}")
+                return False
+                
+        except Exception as e:
+            self.log_test("User Login", False, f"Exception: {str(e)}")
+            return False
+
+    def create_test_regulatory_document(self):
+        """Create a test ISO 13485 regulatory document"""
+        content = """ISO 13485:2016 Medical devices — Quality management systems — Requirements for regulatory purposes
+
+4. Quality management system
+
+4.1 General requirements
+The organization shall establish, document, implement and maintain a quality management system and maintain its effectiveness in accordance with the requirements of this International Standard.
+
+The organization shall:
+a) determine the processes needed for the quality management system and their application throughout the organization;
+b) determine the sequence and interaction of these processes;
+c) determine criteria and methods needed to ensure that both the operation and control of these processes are effective;
+d) ensure the availability of resources and information necessary to support the operation and monitoring of these processes;
+e) monitor, measure where applicable, and analyze these processes;
+f) implement actions necessary to achieve planned results and maintain the effectiveness of these processes.
+
+4.2 Documentation requirements
+
+4.2.1 General
+The quality management system documentation shall include:
+a) documented statements of a quality policy and quality objectives;
+b) a quality manual;
+c) documented procedures and records required by this International Standard;
+d) documents, including records, determined by the organization to be necessary to ensure the effective planning, operation and control of its processes.
+
+4.2.2 Quality manual
+The organization shall establish and maintain a quality manual that includes:
+a) the scope of the quality management system, including details of and justification for any exclusions;
+b) the documented procedures established for the quality management system, or reference to them;
+c) a description of the interaction between the processes of the quality management system.
+
+5. Management responsibility
+
+5.1 Management commitment
+Top management shall provide evidence of its commitment to the development and implementation of the quality management system and to maintaining its effectiveness by:
+a) communicating to the organization the importance of meeting customer as well as statutory and regulatory requirements;
+b) establishing the quality policy;
+c) ensuring that quality objectives are established;
+d) conducting management reviews;
+e) ensuring the availability of resources.
+
+5.2 Customer focus
+Top management shall ensure that customer requirements are determined and are met with the aim of enhancing customer satisfaction.
+
+7. Product realization
+
+7.1 Planning of product realization
+The organization shall plan and develop the processes needed for product realization. Planning of product realization shall be consistent with the requirements of the other processes of the quality management system.
+
+7.3 Design and development
+
+7.3.1 Design and development planning
+The organization shall plan and control the design and development of the product.
+
+During design and development planning, the organization shall determine:
+a) the design and development stages;
+b) the review, verification and validation that are appropriate to each design and development stage;
+c) the responsibilities and authorities for design and development.
+
+8. Measurement, analysis and improvement
+
+8.1 General
+The organization shall plan and implement the monitoring, measurement, analysis and improvement processes needed:
+a) to demonstrate conformity to product requirements;
+b) to ensure conformity of the quality management system;
+c) to maintain the effectiveness of the quality management system.
+
+8.2 Monitoring and measurement
+
+8.2.1 Customer satisfaction
+As one of the measurements of the performance of the quality management system, the organization shall monitor information relating to customer perception as to whether the organization has met customer requirements.
+
+8.5 Improvement
+
+8.5.1 Continual improvement
+The organization shall continually improve the effectiveness of the quality management system through the use of the quality policy, quality objectives, audit results, analysis of data, corrective and preventive actions and management review.
+"""
+        
+        # Create temporary file
+        temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False)
+        temp_file.write(content)
+        temp_file.close()
+        return temp_file.name
+
+    def test_rag_upload_regulatory_doc(self):
+        """Test RAG regulatory document upload with OpenAI text-embedding-3-large"""
+        test_file = None
+        try:
+            if not self.auth_token:
+                self.log_test("RAG Upload Regulatory Doc", False, "No authentication token")
+                return False, {}
+            
+            test_file = self.create_test_regulatory_document()
+            
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            
+            with open(test_file, 'rb') as f:
+                files = {'file': ('iso_13485_test.txt', f, 'text/plain')}
+                data = {
+                    'framework': 'ISO_13485',
+                    'doc_name': 'Test ISO 13485 Document'
+                }
+                response = requests.post(
+                    f"{self.api_url}/rag/upload-regulatory-doc", 
+                    files=files, 
+                    data=data,
+                    headers=headers,
+                    timeout=60
+                )
+            
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                details = f"Doc ID: {data.get('doc_id', 'N/A')}, Chunks: {data.get('chunks_added', 0)}, Framework: {data.get('framework', 'N/A')}"
+            else:
+                details = f"Status: {response.status_code}"
+                
+            self.log_test("RAG Upload Regulatory Doc", success, details, response.json() if success else response.text)
+            return success, response.json() if success else {}
+            
+        except Exception as e:
+            self.log_test("RAG Upload Regulatory Doc", False, f"Exception: {str(e)}")
+            return False, {}
+        finally:
+            if test_file and os.path.exists(test_file):
+                os.unlink(test_file)
+
+    def test_rag_list_regulatory_docs(self):
+        """Test listing regulatory documents"""
+        try:
+            if not self.auth_token:
+                self.log_test("RAG List Regulatory Docs", False, "No authentication token")
+                return False, {}
+            
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            response = requests.get(f"{self.api_url}/rag/regulatory-docs", headers=headers, timeout=10)
+            
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                docs_count = data.get('count', 0)
+                details = f"Documents Found: {docs_count}"
+            else:
+                details = f"Status: {response.status_code}"
+                
+            self.log_test("RAG List Regulatory Docs", success, details, response.json() if success else response.text)
+            return success, response.json() if success else {}
+            
+        except Exception as e:
+            self.log_test("RAG List Regulatory Docs", False, f"Exception: {str(e)}")
+            return False, {}
+
+    def test_rag_semantic_search(self):
+        """Test RAG semantic search with OpenAI embeddings"""
+        try:
+            if not self.auth_token:
+                self.log_test("RAG Semantic Search", False, "No authentication token")
+                return False, {}
+            
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            
+            # Test search for quality management system
+            search_data = {
+                'query': 'quality management system requirements',
+                'framework': 'ISO_13485',
+                'n_results': 5
+            }
+            
+            response = requests.post(
+                f"{self.api_url}/rag/search", 
+                data=search_data,
+                headers=headers,
+                timeout=30
+            )
+            
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                results_count = data.get('results_count', 0)
+                details = f"Query: '{search_data['query']}', Results: {results_count}"
+                
+                # Check if results have proper structure
+                if results_count > 0:
+                    first_result = data.get('results', [{}])[0]
+                    has_distance = 'distance' in first_result
+                    has_metadata = 'metadata' in first_result
+                    details += f", Has Distance Scores: {has_distance}, Has Metadata: {has_metadata}"
+            else:
+                details = f"Status: {response.status_code}"
+                
+            self.log_test("RAG Semantic Search", success, details, response.json() if success else response.text)
+            return success, response.json() if success else {}
+            
+        except Exception as e:
+            self.log_test("RAG Semantic Search", False, f"Exception: {str(e)}")
+            return False, {}
+
+    def test_rag_compliance_check(self):
+        """Test RAG compliance checking between QSP and regulatory docs"""
+        try:
+            if not self.auth_token:
+                self.log_test("RAG Compliance Check", False, "No authentication token")
+                return False, {}
+            
+            # First upload a QSP document
+            qsp_success, qsp_data = self.test_qsp_document_upload()
+            
+            if not qsp_success:
+                self.log_test("RAG Compliance Check", False, "Failed to upload QSP document")
+                return False, {}
+            
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            
+            compliance_data = {
+                'qsp_doc_id': qsp_data.get('document_id'),
+                'framework': 'ISO_13485'
+            }
+            
+            response = requests.post(
+                f"{self.api_url}/rag/check-compliance",
+                data=compliance_data,
+                headers=headers,
+                timeout=60
+            )
+            
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                analysis = data.get('analysis', {})
+                coverage = analysis.get('coverage_percentage', 0)
+                matches = analysis.get('matches_found', 0)
+                details = f"Coverage: {coverage}%, Matches: {matches}, Framework: {analysis.get('framework', 'N/A')}"
+            else:
+                details = f"Status: {response.status_code}"
+                
+            self.log_test("RAG Compliance Check", success, details, response.json() if success else response.text)
+            return success, response.json() if success else {}
+            
+        except Exception as e:
+            self.log_test("RAG Compliance Check", False, f"Exception: {str(e)}")
+            return False, {}
+
+    def test_rag_error_handling(self):
+        """Test RAG error handling scenarios"""
+        try:
+            if not self.auth_token:
+                self.log_test("RAG Error Handling", False, "No authentication token")
+                return False
+            
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            
+            # Test 1: Invalid framework
+            temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False)
+            temp_file.write("Test content")
+            temp_file.close()
+            
+            with open(temp_file.name, 'rb') as f:
+                files = {'file': ('test.txt', f, 'text/plain')}
+                data = {
+                    'framework': 'INVALID_FRAMEWORK',
+                    'doc_name': 'Test Doc'
+                }
+                response = requests.post(
+                    f"{self.api_url}/rag/upload-regulatory-doc", 
+                    files=files, 
+                    data=data,
+                    headers=headers,
+                    timeout=10
+                )
+            
+            invalid_framework_handled = response.status_code == 400
+            
+            os.unlink(temp_file.name)
+            
+            # Test 2: Search without authentication
+            response = requests.post(f"{self.api_url}/rag/search", data={'query': 'test'}, timeout=10)
+            auth_required = response.status_code == 401
+            
+            # Test 3: Empty document upload
+            temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False)
+            temp_file.write("")  # Empty content
+            temp_file.close()
+            
+            with open(temp_file.name, 'rb') as f:
+                files = {'file': ('empty.txt', f, 'text/plain')}
+                data = {
+                    'framework': 'ISO_13485',
+                    'doc_name': 'Empty Doc'
+                }
+                response = requests.post(
+                    f"{self.api_url}/rag/upload-regulatory-doc", 
+                    files=files, 
+                    data=data,
+                    headers=headers,
+                    timeout=10
+                )
+            
+            empty_doc_handled = response.status_code == 400
+            
+            os.unlink(temp_file.name)
+            
+            success = invalid_framework_handled and auth_required and empty_doc_handled
+            details = f"Invalid Framework: {invalid_framework_handled}, Auth Required: {auth_required}, Empty Doc: {empty_doc_handled}"
+            
+            self.log_test("RAG Error Handling", success, details)
+            return success
+            
+        except Exception as e:
+            self.log_test("RAG Error Handling", False, f"Exception: {str(e)}")
+            return False
 
     def run_full_test_suite(self):
         """Run complete test suite"""
