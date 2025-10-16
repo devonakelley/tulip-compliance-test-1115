@@ -17,31 +17,12 @@ def test_rag_embedding_dimensions():
     # Step 1: Register/Login
     print("🔐 Setting up authentication...")
     
-    # Try to register
-    user_data = {
-        "email": "ragtest2@example.com",
-        "password": "SecurePassword123!",
-        "tenant_id": "test-tenant-rag-002",
-        "full_name": "RAG Test User 2"
+    # Try login with existing user
+    login_data = {
+        "email": "ragtest@example.com",
+        "password": "SecurePassword123!"
     }
-    
-    # Create tenant first
-    tenant_data = {
-        "name": "Test Company for RAG Detailed Testing",
-        "plan": "enterprise"
-    }
-    requests.post(f"{api_url}/auth/tenant/create", json=tenant_data, timeout=10)
-    
-    # Register user
-    response = requests.post(f"{api_url}/auth/register", json=user_data, timeout=10)
-    
-    if response.status_code != 200:
-        # Try login instead
-        login_data = {
-            "email": "ragtest2@example.com",
-            "password": "SecurePassword123!"
-        }
-        response = requests.post(f"{api_url}/auth/login", json=login_data, timeout=10)
+    response = requests.post(f"{api_url}/auth/login", json=login_data, timeout=10)
     
     if response.status_code != 200:
         print("❌ Authentication failed")
