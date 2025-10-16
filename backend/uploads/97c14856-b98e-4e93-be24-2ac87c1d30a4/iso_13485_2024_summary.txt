@@ -1,0 +1,16 @@
+ISO 13485:2024 Summary of Changes
+
+NEW CLAUSES:
+4.1.6 Outsourced processes - Enhanced requirements for control of outsourced processes
+7.3.10 Design transfer - New requirements for design transfer activities
+8.2.6 Post-market surveillance - Enhanced post-market surveillance requirements
+
+MODIFIED CLAUSES:
+4.2.4 Control of documents - Updated requirements for electronic document control
+5.5.2 Management representative - Modified responsibilities for management representative
+7.1 Planning of product realization - Enhanced planning requirements
+7.5.1 Control of production and service provision - Updated production control requirements
+8.5.2 Corrective action - Enhanced corrective action requirements
+
+The 2024 revision introduces significant changes to risk management integration,
+software lifecycle processes, and cybersecurity considerations for medical devices.
