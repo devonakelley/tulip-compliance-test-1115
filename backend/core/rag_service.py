@@ -18,7 +18,7 @@ class RAGService:
     def __init__(self):
         self.emergent_key = None
         self.openai_client = None
-        self.embedding_model = "text-embedding-3-small"  # 1536 dimensions, cost-effective
+        self.embedding_model = "text-embedding-3-large"  # 3072 dimensions, highest accuracy
         
         # Initialize ChromaDB with persistent storage
         persist_dir = os.getenv("CHROMADB_DIR", "./chromadb_data")
