@@ -1,6 +1,6 @@
 """
 RAG Service for Regulatory Compliance
-Uses Emergent LLM API for embeddings (deployment-safe, no local ML)
+Uses OpenAI text-embedding-3-large for high-accuracy semantic matching
 ChromaDB for vector storage
 """
 import logging
