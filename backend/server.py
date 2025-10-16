@@ -565,8 +565,22 @@ async def upload_iso_summary(
         file_ext = Path(file.filename).suffix.lower()
         if file_ext == '.docx':
             text_content = await extract_text_from_docx(content)
-        else:
+        elif file_ext == '.pdf':
+            # For PDF files, use PyPDF2 to extract text
+            import PyPDF2
+            pdf_file = io.BytesIO(content)
+            pdf_reader = PyPDF2.PdfReader(pdf_file)
+            text_content = ""
+            for page in pdf_reader.pages:
+                text_content += page.extract_text() + "\n"
+        elif file_ext == '.txt':
             text_content = content.decode('utf-8')
+        else:
+            # Try to decode as UTF-8, fallback to latin-1
+            try:
+                text_content = content.decode('utf-8')
+            except UnicodeDecodeError:
+                text_content = content.decode('latin-1')
         
         # Parse ISO summary content
         new_clauses = []
