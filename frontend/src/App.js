@@ -227,32 +227,58 @@ const DocumentUpload = () => {
   }, []);
 
   const handleFileUpload = async (event, type) => {
-    const file = event.target.files[0];
-    if (!file) return;
+    const files = Array.from(event.target.files);
+    if (files.length === 0) return;
 
     setUploading(true);
-    const formData = new FormData();
-    formData.append('file', file);
+    const endpoint = type === 'qsp' ? '/documents/upload' : '/iso-summary/upload';
+    
+    let successCount = 0;
+    let failCount = 0;
 
-    try {
-      const endpoint = type === 'qsp' ? '/documents/upload' : '/iso-summary/upload';
-      const response = await axios.post(`${API}${endpoint}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      
-      toast.success(response.data.message);
-      
-      if (type === 'qsp') {
-        fetchDocuments();
+    // Upload files sequentially to avoid overwhelming the server
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const response = await axios.post(`${API}${endpoint}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        
+        successCount++;
+        
+        // Show progress for multiple files
+        if (files.length > 1) {
+          toast.success(`Uploaded ${file.name} (${i + 1}/${files.length})`);
+        } else {
+          toast.success(response.data.message);
+        }
+      } catch (error) {
+        console.error(`Upload error for ${file.name}:`, error);
+        failCount++;
+        toast.error(`Failed to upload ${file.name}: ${error.response?.data?.detail || 'Upload failed'}`);
       }
-    } catch (error) {
-      console.error('Upload error:', error);
-      toast.error(error.response?.data?.detail || 'Upload failed');
-    } finally {
-      setUploading(false);
-      event.target.value = '';
+    }
+
+    // Show final summary for batch uploads
+    if (files.length > 1) {
+      if (successCount > 0 && failCount === 0) {
+        toast.success(`✅ All ${successCount} files uploaded successfully!`);
+      } else if (successCount > 0 && failCount > 0) {
+        toast.info(`Uploaded ${successCount} files, ${failCount} failed`);
+      }
+    }
+
+    setUploading(false);
+    event.target.value = '';
+    
+    // Refresh document list after uploads
+    if (type === 'qsp' && successCount > 0) {
+      fetchDocuments();
     }
   };
 
