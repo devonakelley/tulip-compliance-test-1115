@@ -139,3 +139,4 @@ boto3==1.40.41
 passlib==1.7.4
 python-jose==3.3.0
 chromadb==0.4.22
+openai==1.12.0
