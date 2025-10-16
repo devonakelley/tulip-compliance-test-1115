@@ -367,7 +367,8 @@ software lifecycle processes, and cybersecurity considerations for medical devic
     def test_compliance_gap_analysis(self):
         """Test compliance gap analysis"""
         try:
-            response = requests.post(f"{self.api_url}/analysis/run-compliance", timeout=60)
+            headers = {"Authorization": f"Bearer {self.auth_token}"} if self.auth_token else {}
+            response = requests.post(f"{self.api_url}/analysis/run-compliance", headers=headers, timeout=60)
             success = response.status_code == 200
             
             if success:
