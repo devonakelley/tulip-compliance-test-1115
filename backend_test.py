@@ -821,8 +821,8 @@ The organization shall continually improve the effectiveness of the quality mana
             return False
 
     def run_full_test_suite(self):
-        """Run complete test suite"""
-        print("🚀 Starting QSP Compliance Checker API Tests")
+        """Run complete test suite including RAG system testing"""
+        print("🚀 Starting QSP Compliance Checker API Tests with RAG System")
         print(f"📍 Testing against: {self.base_url}")
         print("=" * 60)
         
@@ -843,6 +843,35 @@ The organization shall continually improve the effectiveness of the quality mana
         db_success = self.test_database_connectivity()
         ai_success = self.test_ai_service()
         
+        # Authentication setup for RAG testing
+        print("🔐 Setting up Authentication for RAG Testing...")
+        auth_success = self.register_test_user()
+        
+        if not auth_success:
+            print("❌ Authentication failed. Some tests will be skipped.")
+        
+        # RAG System Testing (PRIMARY FOCUS)
+        print("🧠 Testing RAG System with OpenAI text-embedding-3-large...")
+        if auth_success:
+            print("   📤 Testing regulatory document upload with embedding generation...")
+            rag_upload_success, rag_upload_data = self.test_rag_upload_regulatory_doc()
+            
+            print("   📋 Testing regulatory documents listing...")
+            rag_list_success, rag_list_data = self.test_rag_list_regulatory_docs()
+            
+            print("   🔍 Testing semantic search with OpenAI embeddings...")
+            rag_search_success, rag_search_data = self.test_rag_semantic_search()
+            
+            print("   ⚖️ Testing compliance checking between QSP and regulatory docs...")
+            rag_compliance_success, rag_compliance_data = self.test_rag_compliance_check()
+            
+            print("   🚫 Testing RAG error handling...")
+            rag_error_success = self.test_rag_error_handling()
+        else:
+            print("   ⚠️  Skipping RAG tests due to authentication failure")
+            rag_upload_success = rag_list_success = rag_search_success = False
+            rag_compliance_success = rag_error_success = False
+        
         # Simple upload and list tests (as requested in review)
         print("📤 Testing Simple Upload & List...")
         simple_upload_success = self.test_document_upload_simple()
@@ -850,19 +879,26 @@ The organization shall continually improve the effectiveness of the quality mana
         
         # Dashboard test (should work even without data)
         print("📊 Testing Dashboard...")
-        dashboard_success, dashboard_data = self.test_dashboard_endpoint()
+        if auth_success:
+            dashboard_success, dashboard_data = self.test_dashboard_endpoint()
+        else:
+            dashboard_success, dashboard_data = False, {}
         
         # Document upload tests
         print("📄 Testing Document Upload...")
-        qsp_success, qsp_data = self.test_qsp_document_upload()
-        iso_success, iso_data = self.test_iso_summary_upload()
+        if auth_success:
+            qsp_success, qsp_data = self.test_qsp_document_upload()
+            iso_success, iso_data = self.test_iso_summary_upload()
+        else:
+            qsp_success, qsp_data = False, {}
+            iso_success, iso_data = False, {}
         
         # Error handling test
         print("🚫 Testing Error Handling...")
         error_handling_success = self.test_invalid_file_upload()
         
         # Analysis tests (only if documents uploaded successfully)
-        if qsp_success and iso_success:
+        if qsp_success and iso_success and auth_success:
             print("🤖 Testing AI Analysis...")
             print("   ⏳ Running clause mapping (this may take 30-60 seconds)...")
             mapping_success, mapping_data = self.test_clause_mapping_analysis()
@@ -874,19 +910,27 @@ The organization shall continually improve the effectiveness of the quality mana
                 print("   ⚠️  Skipping compliance analysis due to mapping failure")
                 compliance_success = False
         else:
-            print("   ⚠️  Skipping AI analysis due to upload failures")
+            print("   ⚠️  Skipping AI analysis due to upload failures or auth issues")
             mapping_success = False
             compliance_success = False
         
         # Data retrieval tests
         print("📋 Testing Data Retrieval...")
-        docs_success, docs_data = self.test_get_documents()
-        gaps_success, gaps_data = self.test_get_gaps()
-        mappings_success, mappings_data = self.test_get_mappings()
+        if auth_success:
+            docs_success, docs_data = self.test_get_documents()
+            gaps_success, gaps_data = self.test_get_gaps()
+            mappings_success, mappings_data = self.test_get_mappings()
+        else:
+            docs_success, docs_data = False, []
+            gaps_success, gaps_data = False, {}
+            mappings_success, mappings_data = False, []
         
         # Final dashboard check
         print("📊 Final Dashboard Check...")
-        final_dashboard_success, final_dashboard_data = self.test_dashboard_endpoint()
+        if auth_success:
+            final_dashboard_success, final_dashboard_data = self.test_dashboard_endpoint()
+        else:
+            final_dashboard_success, final_dashboard_data = False, {}
         
         return self.generate_summary()
 
