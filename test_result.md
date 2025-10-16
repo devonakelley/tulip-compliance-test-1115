@@ -192,11 +192,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "System integration testing completed"
-    - "Full-stack QSP compliance system operational"
+    - "OpenAI text-embedding-3-large integration for RAG"
   stuck_tasks: []
-  test_all: true
-  test_priority: "completed"
+  test_all: false
+  test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
@@ -205,3 +204,5 @@ agent_communication:
     message: "Backend testing completed successfully! Enterprise QSP Compliance System is fully functional with 86.7% test pass rate. All requested endpoints implemented and working: Health Check (/api/health), Database Test (/api/test/database), AI Test (/api/test/ai), Document Upload (/api/test/upload), List Documents (/api/test/documents). Core QSP compliance features working perfectly: document upload, ISO summary processing, AI-powered clause mapping, compliance gap analysis, dashboard metrics. MongoDB and Emergent LLM integrations are healthy. Only minor timeouts on heavy AI processing (expected behavior). System ready for production use."
   - agent: "testing"
     message: "FULL-STACK TESTING COMPLETED! Enterprise QSP Compliance System is 100% operational. Frontend testing results: ✅ Dashboard with real-time metrics (100% compliance, 5 docs, 27 mappings, 10 gaps), ✅ Document Management with upload interfaces for QSP docs and ISO summaries, ✅ Analysis workflow with AI-powered clause mapping and gap analysis, ✅ Compliance gaps display with detailed recommendations and priority levels, ✅ Professional responsive UI using shadcn components, ✅ Full backend integration working perfectly. All user workflows functional: upload documents → run analysis → view compliance alerts → review gaps. System ready for medical device companies to use for ISO 13485:2024 compliance checking."
+  - agent: "main"
+    message: "UPGRADED RAG EMBEDDINGS TO OPENAI TEXT-EMBEDDING-3-LARGE: Updated rag_service.py to use OpenAI's text-embedding-3-large model (3072 dimensions) for highest accuracy semantic matching. This replaces the previous text-embedding-3-small (1536 dimensions). OpenAI API key is configured in backend/.env. Changes apply to NEW document uploads only (existing documents retain their embeddings). Backend restarted successfully. TESTING NEEDED: 1) Verify RAG document upload with embedding generation, 2) Test semantic search accuracy with regulatory queries, 3) Validate compliance comparison between QSP and regulatory documents. Focus on /api/rag/* endpoints."
