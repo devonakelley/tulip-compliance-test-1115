@@ -477,6 +477,45 @@ async def upload_qsp_document(
         
         logger.info(f"Uploaded QSP document: {file.filename}")
         
+        # Extract references and citations for traceability (background task)
+        try:
+            doc_refs = reference_extractor.extract_document_references(text_content)
+            reg_cits = reference_extractor.extract_regulatory_citations(text_content)
+            
+            # Store document references
+            from models.regulatory import DocumentReference, RegulatoryCitation, DocumentType
+            for ref in doc_refs:
+                target_type = reference_extractor.determine_document_type(ref['reference'])
+                doc_ref = DocumentReference(
+                    tenant_id=tenant_id,
+                    source_doc_id=qsp_doc.id,
+                    source_doc_type=DocumentType.QSP,
+                    target_doc_id=ref['reference'],
+                    target_doc_type=target_type,
+                    reference_type="references",
+                    context=ref.get('context')
+                )
+                await db.document_references.insert_one(doc_ref.model_dump())
+            
+            # Store regulatory citations
+            for cit in reg_cits:
+                from models.regulatory import RegulatoryFramework
+                reg_citation = RegulatoryCitation(
+                    tenant_id=tenant_id,
+                    document_id=qsp_doc.id,
+                    document_type=DocumentType.QSP,
+                    framework=RegulatoryFramework(cit['framework']),
+                    citation=cit['citation'],
+                    clause_id=cit['clause_id'],
+                    context=cit.get('context'),
+                    confidence=1.0
+                )
+                await db.regulatory_citations.insert_one(reg_citation.model_dump())
+            
+            logger.info(f"Extracted {len(doc_refs)} references and {len(reg_cits)} citations from {file.filename}")
+        except Exception as e:
+            logger.warning(f"Failed to extract references from {file.filename}: {e}")
+        
         # Log audit event
         await audit_logger.log_upload(
             tenant_id=tenant_id,
@@ -491,7 +530,9 @@ async def upload_qsp_document(
             "document_id": qsp_doc.id,
             "filename": file.filename,
             "sections_count": len(sections),
-            "content_length": len(text_content)
+            "content_length": len(text_content),
+            "references_extracted": len(doc_refs) if 'doc_refs' in locals() else 0,
+            "citations_extracted": len(reg_cits) if 'reg_cits' in locals() else 0
         }
         
     except HTTPException:
