@@ -16,10 +16,8 @@ class RAGService:
     """RAG service using OpenAI embeddings via Emergent LLM key"""
     
     def __init__(self):
-        self.emergent_key = os.getenv("EMERGENT_LLM_KEY")
-        
-        # Initialize OpenAI client with Emergent key
-        self.openai_client = OpenAI(api_key=self.emergent_key)
+        self.emergent_key = None
+        self.openai_client = None
         self.embedding_model = "text-embedding-3-small"  # 1536 dimensions, cost-effective
         
         # Initialize ChromaDB with persistent storage
