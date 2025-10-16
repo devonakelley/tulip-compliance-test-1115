@@ -407,7 +407,8 @@ software lifecycle processes, and cybersecurity considerations for medical devic
     def test_get_gaps(self):
         """Test get compliance gaps endpoint"""
         try:
-            response = requests.get(f"{self.api_url}/gaps", timeout=10)
+            headers = {"Authorization": f"Bearer {self.auth_token}"} if self.auth_token else {}
+            response = requests.get(f"{self.api_url}/gaps", headers=headers, timeout=10)
             success = response.status_code == 200
             
             if success:
