@@ -375,9 +375,12 @@ const DocumentUpload = () => {
                   <option value="ISO_13485">ISO 13485 (Medical Devices QMS)</option>
                   <option value="ISO_14971">ISO 14971 (Risk Management)</option>
                   <option value="FDA_21CFR820">FDA 21 CFR Part 820 (QSR)</option>
-                  <option value="MDR">EU MDR 2017/745</option>
-                  <option value="ISO_62304">ISO 62304 (Software Lifecycle)</option>
-                  <option value="OTHER">Other Regulatory Standard</option>
+                  <option value="MDR_2017_745">EU MDR 2017/745</option>
+                  <option value="ISO_10993">ISO 10993 (Biological Evaluation)</option>
+                  <option value="ISO_11135">ISO 11135 (Sterilization)</option>
+                  <option value="ISO_11607">ISO 11607 (Packaging)</option>
+                  <option value="21CFR_PART11">21 CFR Part 11 (Electronic Records)</option>
+                  <option value="MDSAP">MDSAP (Medical Device Single Audit Program)</option>
                 </select>
                 <input
                   id="regulatory-file"
