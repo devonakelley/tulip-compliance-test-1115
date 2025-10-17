@@ -1,0 +1,10 @@
+{
+  "message": "Compliance analysis completed successfully",
+  "overall_score": 100.0,
+  "gaps_found": 0,
+  "affected_documents": 0,
+  "analysis_id": "3271084d-f5e3-4cc0-a232-720f4edc462e",
+  "total_documents": 144,
+  "gaps": [],
+  "summary": "Analyzed 144 documents. Compliance score: 100.0%. Found 0 gaps."
+}
