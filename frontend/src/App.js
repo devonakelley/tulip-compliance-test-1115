@@ -330,9 +330,11 @@ const DocumentUpload = () => {
     setUploading(false);
     event.target.value = '';
     
-    // Refresh document list after uploads
+    // Refresh document lists after uploads
     if (type === 'qsp' && successCount > 0) {
       fetchDocuments();
+    } else if (type === 'regulatory' && successCount > 0) {
+      fetchRegulatoryDocs();
     }
   };
 
