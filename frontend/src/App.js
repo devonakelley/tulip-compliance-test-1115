@@ -234,7 +234,7 @@ const DocumentUpload = () => {
   const fetchRegulatoryDocs = async () => {
     try {
       const response = await axios.get(`${API}/rag/regulatory-docs`);
-      setRegulatoryDocs(response.data);
+      setRegulatoryDocs(response.data.documents || []);
     } catch (error) {
       console.error('Error fetching regulatory documents:', error);
       toast.error('Failed to load regulatory documents');
