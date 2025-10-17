@@ -103,7 +103,7 @@ const Dashboard = () => {
       {/* Header */}
       <div className="text-center space-y-4 py-8">
         <h1 className="dashboard-title">
-          QSP Compliance Dashboard
+          Certaro Compliance Dashboard
         </h1>
         <p className="dashboard-subtitle max-w-2xl mx-auto">
           Monitor your Quality System Procedures compliance with ISO 13485:2024 standards
