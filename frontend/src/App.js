@@ -170,38 +170,42 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* ISO Summary Status */}
+      {/* Regulatory Analysis Status */}
       {dashboardData?.iso_summary_loaded && (
-        <Card data-testid="iso-status-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-              ISO 13485:2024 Analysis Ready
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">
-                  {dashboardData.new_clauses_count}
-                </div>
-                <p className="text-sm text-muted-foreground">New Clauses</p>
+        <div className="status-card">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="status-indicator"></div>
+            <h3 className="text-xl font-bold" style={{ color: '#0a0e27' }}>
+              Regulatory Standards Monitoring Active
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold" style={{ color: '#0066ff' }}>
+                {dashboardData.new_clauses_count || 0}
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-600">
-                  {dashboardData.modified_clauses_count}
-                </div>
-                <p className="text-sm text-muted-foreground">Modified Clauses</p>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-muted-foreground">
-                  Last Analysis: {dashboardData.last_analysis_date ? 
-                    new Date(dashboardData.last_analysis_date).toLocaleDateString() : 'Never'}
-                </div>
-              </div>
+              <p className="text-sm text-gray-600 mt-2">New Requirements</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="text-center">
+              <div className="text-3xl font-bold" style={{ color: '#f59e0b' }}>
+                {dashboardData.modified_clauses_count || 0}
+              </div>
+              <p className="text-sm text-gray-600 mt-2">Modified Clauses</p>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold" style={{ color: '#00d4aa' }}>
+                {dashboardData.total_mappings || 0}
+              </div>
+              <p className="text-sm text-gray-600 mt-2">Active Mappings</p>
+            </div>
+          </div>
+          <div className="mt-4 text-center">
+            <p className="text-sm text-gray-500">
+              Last Analysis: {dashboardData.last_analysis_date ? 
+                new Date(dashboardData.last_analysis_date).toLocaleDateString() : 'Never'}
+            </p>
+          </div>
+        </div>
       )}
     </div>
   );
