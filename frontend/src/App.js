@@ -215,7 +215,9 @@ const Dashboard = () => {
 const DocumentUpload = () => {
   const [uploading, setUploading] = useState(false);
   const [documents, setDocuments] = useState([]);
+  const [regulatoryDocs, setRegulatoryDocs] = useState([]);
   const [loadingDocs, setLoadingDocs] = useState(true);
+  const [loadingRegDocs, setLoadingRegDocs] = useState(true);
 
   const fetchDocuments = async () => {
     try {
@@ -229,8 +231,36 @@ const DocumentUpload = () => {
     }
   };
 
+  const fetchRegulatoryDocs = async () => {
+    try {
+      const response = await axios.get(`${API}/rag/regulatory-docs`);
+      setRegulatoryDocs(response.data);
+    } catch (error) {
+      console.error('Error fetching regulatory documents:', error);
+      toast.error('Failed to load regulatory documents');
+    } finally {
+      setLoadingRegDocs(false);
+    }
+  };
+
+  const deleteRegulatoryDoc = async (docId) => {
+    if (!confirm('Are you sure you want to delete this regulatory document?')) {
+      return;
+    }
+    
+    try {
+      await axios.delete(`${API}/rag/regulatory-docs/${docId}`);
+      toast.success('Regulatory document deleted successfully');
+      fetchRegulatoryDocs();
+    } catch (error) {
+      console.error('Error deleting regulatory document:', error);
+      toast.error('Failed to delete document');
+    }
+  };
+
   useEffect(() => {
     fetchDocuments();
+    fetchRegulatoryDocs();
   }, []);
 
   const handleFileUpload = async (event, type) => {
