@@ -717,10 +717,12 @@ async def run_clause_mapping(current_user: dict = Depends(get_current_user)):
         
         # Prepare report results
         results = {
-            "message": "Clause mapping completed successfully",
-            "total_documents_processed": len(qsp_docs),
-            "total_mappings_generated": total_mappings,
-            "summary": f"Analyzed {len(qsp_docs)} documents and generated {total_mappings} clause mappings"
+            "success": True,
+            "message": f"Successfully mapped {total_mappings} regulatory requirements to QSP sections",
+            "total_mappings": total_mappings,
+            "qsp_documents": len(qsp_docs),
+            "regulatory_docs": len(regulatory_docs),
+            "summary": f"Analyzed {len(qsp_docs)} documents using RAG and generated {total_mappings} clause mappings"
         }
         
         # Save report
