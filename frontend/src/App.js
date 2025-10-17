@@ -879,15 +879,18 @@ function App() {
                 </ProtectedRoute>
               } 
             />
-              <Route 
-                path="/reports" 
-                element={
-                  <ProtectedRoute>
+            <Route 
+              path="/reports" 
+              element={
+                <ProtectedRoute>
+                  <Navigation />
+                  <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
                     <Reports />
-                  </ProtectedRoute>
-                } 
-              />
-            </Routes>
+                  </main>
+                </ProtectedRoute>
+              } 
+            />
+          </Routes>
           </main>
           <Toaster />
         </AuthProvider>
