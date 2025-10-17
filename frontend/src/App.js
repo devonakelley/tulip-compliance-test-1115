@@ -768,49 +768,155 @@ const Gaps = () => {
   return (
     <div className="space-y-8">
       <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold text-gray-900">Compliance Gaps</h1>
+        <h1 className="text-4xl font-bold text-gray-900">Compliance Analysis Results</h1>
         <p className="text-xl text-muted-foreground">
-          Detailed analysis of compliance gaps and recommendations
+          View clause mappings and compliance gaps
         </p>
       </div>
 
-      {gaps.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-12">
-            <CheckCircle className="h-12 w-12 mx-auto text-green-500 mb-4" />
-            <h3 className="text-lg font-medium mb-2">No Compliance Gaps Found</h3>
-            <p className="text-muted-foreground">
-              Great! Your QSP documents appear to be compliant with ISO 13485:2024 changes.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
+      {/* Tab Navigation */}
+      <div className="flex justify-center gap-4 border-b">
+        <button
+          onClick={() => setActiveTab('mappings')}
+          className={`px-6 py-3 font-medium transition-colors ${
+            activeTab === 'mappings'
+              ? 'border-b-2 border-blue-500 text-blue-600'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Clause Mappings ({mappings.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('gaps')}
+          className={`px-6 py-3 font-medium transition-colors ${
+            activeTab === 'gaps'
+              ? 'border-b-2 border-blue-500 text-blue-600'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Compliance Gaps ({gaps.length})
+        </button>
+      </div>
+
+      {/* Mappings Tab */}
+      {activeTab === 'mappings' && (
         <div className="space-y-4">
-          {/* Summary */}
-          <Card data-testid="gaps-summary">
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                <div>
-                  <div className="text-2xl font-bold text-red-600">
-                    {gaps.filter(g => g.severity === 'high').length}
-                  </div>
-                  <p className="text-sm text-muted-foreground">High Priority</p>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-yellow-600">
-                    {gaps.filter(g => g.severity === 'medium').length}
-                  </div>
-                  <p className="text-sm text-muted-foreground">Medium Priority</p>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-blue-600">
-                    {gaps.filter(g => g.severity === 'low').length}
-                  </div>
-                  <p className="text-sm text-muted-foreground">Low Priority</p>
-                </div>
+          {mappings.length === 0 ? (
+            <Card>
+              <CardContent className="text-center py-12">
+                <Database className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium mb-2">No Clause Mappings Yet</h3>
+                <p className="text-muted-foreground">
+                  Go to the Analysis page and run "Clause Mapping" to analyze your documents.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-900">
+                  <strong>{mappings.length} clause mappings</strong> generated using RAG semantic search. 
+                  Each mapping shows which QSP section addresses which regulatory requirement.
+                </p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="space-y-4">
+                {mappings.slice(0, 50).map((mapping, index) => (
+                  <Card key={index}>
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <FileCheck className="h-5 w-5 text-green-600" />
+                            {mapping.qsp_filename}
+                          </CardTitle>
+                          <CardDescription className="mt-1">
+                            Section: {mapping.section_title}
+                          </CardDescription>
+                        </div>
+                        <Badge variant={mapping.confidence_score > 0.7 ? 'default' : 'secondary'}>
+                          {Math.round(mapping.confidence_score * 100)}% confidence
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div>
+                        <p className="text-sm font-medium text-gray-700 mb-1">Maps to Regulatory Requirement:</p>
+                        <div className="bg-blue-50 p-3 rounded border border-blue-200">
+                          <p className="text-sm font-semibold text-blue-900">{mapping.iso_clause}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-700 mb-1">QSP Content:</p>
+                        <div className="bg-gray-50 p-3 rounded border">
+                          <p className="text-sm text-gray-700 italic">"{mapping.section_content}"</p>
+                        </div>
+                      </div>
+                      {mapping.evidence_text && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-700 mb-1">Regulatory Requirement Text:</p>
+                          <div className="bg-green-50 p-3 rounded border border-green-200">
+                            <p className="text-sm text-gray-700">"{mapping.evidence_text}"</p>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+                {mappings.length > 50 && (
+                  <Card>
+                    <CardContent className="text-center py-6">
+                      <p className="text-muted-foreground">
+                        Showing 50 of {mappings.length} mappings. The full set is available via API.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Gaps Tab */}
+      {activeTab === 'gaps' && (
+        <div className="space-y-4">
+          {gaps.length === 0 ? (
+            <Card>
+              <CardContent className="text-center py-12">
+                <CheckCircle className="h-12 w-12 mx-auto text-green-500 mb-4" />
+                <h3 className="text-lg font-medium mb-2">No Compliance Gaps Found</h3>
+                <p className="text-muted-foreground">
+                  Great! Your QSP documents appear to be compliant with regulatory requirements.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {/* Summary */}
+              <Card data-testid="gaps-summary">
+                <CardContent className="pt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                    <div>
+                      <div className="text-2xl font-bold text-red-600">
+                        {gaps.filter(g => g.severity === 'high').length}
+                      </div>
+                      <p className="text-sm text-muted-foreground">High Priority</p>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-yellow-600">
+                        {gaps.filter(g => g.severity === 'medium').length}
+                      </div>
+                      <p className="text-sm text-muted-foreground">Medium Priority</p>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-blue-600">
+                        {gaps.filter(g => g.severity === 'low').length}
+                      </div>
+                      <p className="text-sm text-muted-foreground">Low Priority</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
           {/* Gaps List */}
           {gaps.map((gap, index) => (
