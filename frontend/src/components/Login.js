@@ -38,11 +38,27 @@ const Login = () => {
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-            <div className="p-3 bg-blue-100 rounded-full">
-              <Shield className="h-8 w-8 text-blue-600" />
+            <div style={{ 
+              width: '60px', 
+              height: '60px', 
+              background: 'linear-gradient(135deg, #0066ff 0%, #00d4aa 100%)',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontSize: '2rem',
+              fontWeight: '800'
+            }}>
+              ✓
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">QSP Compliance System</CardTitle>
+          <CardTitle className="text-2xl font-bold" style={{
+            background: 'linear-gradient(135deg, #0066ff 0%, #00d4aa 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}>Certaro</CardTitle>
           <CardDescription>
             Sign in to access your compliance dashboard
           </CardDescription>
