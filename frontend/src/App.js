@@ -918,45 +918,47 @@ const Gaps = () => {
                 </CardContent>
               </Card>
 
-          {/* Gaps List */}
-          {gaps.map((gap, index) => (
-            <Card key={gap.id || index} data-testid={`gap-${index}`}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    {getGapTypeIcon(gap.gap_type)}
-                    <div>
-                      <CardTitle className="text-lg">{gap.iso_clause}</CardTitle>
-                      <CardDescription>{gap.qsp_filename}</CardDescription>
+              {/* Gaps List */}
+              {gaps.map((gap, index) => (
+                <Card key={gap.id || index} data-testid={`gap-${index}`}>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        {getGapTypeIcon(gap.gap_type)}
+                        <div>
+                          <CardTitle className="text-lg">{gap.iso_clause}</CardTitle>
+                          <CardDescription>{gap.qsp_filename}</CardDescription>
+                        </div>
+                      </div>
+                      <Badge variant={getSeverityColor(gap.severity)}>
+                        {gap.severity?.toUpperCase() || 'UNKNOWN'}
+                      </Badge>
                     </div>
-                  </div>
-                  <Badge variant={getSeverityColor(gap.severity)}>
-                    {gap.severity?.toUpperCase() || 'UNKNOWN'}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <h4 className="font-medium mb-2">Description</h4>
-                  <p className="text-muted-foreground">{gap.description}</p>
-                </div>
-                
-                {gap.recommendations && gap.recommendations.length > 0 && (
-                  <div>
-                    <h4 className="font-medium mb-2">Recommendations</h4>
-                    <ul className="space-y-1">
-                      {gap.recommendations.map((rec, idx) => (
-                        <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
-                          <span className="text-blue-500 mt-1">•</span>
-                          {rec}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <h4 className="font-medium mb-2">Description</h4>
+                      <p className="text-muted-foreground">{gap.description}</p>
+                    </div>
+                    
+                    {gap.recommendations && gap.recommendations.length > 0 && (
+                      <div>
+                        <h4 className="font-medium mb-2">Recommendations</h4>
+                        <ul className="space-y-1">
+                          {gap.recommendations.map((rec, idx) => (
+                            <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
+                              <span className="text-blue-500 mt-1">•</span>
+                              {rec}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
