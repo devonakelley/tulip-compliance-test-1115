@@ -66,106 +66,108 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-4">
-          <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
-          <p className="text-muted-foreground">Loading dashboard...</p>
-        </div>
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p className="loading-text">Loading compliance dashboard...</p>
       </div>
     );
   }
 
   const getScoreColor = (score) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
-    return 'text-red-600';
-  };
-
-  const getScoreBadgeVariant = (score) => {
-    if (score >= 80) return 'default';
-    if (score >= 60) return 'secondary';
-    return 'destructive';
+    if (score >= 80) return '#10b981';
+    if (score >= 60) return '#f59e0b';
+    return '#ef4444';
   };
 
   return (
-    <div className="space-y-8">
+    <div className="dashboard-container space-y-8">
+      <style>{`
+        @import url('./pages/Dashboard.css');
+        
+        .metric-card { background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 1.5rem; transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .metric-card::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(135deg, #0066ff 0%, #00d4aa 100%); transform: scaleX(0); transition: transform 0.3s ease; }
+        .metric-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08); }
+        .metric-card:hover::before { transform: scaleX(1); }
+        .metric-icon { width: 48px; height: 48px; background: linear-gradient(135deg, #0066ff 0%, #00d4aa 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; margin-bottom: 1rem; }
+        .metric-value { font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; }
+        .metric-label { font-size: 0.875rem; color: #64748b; font-weight: 500; }
+        .dashboard-title { font-size: 3rem; font-weight: 800; background: linear-gradient(135deg, #0a0e27 0%, #0066ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 1rem; }
+        .dashboard-subtitle { font-size: 1.25rem; color: #64748b; }
+        .status-card { background: linear-gradient(135deg, #f0f4ff 0%, #e8f5ff 100%); border-radius: 16px; padding: 2rem; margin-top: 2rem; }
+        .status-indicator { width: 16px; height: 16px; background: #10b981; border-radius: 50%; animation: pulse-status 2s infinite; }
+        @keyframes pulse-status { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+        .compliance-progress { height: 8px; background: #e2e8f0; border-radius: 10px; overflow: hidden; margin-top: 1rem; }
+        .compliance-progress-bar { height: 100%; background: linear-gradient(135deg, #0066ff 0%, #00d4aa 100%); border-radius: 10px; transition: width 0.6s ease; }
+      `}</style>
+
       {/* Header */}
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold text-gray-900">
+      <div className="text-center space-y-4 py-8">
+        <h1 className="dashboard-title">
           QSP Compliance Dashboard
         </h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+        <p className="dashboard-subtitle max-w-2xl mx-auto">
           Monitor your Quality System Procedures compliance with ISO 13485:2024 standards
         </p>
       </div>
 
       {/* Status Alert */}
       {!dashboardData?.iso_summary_loaded && (
-        <Alert data-testid="iso-summary-alert">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Upload an ISO 13485:2024 Summary of Changes document to enable compliance analysis.
-          </AlertDescription>
-        </Alert>
+        <div className="bg-gradient-to-r from-orange-50 to-yellow-50 border-l-4 border-orange-500 rounded-lg p-4 flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-orange-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-gray-900">Upload Regulatory Document</p>
+            <p className="text-sm text-gray-600">Upload a regulatory standard (ISO, FDA, etc.) to enable compliance analysis.</p>
+          </div>
+        </div>
       )}
 
       {/* Key Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card data-testid="compliance-score-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Compliance Score</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${getScoreColor(dashboardData?.compliance_score || 0)}`}>
-              {dashboardData?.compliance_score || 0}%
-            </div>
-            <div className="mt-2">
-              <Progress value={dashboardData?.compliance_score || 0} className="h-2" />
-            </div>
-          </CardContent>
-        </Card>
+        <div className="metric-card" data-testid="compliance-score-card">
+          <div className="metric-icon">
+            <Shield className="h-6 w-6" />
+          </div>
+          <div style={{ color: getScoreColor(dashboardData?.compliance_score || 0) }} className="metric-value">
+            {dashboardData?.compliance_score || 0}%
+          </div>
+          <div className="metric-label">Compliance Score</div>
+          <div className="compliance-progress">
+            <div 
+              className="compliance-progress-bar" 
+              style={{ width: `${dashboardData?.compliance_score || 0}%` }}
+            ></div>
+          </div>
+        </div>
 
-        <Card data-testid="documents-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">QSP Documents</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboardData?.total_documents || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Documents uploaded
-            </p>
-          </CardContent>
-        </Card>
+        <div className="metric-card" data-testid="documents-card">
+          <div className="metric-icon">
+            <FileText className="h-6 w-6" />
+          </div>
+          <div className="metric-value" style={{ color: '#0066ff' }}>
+            {dashboardData?.total_documents || 0}
+          </div>
+          <div className="metric-label">QSP Documents Uploaded</div>
+        </div>
 
-        <Card data-testid="gaps-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Compliance Gaps</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {dashboardData?.gaps_count || 0}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Issues identified
-            </p>
-          </CardContent>
-        </Card>
+        <div className="metric-card" data-testid="gaps-card">
+          <div className="metric-icon">
+            <AlertTriangle className="h-6 w-6" />
+          </div>
+          <div className="metric-value" style={{ color: '#ef4444' }}>
+            {dashboardData?.gaps_count || 0}
+          </div>
+          <div className="metric-label">Compliance Gaps Identified</div>
+        </div>
 
-        <Card data-testid="mappings-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Clause Mappings</CardTitle>
-            <Database className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboardData?.total_mappings || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              AI-generated mappings
-            </p>
-          </CardContent>
-        </Card>
+        <div className="metric-card" data-testid="mappings-card">
+          <div className="metric-icon">
+            <Database className="h-6 w-6" />
+          </div>
+          <div className="metric-value" style={{ color: '#00d4aa' }}>
+            {dashboardData?.total_mappings || 0}
+          </div>
+          <div className="metric-label">AI-Generated Mappings</div>
+        </div>
       </div>
 
       {/* ISO Summary Status */}
