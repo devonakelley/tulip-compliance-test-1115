@@ -829,43 +829,56 @@ function App() {
     <div className="App min-h-screen bg-gray-50">
       <BrowserRouter>
         <AuthProvider>
-          <Navigation />
-          <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route 
-                path="/dashboard" 
-                element={
-                  <ProtectedRoute>
+          <Routes>
+            {/* Public Routes - No Navigation */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<Login />} />
+            
+            {/* Protected Routes - With Navigation */}
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <Navigation />
+                  <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
                     <Dashboard />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/upload" 
-                element={
-                  <ProtectedRoute>
+                  </main>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/upload" 
+              element={
+                <ProtectedRoute>
+                  <Navigation />
+                  <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
                     <DocumentUpload />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/analysis" 
-                element={
-                  <ProtectedRoute>
+                  </main>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/analysis" 
+              element={
+                <ProtectedRoute>
+                  <Navigation />
+                  <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
                     <Analysis />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/gaps" 
-                element={
-                  <ProtectedRoute>
+                  </main>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/gaps" 
+              element={
+                <ProtectedRoute>
+                  <Navigation />
+                  <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
                     <Gaps />
-                  </ProtectedRoute>
-                } 
-              />
+                  </main>
+                </ProtectedRoute>
+              } 
+            />
               <Route 
                 path="/reports" 
                 element={
