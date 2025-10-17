@@ -705,7 +705,9 @@ const Analysis = () => {
 // Gaps Component
 const Gaps = () => {
   const [gaps, setGaps] = useState([]);
+  const [mappings, setMappings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('mappings'); // 'mappings' or 'gaps'
 
   const fetchGaps = async () => {
     try {
@@ -714,6 +716,16 @@ const Gaps = () => {
     } catch (error) {
       console.error('Error fetching gaps:', error);
       toast.error('Failed to load compliance gaps');
+    }
+  };
+
+  const fetchMappings = async () => {
+    try {
+      const response = await axios.get(`${API}/mappings`);
+      setMappings(response.data || []);
+    } catch (error) {
+      console.error('Error fetching mappings:', error);
+      toast.error('Failed to load clause mappings');
     } finally {
       setLoading(false);
     }
@@ -721,6 +733,7 @@ const Gaps = () => {
 
   useEffect(() => {
     fetchGaps();
+    fetchMappings();
   }, []);
 
   const getSeverityColor = (severity) => {
