@@ -488,6 +488,66 @@ const DocumentUpload = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Regulatory Documents List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Regulatory Standards</CardTitle>
+          <CardDescription>
+            {regulatoryDocs.length} regulatory documents uploaded for compliance checking
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loadingRegDocs ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+            </div>
+          ) : regulatoryDocs.length > 0 ? (
+            <div className="space-y-3">
+              {regulatoryDocs.map((doc) => (
+                <div key={doc.doc_id} className="flex items-center justify-between p-4 border rounded-lg hover:border-blue-300 transition-colors">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-500 to-teal-500 rounded-lg">
+                      <Shield className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-900">{doc.doc_name}</p>
+                      <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+                        <span className="flex items-center gap-1">
+                          <Database className="h-3 w-3" />
+                          {doc.framework}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <FileText className="h-3 w-3" />
+                          {doc.chunks_count || 0} chunks
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {new Date(doc.uploaded_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => deleteRegulatoryDoc(doc.doc_id)}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    Delete
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Shield className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-600 font-medium">No regulatory documents uploaded yet</p>
+              <p className="text-sm text-gray-500 mt-1">Upload regulatory standards above to enable compliance checking</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
