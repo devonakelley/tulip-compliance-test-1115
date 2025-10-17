@@ -647,7 +647,7 @@ async def upload_iso_summary(
 
 @api_router.post("/analysis/run-mapping")
 async def run_clause_mapping(current_user: dict = Depends(get_current_user)):
-    """Run AI-powered clause mapping for all QSP documents - Tenant-aware"""
+    """Run AI-powered clause mapping using RAG regulatory documents - Tenant-aware"""
     try:
         tenant_id = current_user["tenant_id"]
         
@@ -655,69 +655,55 @@ async def run_clause_mapping(current_user: dict = Depends(get_current_user)):
         qsp_docs = await db.qsp_documents.find({"tenant_id": tenant_id}, {"_id": 0}).to_list(length=None)
         
         if not qsp_docs:
-            raise HTTPException(status_code=404, detail="No QSP documents found")
+            raise HTTPException(status_code=404, detail="No QSP documents found. Please upload QSP documents first.")
         
-        # Get ISO summary for clauses (tenant-specific)
-        iso_summary = await db.iso_summaries.find_one({"tenant_id": tenant_id}, {"_id": 0})
-        if not iso_summary:
-            raise HTTPException(status_code=404, detail="No ISO summary found")
-        
-        # Standard ISO 13485 clauses
-        iso_clauses = [
-            "4.1 General requirements",
-            "4.2 Documentation requirements",
-            "5.1 Management commitment",
-            "5.2 Customer focus",
-            "5.3 Quality policy",
-            "5.4 Planning",
-            "5.5 Responsibility, authority and communication",
-            "5.6 Management review",
-            "6.1 Provision of resources",
-            "6.2 Human resources",
-            "6.3 Infrastructure",
-            "6.4 Work environment",
-            "7.1 Planning of product realization",
-            "7.2 Customer-related processes",
-            "7.3 Design and development",
-            "7.4 Purchasing",
-            "7.5 Production and service provision",
-            "7.6 Control of monitoring and measuring equipment",
-            "8.1 General",
-            "8.2 Monitoring and measurement",
-            "8.3 Control of nonconforming product",
-            "8.4 Analysis of data",
-            "8.5 Improvement"
-        ]
+        # Check if regulatory documents exist in RAG system
+        regulatory_docs = rag_service.list_regulatory_documents(tenant_id)
+        if not regulatory_docs:
+            raise HTTPException(
+                status_code=404, 
+                detail="No regulatory documents found. Please upload regulatory standards (ISO, FDA, etc.) first."
+            )
         
         # Clear existing mappings for this tenant
         await db.clause_mappings.delete_many({"tenant_id": tenant_id})
         
         total_mappings = 0
         
-        # Process each QSP document
+        # Process each QSP document using RAG semantic search
         for qsp_doc in qsp_docs:
             qsp_doc = parse_from_mongo(qsp_doc)
             
-            # Map each section
+            # Map each section using RAG
             for section_title, section_content in qsp_doc['sections'].items():
                 if len(section_content) < 50:  # Skip very short sections
                     continue
                 
-                mappings = await analyze_clause_mapping(
-                    section_content, qsp_doc['filename'], iso_clauses
-                )
-                
-                for mapping in mappings:
-                    if mapping.get('confidence_score', 0) > 0.3:  # Only store high-confidence mappings
-                        clause_mapping = ClauseMapping(
-                            tenant_id=tenant_id,
-                            qsp_id=qsp_doc['id'],
-                            qsp_filename=qsp_doc['filename'],
-                            section_title=section_title,
-                            section_content=section_content[:500],  # Truncate for storage
-                            iso_clause=mapping['iso_clause'],
-                            confidence_score=mapping['confidence_score'],
-                            evidence_text=mapping['evidence_text']
+                # Use RAG to find relevant regulatory requirements
+                try:
+                    rag_results = rag_service.search_regulatory_requirements(
+                        tenant_id=tenant_id,
+                        query_text=section_content,
+                        framework=None,  # Search across all frameworks
+                        n_results=5
+                    )
+                    
+                    # Create mappings from RAG results
+                    for result in rag_results:
+                        # Calculate confidence based on distance (lower distance = higher confidence)
+                        distance = result.get('distance', 1.0)
+                        confidence = 1.0 - min(distance, 1.0)  # Convert distance to confidence score
+                        
+                        if confidence > 0.3:  # Only store high-confidence mappings
+                            clause_mapping = ClauseMapping(
+                                tenant_id=tenant_id,
+                                qsp_id=qsp_doc['id'],
+                                qsp_filename=qsp_doc['filename'],
+                                section_title=section_title,
+                                section_content=section_content[:500],  # Truncate for storage
+                                iso_clause=result['metadata'].get('doc_name', 'Unknown'),
+                                confidence_score=confidence,
+                                evidence_text=result['text'][:300]
                         )
                         
                         mapping_dict = prepare_for_mongo(clause_mapping.model_dump())
