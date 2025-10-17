@@ -33,6 +33,15 @@ async def extract_text_from_file(file_content: bytes, filename: str) -> str:
         if file_ext == 'docx':
             doc = DocxDocument(io.BytesIO(file_content))
             return '\n'.join([para.text for para in doc.paragraphs])
+        elif file_ext == 'pdf':
+            # Extract text from PDF using PyPDF2
+            import PyPDF2
+            pdf_file = io.BytesIO(file_content)
+            pdf_reader = PyPDF2.PdfReader(pdf_file)
+            text_content = ""
+            for page in pdf_reader.pages:
+                text_content += page.extract_text() + "\n"
+            return text_content
         elif file_ext == 'txt':
             return file_content.decode('utf-8', errors='ignore')
         else:
@@ -40,7 +49,7 @@ async def extract_text_from_file(file_content: bytes, filename: str) -> str:
             return file_content.decode('utf-8', errors='ignore')
     except Exception as e:
         logger.error(f"Text extraction failed for {filename}: {e}")
-        raise HTTPException(status_code=400, detail=f"Could not extract text from {filename}")
+        raise HTTPException(status_code=400, detail=f"Could not extract text from {filename}: {str(e)}")
 
 @router.post("/upload-regulatory-doc")
 async def upload_regulatory_document(
