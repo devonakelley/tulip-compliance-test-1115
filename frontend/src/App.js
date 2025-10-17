@@ -891,7 +891,6 @@ function App() {
               } 
             />
           </Routes>
-          </main>
           <Toaster />
         </AuthProvider>
       </BrowserRouter>
