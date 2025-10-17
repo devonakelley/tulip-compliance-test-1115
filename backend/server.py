@@ -704,11 +704,14 @@ async def run_clause_mapping(current_user: dict = Depends(get_current_user)):
                                 iso_clause=result['metadata'].get('doc_name', 'Unknown'),
                                 confidence_score=confidence,
                                 evidence_text=result['text'][:300]
-                        )
-                        
-                        mapping_dict = prepare_for_mongo(clause_mapping.model_dump())
-                        await db.clause_mappings.insert_one(mapping_dict)
-                        total_mappings += 1
+                            )
+                            mapping_dict = prepare_for_mongo(clause_mapping.model_dump())
+                            await db.clause_mappings.insert_one(mapping_dict)
+                            total_mappings += 1
+                
+                except Exception as e:
+                    logger.error(f"RAG search failed for section {section_title}: {e}")
+                    continue
         
         logger.info(f"Generated {total_mappings} clause mappings")
         
