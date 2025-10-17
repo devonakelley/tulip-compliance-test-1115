@@ -780,8 +780,26 @@ const Navigation = () => {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-8">
             <div className="flex items-center gap-2">
-              <Shield className="h-8 w-8 text-blue-600" />
-              <span className="text-xl font-bold text-gray-900">QSP Compliance</span>
+              <div style={{ 
+                width: '35px', 
+                height: '35px', 
+                background: 'linear-gradient(135deg, #0066ff 0%, #00d4aa 100%)',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '1.2rem',
+                fontWeight: '800'
+              }}>
+                ✓
+              </div>
+              <span className="text-xl font-bold" style={{
+                background: 'linear-gradient(135deg, #0066ff 0%, #00d4aa 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}>Certaro</span>
             </div>
             
             <div className="hidden md:flex space-x-4">
