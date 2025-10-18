@@ -258,6 +258,21 @@ const DocumentUpload = () => {
     }
   };
 
+  const deleteQSPDoc = async (docId) => {
+    if (!confirm('Are you sure you want to delete this QSP document? Related clause mappings will also be deleted.')) {
+      return;
+    }
+    
+    try {
+      await axios.delete(`${API}/documents/${docId}`);
+      toast.success('QSP document deleted successfully');
+      fetchDocuments();
+    } catch (error) {
+      console.error('Error deleting QSP document:', error);
+      toast.error('Failed to delete document');
+    }
+  };
+
   useEffect(() => {
     fetchDocuments();
     fetchRegulatoryDocs();
