@@ -545,6 +545,52 @@ async def upload_qsp_document(
         logger.error(f"Error uploading document: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.delete("/documents/{doc_id}")
+async def delete_qsp_document(
+    doc_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Delete a QSP document - Tenant-aware"""
+    try:
+        tenant_id = current_user["tenant_id"]
+        
+        # Find and delete the document (tenant-specific)
+        result = await db.qsp_documents.delete_one({
+            "id": doc_id,
+            "tenant_id": tenant_id
+        })
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Document not found")
+        
+        # Also delete related clause mappings
+        await db.clause_mappings.delete_many({
+            "qsp_id": doc_id,
+            "tenant_id": tenant_id
+        })
+        
+        # Log the deletion
+        await audit_logger.log_action(
+            tenant_id=tenant_id,
+            user_id=current_user["user_id"],
+            action="delete_qsp_document",
+            details={"doc_id": doc_id}
+        )
+        
+        logger.info(f"Deleted QSP document: {doc_id}")
+        
+        return {
+            "success": True,
+            "message": "Document deleted successfully",
+            "doc_id": doc_id
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting document: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.post("/iso-summary/upload")
 async def upload_iso_summary(
     file: UploadFile = File(...),
