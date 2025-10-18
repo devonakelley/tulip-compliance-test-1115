@@ -490,9 +490,19 @@ const DocumentUpload = () => {
                       </p>
                     </div>
                   </div>
-                  <Badge variant="secondary">
-                    {doc.processed ? 'Processed' : 'Processing'}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">
+                      {doc.processed ? 'Processed' : 'Processing'}
+                    </Badge>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => deleteQSPDoc(doc.id)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      Delete
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
