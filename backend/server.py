@@ -1004,6 +1004,56 @@ async def get_qsp_documents(current_user: dict = Depends(get_current_user)):
         logger.error(f"Error getting documents: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.get("/documents/hierarchy")
+async def get_document_hierarchy(current_user: dict = Depends(get_current_user)):
+    """Get document hierarchy (QSP → WI → Forms) - Tenant-aware"""
+    try:
+        tenant_id = current_user["tenant_id"]
+        
+        # Get all QSP documents
+        qsp_docs = await db.qsp_documents.find({"tenant_id": tenant_id}, {"_id": 0}).to_list(length=None)
+        
+        hierarchy = []
+        
+        for doc in qsp_docs:
+            doc = parse_from_mongo(doc)
+            
+            # Extract references from document content
+            import re
+            content = " ".join(doc.get('sections', {}).values())
+            
+            # Extract WI references (e.g., WI-ENG-003, WI-TEST-015)
+            wi_pattern = r'WI-[A-Z]+-\d+'
+            wi_refs = list(set(re.findall(wi_pattern, content)))
+            
+            # Extract Form references (e.g., Form 7.3-2-B, Form 4.2-1-1)
+            form_pattern = r'Form\s+[\d.-]+[A-Z]?'
+            form_refs = list(set(re.findall(form_pattern, content)))
+            
+            # Extract procedure references (e.g., QSP 4.3-2)
+            qsp_pattern = r'QSP\s+[\d.-]+'
+            qsp_refs = list(set(re.findall(qsp_pattern, content)))
+            
+            hierarchy.append({
+                "qsp_id": doc['id'],
+                "qsp_filename": doc['filename'],
+                "upload_date": doc['upload_date'],
+                "work_instructions": wi_refs,
+                "forms": form_refs,
+                "referenced_qsps": qsp_refs,
+                "total_references": len(wi_refs) + len(form_refs) + len(qsp_refs)
+            })
+        
+        return {
+            "success": True,
+            "count": len(hierarchy),
+            "hierarchy": hierarchy
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting document hierarchy: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/gaps")
 async def get_compliance_gaps(current_user: dict = Depends(get_current_user)):
     """Get detailed compliance gaps - Tenant-aware"""
