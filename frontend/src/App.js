@@ -731,8 +731,9 @@ const Analysis = () => {
 const Gaps = () => {
   const [gaps, setGaps] = useState([]);
   const [mappings, setMappings] = useState([]);
+  const [hierarchy, setHierarchy] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('mappings'); // 'mappings' or 'gaps'
+  const [activeTab, setActiveTab] = useState('mappings'); // 'mappings', 'gaps', or 'hierarchy'
 
   const fetchGaps = async () => {
     try {
@@ -756,9 +757,20 @@ const Gaps = () => {
     }
   };
 
+  const fetchHierarchy = async () => {
+    try {
+      const response = await axios.get(`${API}/documents/hierarchy`);
+      setHierarchy(response.data.hierarchy || []);
+    } catch (error) {
+      console.error('Error fetching hierarchy:', error);
+      toast.error('Failed to load document hierarchy');
+    }
+  };
+
   useEffect(() => {
     fetchGaps();
     fetchMappings();
+    fetchHierarchy();
   }, []);
 
   const getSeverityColor = (severity) => {
