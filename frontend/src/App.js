@@ -824,6 +824,16 @@ const Gaps = () => {
           Clause Mappings ({mappings.length})
         </button>
         <button
+          onClick={() => setActiveTab('hierarchy')}
+          className={`px-6 py-3 font-medium transition-colors ${
+            activeTab === 'hierarchy'
+              ? 'border-b-2 border-blue-500 text-blue-600'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Document Hierarchy ({hierarchy.length})
+        </button>
+        <button
           onClick={() => setActiveTab('gaps')}
           className={`px-6 py-3 font-medium transition-colors ${
             activeTab === 'gaps'
