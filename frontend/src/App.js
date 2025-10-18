@@ -924,6 +924,105 @@ const Gaps = () => {
         </div>
       )}
 
+      {/* Hierarchy Tab */}
+      {activeTab === 'hierarchy' && (
+        <div className="space-y-4">
+          {hierarchy.length === 0 ? (
+            <Card>
+              <CardContent className="text-center py-12">
+                <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium mb-2">No Document Hierarchy Available</h3>
+                <p className="text-muted-foreground">
+                  Upload QSP documents to view the document hierarchy (QSP → WI → Forms).
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-900">
+                  <strong>Document Hierarchy View:</strong> Shows which Work Instructions and Forms each QSP references.
+                  This helps visualize your quality system structure.
+                </p>
+              </div>
+              <div className="space-y-4">
+                {hierarchy.map((item, index) => (
+                  <Card key={index}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <FileText className="h-5 w-5 text-blue-600" />
+                          {item.qsp_filename}
+                        </CardTitle>
+                        <Badge variant="secondary">
+                          {item.total_references} references
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {/* Work Instructions */}
+                      {item.work_instructions.length > 0 && (
+                        <div>
+                          <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-2">
+                            <span className="text-blue-500">├─</span> Work Instructions ({item.work_instructions.length})
+                          </h4>
+                          <div className="ml-6 space-y-1">
+                            {item.work_instructions.map((wi, idx) => (
+                              <div key={idx} className="flex items-center gap-2 text-sm">
+                                <span className="text-gray-400">│</span>
+                                <span className="bg-blue-50 px-2 py-1 rounded text-blue-700">{wi}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Forms */}
+                      {item.forms.length > 0 && (
+                        <div>
+                          <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-2">
+                            <span className="text-green-500">├─</span> Forms ({item.forms.length})
+                          </h4>
+                          <div className="ml-6 space-y-1">
+                            {item.forms.map((form, idx) => (
+                              <div key={idx} className="flex items-center gap-2 text-sm">
+                                <span className="text-gray-400">│</span>
+                                <span className="bg-green-50 px-2 py-1 rounded text-green-700">{form}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Referenced QSPs */}
+                      {item.referenced_qsps.length > 0 && (
+                        <div>
+                          <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-2">
+                            <span className="text-purple-500">└─</span> Referenced Procedures ({item.referenced_qsps.length})
+                          </h4>
+                          <div className="ml-6 space-y-1">
+                            {item.referenced_qsps.map((qsp, idx) => (
+                              <div key={idx} className="flex items-center gap-2 text-sm">
+                                <span className="text-gray-400">│</span>
+                                <span className="bg-purple-50 px-2 py-1 rounded text-purple-700">{qsp}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {item.work_instructions.length === 0 && item.forms.length === 0 && item.referenced_qsps.length === 0 && (
+                        <p className="text-sm text-gray-500 italic">No references found in this document.</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Gaps Tab */}
       {activeTab === 'gaps' && (
         <div className="space-y-4">
