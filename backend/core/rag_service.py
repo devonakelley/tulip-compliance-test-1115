@@ -477,11 +477,12 @@ class RAGService:
             Compliance analysis with matches and gaps
         """
         try:
-            # Chunk the QSP
-            qsp_chunks = self._chunk_document(qsp_content, chunk_size=300)
+            # Chunk the QSP using improved strategy for better semantic matching
+            qsp_chunks = self._chunk_document(qsp_content, chunk_size=1000, overlap=200)
             
             matches = []
             covered_requirements = set()
+            confidence_scores = []  # Track all confidence scores for analysis
             
             # Search for each QSP chunk
             for chunk in qsp_chunks:
@@ -489,20 +490,27 @@ class RAGService:
                     tenant_id=tenant_id,
                     query_text=chunk['text'],
                     framework=framework,
-                    n_results=3
+                    n_results=5  # Increased from 3 for better coverage
                 )
                 
                 for result in results:
+                    # Calculate confidence score (similarity = 1 - distance)
+                    confidence = 1 - result.get('distance', 1.0)
+                    confidence_scores.append(confidence)
+                    
                     if result.get('distance', 1.0) < (1 - threshold):
                         matches.append({
                             'qsp_chunk': chunk['text'][:200],
+                            'qsp_section': chunk.get('section_header', 'Unknown'),
                             'regulatory_text': result['text'][:200],
+                            'regulatory_section': result['metadata'].get('section_header', 'Unknown'),
                             'doc_name': result['metadata'].get('doc_name'),
-                            'confidence': 1 - result.get('distance', 1.0)
+                            'confidence': confidence,
+                            'semantic_unit': result['metadata'].get('semantic_unit', 'paragraph')
                         })
                         covered_requirements.add(result['chunk_id'])
             
-            # Calculate coverage
+            # Calculate coverage and confidence statistics
             collection_name = f"regulatory_{tenant_id}".replace("-", "_")
             try:
                 collection = self.chroma_client.get_collection(collection_name)
@@ -512,13 +520,25 @@ class RAGService:
                 total_chunks = 0
                 coverage = 0
             
+            # Calculate confidence score statistics
+            avg_confidence = sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0
+            high_confidence_count = sum(1 for c in confidence_scores if c >= 0.7)
+            medium_confidence_count = sum(1 for c in confidence_scores if 0.4 <= c < 0.7)
+            low_confidence_count = sum(1 for c in confidence_scores if c < 0.4)
+            
             return {
                 'framework': framework,
                 'matches_found': len(matches),
                 'unique_requirements_covered': len(covered_requirements),
                 'total_requirements': total_chunks,
                 'coverage_percentage': round(coverage * 100, 2),
-                'matches': matches[:10]  # Top 10 matches
+                'avg_confidence': round(avg_confidence, 3),
+                'confidence_distribution': {
+                    'high': high_confidence_count,  # >= 70%
+                    'medium': medium_confidence_count,  # 40-70%
+                    'low': low_confidence_count  # < 40%
+                },
+                'matches': sorted(matches, key=lambda x: x['confidence'], reverse=True)[:10]  # Top 10 by confidence
             }
             
         except Exception as e:
