@@ -73,48 +73,238 @@ class RAGService:
             logger.error(f"OpenAI embedding generation failed: {e}")
             raise Exception(f"Failed to generate embedding: {str(e)}")
     
-    def _chunk_document(self, text: str, chunk_size: int = 500, overlap: int = 50) -> List[Dict[str, Any]]:
+    def _clean_text(self, text: str) -> str:
         """
-        Chunk document into smaller pieces with overlap
+        Clean text before chunking to remove noise
+        
+        - Removes excessive whitespace
+        - Removes page numbers and common footers
+        - Normalizes line breaks
+        - Removes non-content patterns
+        """
+        import re
+        
+        # Remove page numbers (e.g., "Page 5 of 20", "- 5 -")
+        text = re.sub(r'Page\s+\d+\s+of\s+\d+', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'-\s*\d+\s*-', '', text)
+        text = re.sub(r'^\d+$', '', text, flags=re.MULTILINE)
+        
+        # Remove common headers/footers (e.g., "ISO 13485:2016", "© 2024")
+        text = re.sub(r'©\s*\d{4}', '', text)
+        text = re.sub(r'All rights reserved', '', text, flags=re.IGNORECASE)
+        
+        # Normalize whitespace while preserving paragraph structure
+        lines = text.split('\n')
+        cleaned_lines = []
+        for line in lines:
+            line = ' '.join(line.split())  # Collapse multiple spaces
+            if line:  # Keep non-empty lines
+                cleaned_lines.append(line)
+        
+        text = '\n'.join(cleaned_lines)
+        
+        # Remove very short lines that are likely artifacts (< 10 chars)
+        lines = text.split('\n')
+        meaningful_lines = [line for line in lines if len(line.strip()) >= 10 or line.strip().endswith(':')]
+        text = '\n'.join(meaningful_lines)
+        
+        return text
+    
+    def _is_section_header(self, text: str) -> bool:
+        """
+        Detect if text is a section header
+        Common patterns:
+        - "4.2 Document Control"
+        - "Clause 7: Product realization"
+        - "Section 3 - Requirements"
+        """
+        import re
+        
+        # Check for numbered sections
+        if re.match(r'^\d+\.?\d*\.?\d*\s+[A-Z]', text.strip()):
+            return True
+        
+        # Check for "Clause", "Section", "Article" keywords
+        if re.match(r'^(Clause|Section|Article|Chapter)\s+\d+', text.strip(), flags=re.IGNORECASE):
+            return True
+        
+        # Check if it's short and title-case (likely a heading)
+        if len(text.strip()) < 80 and text.strip().istitle():
+            return True
+        
+        return False
+    
+    def _chunk_document_improved(
+        self, 
+        text: str, 
+        chunk_size: int = 1000,  # Increased from 500 for better semantic coherence
+        overlap: int = 200,      # Increased overlap for better context
+        min_chunk_size: int = 300  # Minimum viable chunk size
+    ) -> List[Dict[str, Any]]:
+        """
+        Improved chunking strategy for regulatory documents
+        
+        Features:
+        - Sentence-aware chunking (breaks at sentence boundaries)
+        - Section-aware chunking (preserves section structure)
+        - Larger chunks for better semantic coherence
+        - Smart overlap to maintain context
+        - Filters out non-content elements
         
         Args:
             text: Document text
-            chunk_size: Characters per chunk
-            overlap: Overlap between chunks
+            chunk_size: Target characters per chunk (default 1000)
+            overlap: Overlap between chunks (default 200)
+            min_chunk_size: Minimum chunk size to avoid tiny fragments
             
         Returns:
             List of chunk dictionaries with text and metadata
         """
+        import re
+        
+        # Clean text first
+        text = self._clean_text(text)
+        
         chunks = []
-        start = 0
         chunk_id = 0
         
-        while start < len(text):
-            end = start + chunk_size
-            chunk_text = text[start:end]
+        # Split into paragraphs first
+        paragraphs = text.split('\n\n')
+        if len(paragraphs) == 1:
+            # If no double newlines, split by single newlines
+            paragraphs = text.split('\n')
+        
+        current_chunk = ""
+        current_start = 0
+        section_header = ""
+        
+        for para_idx, para in enumerate(paragraphs):
+            para = para.strip()
+            if not para or len(para) < 10:
+                continue
             
-            # Try to break at sentence boundary
-            if end < len(text):
-                last_period = chunk_text.rfind('.')
-                last_newline = chunk_text.rfind('\n')
-                break_point = max(last_period, last_newline)
+            # Check if this is a section header
+            if self._is_section_header(para):
+                section_header = para
                 
-                if break_point > chunk_size * 0.5:  # At least 50% of chunk
-                    end = start + break_point + 1
-                    chunk_text = text[start:end]
+                # If current chunk is substantial, save it before starting new section
+                if len(current_chunk) >= min_chunk_size:
+                    # Try to break at sentence boundary
+                    sentences = self._split_into_sentences(current_chunk)
+                    if len(sentences) > 0:
+                        # Add chunk
+                        chunk_text = ' '.join(sentences).strip()
+                        if chunk_text:
+                            chunks.append({
+                                'text': chunk_text,
+                                'chunk_id': chunk_id,
+                                'start_char': current_start,
+                                'end_char': current_start + len(chunk_text),
+                                'length': len(chunk_text),
+                                'section_header': section_header,
+                                'semantic_unit': 'section'
+                            })
+                            chunk_id += 1
+                    
+                    current_chunk = section_header + "\n"
+                    current_start = current_start + len(current_chunk)
+                else:
+                    current_chunk += para + "\n"
+                
+                continue
             
+            # Add paragraph to current chunk
+            potential_chunk = current_chunk + para + "\n"
+            
+            if len(potential_chunk) >= chunk_size:
+                # Chunk is large enough, try to break at sentence boundary
+                sentences = self._split_into_sentences(current_chunk + para)
+                
+                if len(sentences) > 1:
+                    # Take sentences until we reach target size
+                    accumulated = ""
+                    remaining = []
+                    for sent in sentences:
+                        if len(accumulated) < chunk_size:
+                            accumulated += sent + " "
+                        else:
+                            remaining.append(sent)
+                    
+                    # Add chunk
+                    chunk_text = accumulated.strip()
+                    if len(chunk_text) >= min_chunk_size:
+                        chunks.append({
+                            'text': chunk_text,
+                            'chunk_id': chunk_id,
+                            'start_char': current_start,
+                            'end_char': current_start + len(chunk_text),
+                            'length': len(chunk_text),
+                            'section_header': section_header,
+                            'semantic_unit': 'paragraph_group'
+                        })
+                        chunk_id += 1
+                    
+                    # Start new chunk with overlap (last few sentences)
+                    if len(remaining) > 0:
+                        # Include last sentence from previous chunk for context
+                        overlap_sentences = sentences[-2:] if len(sentences) >= 2 else sentences[-1:]
+                        current_chunk = ' '.join(overlap_sentences + remaining) + "\n"
+                        current_start = current_start + len(accumulated) - len(' '.join(overlap_sentences))
+                    else:
+                        current_chunk = ' '.join(remaining) + "\n"
+                        current_start = current_start + len(accumulated)
+                else:
+                    # Single long sentence/paragraph, chunk it
+                    current_chunk = potential_chunk
+            else:
+                current_chunk = potential_chunk
+        
+        # Add remaining chunk
+        if len(current_chunk.strip()) >= min_chunk_size:
             chunks.append({
-                'text': chunk_text.strip(),
+                'text': current_chunk.strip(),
                 'chunk_id': chunk_id,
-                'start_char': start,
-                'end_char': end,
-                'length': len(chunk_text)
+                'start_char': current_start,
+                'end_char': current_start + len(current_chunk),
+                'length': len(current_chunk),
+                'section_header': section_header,
+                'semantic_unit': 'final'
             })
-            
-            start = end - overlap
-            chunk_id += 1
+        
+        logger.info(f"Created {len(chunks)} chunks (avg size: {sum(c['length'] for c in chunks) // max(len(chunks), 1)} chars)")
         
         return chunks
+    
+    def _split_into_sentences(self, text: str) -> List[str]:
+        """
+        Split text into sentences using simple heuristics
+        Handles common abbreviations and edge cases
+        """
+        import re
+        
+        # Replace common abbreviations to avoid false splits
+        text = text.replace('Dr.', 'Dr').replace('Mr.', 'Mr').replace('Mrs.', 'Mrs')
+        text = text.replace('e.g.', 'eg').replace('i.e.', 'ie').replace('etc.', 'etc')
+        
+        # Split on sentence boundaries
+        sentences = re.split(r'(?<=[.!?])\s+(?=[A-Z])', text)
+        
+        # Restore abbreviations
+        sentences = [
+            s.replace('Dr', 'Dr.').replace('Mr', 'Mr.').replace('Mrs', 'Mrs.')
+             .replace('eg', 'e.g.').replace('ie', 'i.e.').replace('etc', 'etc.')
+            for s in sentences
+        ]
+        
+        return [s.strip() for s in sentences if s.strip()]
+    
+    def _chunk_document(self, text: str, chunk_size: int = 500, overlap: int = 50) -> List[Dict[str, Any]]:
+        """
+        Legacy chunking method - redirects to improved version
+        Kept for backward compatibility
+        """
+        logger.info("Using improved chunking strategy")
+        return self._chunk_document_improved(text, chunk_size=1000, overlap=200)
     
     def add_regulatory_document(
         self,
