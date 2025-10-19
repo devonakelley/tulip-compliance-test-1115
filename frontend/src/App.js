@@ -807,12 +807,22 @@ const Gaps = () => {
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold text-gray-900">Compliance Analysis Results</h1>
         <p className="text-xl text-muted-foreground">
-          View clause mappings and compliance gaps
+          Visual insights, mappings, hierarchy, and gaps
         </p>
       </div>
 
       {/* Tab Navigation */}
       <div className="flex justify-center gap-4 border-b">
+        <button
+          onClick={() => setActiveTab('dashboard')}
+          className={`px-6 py-3 font-medium transition-colors ${
+            activeTab === 'dashboard'
+              ? 'border-b-2 border-blue-500 text-blue-600'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Analysis Dashboard
+        </button>
         <button
           onClick={() => setActiveTab('mappings')}
           className={`px-6 py-3 font-medium transition-colors ${
