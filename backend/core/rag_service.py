@@ -483,7 +483,8 @@ class RAGService:
         """
         try:
             # Chunk the QSP using improved strategy for better semantic matching
-            qsp_chunks = self._chunk_document(qsp_content, chunk_size=1000, overlap=200)
+            # Use optimal token size (~1000 tokens = 4000 chars)
+            qsp_chunks = self._chunk_document(qsp_content, chunk_size=4000, overlap=800)
             
             matches = []
             covered_requirements = set()
