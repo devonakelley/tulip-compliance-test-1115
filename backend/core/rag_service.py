@@ -137,12 +137,17 @@ class RAGService:
     def _chunk_document_improved(
         self, 
         text: str, 
-        chunk_size: int = 1000,  # Increased from 500 for better semantic coherence
-        overlap: int = 200,      # Increased overlap for better context
-        min_chunk_size: int = 300  # Minimum viable chunk size
+        chunk_size: int = 4000,  # ~1000 tokens (optimal for text-embedding-3-large)
+        overlap: int = 800,       # ~20% overlap (~200 tokens)
+        min_chunk_size: int = 1000  # Minimum viable chunk size (~250 tokens)
     ) -> List[Dict[str, Any]]:
         """
         Improved chunking strategy for regulatory documents
+        
+        Optimized for OpenAI text-embedding-3-large (2024 best practices):
+        - Target: ~1000 tokens per chunk (≈4000 chars)
+        - Overlap: ~20% (≈800 chars / ~200 tokens)
+        - Token-based splitting at semantic boundaries
         
         Features:
         - Sentence-aware chunking (breaks at sentence boundaries)
@@ -153,8 +158,8 @@ class RAGService:
         
         Args:
             text: Document text
-            chunk_size: Target characters per chunk (default 1000)
-            overlap: Overlap between chunks (default 200)
+            chunk_size: Target characters per chunk (default 4000 ≈ 1000 tokens)
+            overlap: Overlap between chunks (default 800 ≈ 200 tokens)
             min_chunk_size: Minimum chunk size to avoid tiny fragments
             
         Returns:
