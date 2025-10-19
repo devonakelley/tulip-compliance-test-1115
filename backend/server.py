@@ -958,7 +958,7 @@ async def run_compliance_analysis(current_user: dict = Depends(get_current_user)
 
 @api_router.get("/dashboard")
 async def get_dashboard_data(current_user: dict = Depends(get_current_user)):
-    """Get dashboard overview data - Tenant-aware"""
+    """Get dashboard overview data - Tenant-aware with RAG quality metrics"""
     try:
         tenant_id = current_user["tenant_id"]
         # Get latest analysis (tenant-specific)
@@ -970,6 +970,32 @@ async def get_dashboard_data(current_user: dict = Depends(get_current_user)):
         
         # Get ISO summary (tenant-specific)
         iso_summary = await db.iso_summaries.find_one({"tenant_id": tenant_id}, {"_id": 0})
+        
+        # Get RAG chunking quality metrics
+        try:
+            from core.rag_service import rag_service
+            reg_docs = rag_service.list_regulatory_documents(tenant_id)
+            total_reg_docs = len(reg_docs)
+            total_chunks = sum(doc['chunk_count'] for doc in reg_docs)
+            avg_chunks = total_chunks // total_reg_docs if total_reg_docs > 0 else 0
+            
+            # Get confidence score distribution from recent analysis
+            confidence_dist = analysis.get('confidence_distribution', {}) if analysis else {}
+            
+            rag_metrics = {
+                'regulatory_docs': total_reg_docs,
+                'total_chunks': total_chunks,
+                'avg_chunks_per_doc': avg_chunks,
+                'confidence_distribution': confidence_dist
+            }
+        except Exception as e:
+            logger.warning(f"Could not get RAG metrics: {e}")
+            rag_metrics = {
+                'regulatory_docs': 0,
+                'total_chunks': 0,
+                'avg_chunks_per_doc': 0,
+                'confidence_distribution': {}
+            }
         
         if analysis:
             analysis = parse_from_mongo(analysis)
@@ -986,7 +1012,9 @@ async def get_dashboard_data(current_user: dict = Depends(get_current_user)):
             "iso_summary_loaded": iso_summary is not None,
             "new_clauses_count": len(iso_summary.get('new_clauses', [])) if iso_summary else 0,
             "modified_clauses_count": len(iso_summary.get('modified_clauses', [])) if iso_summary else 0,
-            "last_analysis_date": analysis['analysis_date'] if analysis else None
+            "last_analysis_date": analysis['analysis_date'] if analysis else None,
+            "rag_metrics": rag_metrics,
+            "avg_confidence": analysis.get('avg_confidence', 0) if analysis else 0
         }
         
     except Exception as e:
