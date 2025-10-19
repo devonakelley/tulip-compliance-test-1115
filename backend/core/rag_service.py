@@ -308,8 +308,8 @@ class RAGService:
         Legacy chunking method - redirects to improved version
         Kept for backward compatibility
         """
-        logger.info("Using improved chunking strategy")
-        return self._chunk_document_improved(text, chunk_size=1000, overlap=200)
+        logger.info("Using improved chunking strategy (4000 chars ≈ 1000 tokens)")
+        return self._chunk_document_improved(text, chunk_size=4000, overlap=800)
     
     def add_regulatory_document(
         self,
