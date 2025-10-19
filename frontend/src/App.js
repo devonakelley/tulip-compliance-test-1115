@@ -733,7 +733,7 @@ const Gaps = () => {
   const [mappings, setMappings] = useState([]);
   const [hierarchy, setHierarchy] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('mappings'); // 'mappings', 'gaps', or 'hierarchy'
+  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'mappings', 'hierarchy', or 'gaps'
 
   const fetchGaps = async () => {
     try {
