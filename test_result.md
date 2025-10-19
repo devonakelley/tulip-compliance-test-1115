@@ -156,6 +156,21 @@ backend:
         agent: "testing"
         comment: "COMPREHENSIVE RAG TESTING COMPLETED SUCCESSFULLY! ✅ OpenAI text-embedding-3-large (3072 dimensions) integration fully operational. Tested: 1) Document upload with embedding generation (11 chunks created), 2) Regulatory document listing (working), 3) Semantic search with distance scores (returning relevant results with proper similarity calculations), 4) Compliance checking between QSP and regulatory documents (functional), 5) Error handling for invalid frameworks and authentication. OpenAI API calls confirmed in logs - multiple successful POST requests to https://api.openai.com/v1/embeddings. All RAG endpoints (/api/rag/*) working correctly with proper authentication. System achieving high accuracy semantic matching as expected with 3072-dimensional embeddings."
 
+  - task: "Document upload functionality (QSP and Regulatory)"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py, /app/backend/api/rag.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "user"
+        comment: "User reports uploads are failing after Dashboard implementation. Need to test both QSP document uploads (/api/documents/upload) and Regulatory document uploads (/api/rag/upload-regulatory-doc)."
+      - working: "NA"
+        agent: "main"
+        comment: "Setting up comprehensive upload testing. Will test: 1) QSP document upload (.docx, .txt), 2) Regulatory document upload (PDF, DOCX) with framework selection, 3) ChromaDB initialization, 4) Document listing endpoints, 5) Error handling. Need to identify exact failure point."
+
   - task: "Test basic system functionality"
     implemented: true
     working: true
