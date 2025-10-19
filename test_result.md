@@ -177,6 +177,18 @@ backend:
         agent: "testing"
         comment: "FRONTEND UPLOAD INVESTIGATION COMPLETED - UPLOADS ARE FULLY FUNCTIONAL! ✅ DEFINITIVE CONCLUSION: After comprehensive frontend testing with Playwright automation and backend log analysis, upload functionality is working correctly. EVIDENCE: 1) Frontend Testing ✅ - File inputs properly connected to labels (for='qsp-file'), change events triggering successfully, API calls being made to correct endpoints, 2) Backend Verification ✅ - Server logs confirm: 'File saved locally: uploads/.../test_qsp.txt', 'Uploaded QSP document: test_qsp.txt', audit logs show 'status: success', HTTP 200 responses, 3) Network Analysis ✅ - Proper Authorization headers, successful API requests to POST /api/documents/upload and POST /api/rag/upload-regulatory-doc, 4) Authentication ✅ - JWT tokens valid, user properly authenticated. FINAL VERDICT: Upload functionality is operational. User's reported 'failure' likely due to UI feedback issues, specific file constraints, or user workflow misunderstanding. Both QSP and Regulatory uploads processing successfully."
 
+  - task: "Improved RAG chunking strategy for accuracy"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/core/rag_service.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "IMPLEMENTED IMPROVED CHUNKING STRATEGY: Created comprehensive text cleaning, section-aware chunking, and sentence-boundary breaking. Changes: 1) Added _clean_text() to remove page numbers, headers, footers, 2) Created _chunk_document_improved() with 1000 char chunks (up from 500), 200 char overlap (up from 50), section header detection, semantic unit preservation, 3) Updated _chunk_document() to redirect to improved method, 4) Added reprocess_document() method for updating existing docs, 5) Enhanced compare_documents() to use improved chunking and track confidence score distribution, 6) Added new metadata fields: section_header, semantic_unit. Backend restarted successfully. TESTING NEEDED: Upload new regulatory document and compare chunk quality (count, size, confidence scores) vs old chunking."
+
   - task: "Test basic system functionality"
     implemented: true
     working: true
