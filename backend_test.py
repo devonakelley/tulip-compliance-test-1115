@@ -521,6 +521,31 @@ software lifecycle processes, and cybersecurity considerations for medical devic
             self.log_test("User Login", False, f"Exception: {str(e)}")
             return False
 
+    def login_admin_user(self):
+        """Login with admin credentials from review request"""
+        try:
+            login_data = {
+                "email": "admin@tulipmedical.com",
+                "password": "password123"
+            }
+            
+            response = requests.post(f"{self.api_url}/auth/login", json=login_data, timeout=10)
+            
+            if response.status_code == 200:
+                token_data = response.json()
+                self.auth_token = token_data["access_token"]
+                self.tenant_id = token_data["tenant_id"]
+                self.user_id = token_data["user_id"]
+                self.log_test("Admin User Login", True, f"Logged in admin user: {login_data['email']}")
+                return True
+            else:
+                self.log_test("Admin User Login", False, f"Status: {response.status_code}, Response: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Admin User Login", False, f"Exception: {str(e)}")
+            return False
+
     def create_test_regulatory_document(self):
         """Create a test ISO 13485 regulatory document"""
         content = """ISO 13485:2016 Medical devices — Quality management systems — Requirements for regulatory purposes
