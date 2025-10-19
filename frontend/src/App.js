@@ -855,6 +855,214 @@ const Gaps = () => {
         </button>
       </div>
 
+      {/* Dashboard Tab */}
+      {activeTab === 'dashboard' && (
+        <div className="space-y-6">
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <Database className="h-8 w-8 mx-auto text-blue-600 mb-2" />
+                  <div className="text-3xl font-bold text-blue-600">{mappings.length}</div>
+                  <p className="text-sm text-gray-600 mt-1">Total Mappings</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <CheckCircle className="h-8 w-8 mx-auto text-green-600 mb-2" />
+                  <div className="text-3xl font-bold text-green-600">
+                    {mappings.filter(m => m.confidence_score > 0.5).length}
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">High Confidence</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <AlertTriangle className="h-8 w-8 mx-auto text-red-600 mb-2" />
+                  <div className="text-3xl font-bold text-red-600">{gaps.length}</div>
+                  <p className="text-sm text-gray-600 mt-1">Compliance Gaps</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <FileText className="h-8 w-8 mx-auto text-purple-600 mb-2" />
+                  <div className="text-3xl font-bold text-purple-600">{hierarchy.length}</div>
+                  <p className="text-sm text-gray-600 mt-1">QSP Documents</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Confidence Distribution */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Mapping Confidence Distribution</CardTitle>
+              <CardDescription>Quality of ISO to QSP mappings</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {(() => {
+                  const high = mappings.filter(m => m.confidence_score >= 0.7).length;
+                  const medium = mappings.filter(m => m.confidence_score >= 0.4 && m.confidence_score < 0.7).length;
+                  const low = mappings.filter(m => m.confidence_score < 0.4).length;
+                  const total = mappings.length || 1;
+                  
+                  return (
+                    <>
+                      <div>
+                        <div className="flex justify-between text-sm mb-2">
+                          <span className="font-medium text-green-700">High Confidence (70%+)</span>
+                          <span className="font-semibold">{high} mappings ({Math.round(high/total*100)}%)</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div className="bg-green-500 h-3 rounded-full transition-all" style={{width: `${high/total*100}%`}}></div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <div className="flex justify-between text-sm mb-2">
+                          <span className="font-medium text-yellow-700">Medium Confidence (40-70%)</span>
+                          <span className="font-semibold">{medium} mappings ({Math.round(medium/total*100)}%)</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div className="bg-yellow-500 h-3 rounded-full transition-all" style={{width: `${medium/total*100}%`}}></div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <div className="flex justify-between text-sm mb-2">
+                          <span className="font-medium text-red-700">Low Confidence (&lt;40%)</span>
+                          <span className="font-semibold">{low} mappings ({Math.round(low/total*100)}%)</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div className="bg-red-500 h-3 rounded-full transition-all" style={{width: `${low/total*100}%`}}></div>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* ISO to QSP Mapping Overview */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Document Mapping Overview</CardTitle>
+              <CardDescription>Which QSPs address which ISO requirements</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {mappings.length > 0 ? (
+                <div className="space-y-4">
+                  {(() => {
+                    // Group mappings by QSP document
+                    const qspGroups = {};
+                    mappings.forEach(m => {
+                      if (!qspGroups[m.qsp_filename]) {
+                        qspGroups[m.qsp_filename] = [];
+                      }
+                      qspGroups[m.qsp_filename].push(m);
+                    });
+                    
+                    return Object.entries(qspGroups).slice(0, 10).map(([qsp, maps]) => {
+                      const avgConfidence = maps.reduce((sum, m) => sum + m.confidence_score, 0) / maps.length;
+                      
+                      return (
+                        <div key={qsp} className="border-l-4 border-blue-500 pl-4 py-2">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-semibold text-gray-900">{qsp}</h4>
+                            <Badge variant={avgConfidence > 0.5 ? 'default' : 'secondary'}>
+                              {Math.round(avgConfidence * 100)}% avg confidence
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-600">
+                            {maps.length} ISO requirement{maps.length > 1 ? 's' : ''} mapped
+                          </p>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {maps.slice(0, 5).map((m, idx) => (
+                              <span key={idx} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                                {m.iso_clause.substring(0, 30)}...
+                              </span>
+                            ))}
+                            {maps.length > 5 && (
+                              <span className="text-xs text-gray-500">+{maps.length - 5} more</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                  {Object.keys(mappings.reduce((acc, m) => ({...acc, [m.qsp_filename]: true}), {})).length > 10 && (
+                    <p className="text-sm text-gray-500 text-center mt-4">
+                      Showing top 10 QSP documents. View full mappings in "Clause Mappings" tab.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-600">No mappings available yet. Run clause mapping analysis to see results.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Coverage Insights */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Coverage Insights</CardTitle>
+              <CardDescription>How well your QSPs cover regulatory requirements</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {hierarchy.length > 0 ? (
+                  <>
+                    <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                      <div>
+                        <p className="font-semibold text-gray-900">Total QSP Documents</p>
+                        <p className="text-sm text-gray-600">Documents in your quality system</p>
+                      </div>
+                      <div className="text-3xl font-bold text-blue-600">{hierarchy.length}</div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+                      <div>
+                        <p className="font-semibold text-gray-900">Total References</p>
+                        <p className="text-sm text-gray-600">WIs and Forms referenced</p>
+                      </div>
+                      <div className="text-3xl font-bold text-green-600">
+                        {hierarchy.reduce((sum, h) => sum + h.total_references, 0)}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+                      <div>
+                        <p className="font-semibold text-gray-900">ISO Requirements Mapped</p>
+                        <p className="text-sm text-gray-600">Unique regulatory requirements addressed</p>
+                      </div>
+                      <div className="text-3xl font-bold text-purple-600">
+                        {new Set(mappings.map(m => m.iso_clause)).size}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-center text-gray-600 py-8">Upload documents and run analysis to see coverage insights.</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Mappings Tab */}
       {activeTab === 'mappings' && (
         <div className="space-y-4">
