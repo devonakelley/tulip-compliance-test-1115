@@ -179,15 +179,18 @@ backend:
 
   - task: "Improved RAG chunking strategy for accuracy"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/backend/core/rag_service.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "critical"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "IMPLEMENTED IMPROVED CHUNKING STRATEGY: Created comprehensive text cleaning, section-aware chunking, and sentence-boundary breaking. Changes: 1) Added _clean_text() to remove page numbers, headers, footers, 2) Created _chunk_document_improved() with 1000 char chunks (up from 500), 200 char overlap (up from 50), section header detection, semantic unit preservation, 3) Updated _chunk_document() to redirect to improved method, 4) Added reprocess_document() method for updating existing docs, 5) Enhanced compare_documents() to use improved chunking and track confidence score distribution, 6) Added new metadata fields: section_header, semantic_unit. Backend restarted successfully. TESTING NEEDED: Upload new regulatory document and compare chunk quality (count, size, confidence scores) vs old chunking."
+      - working: false
+        agent: "testing"
+        comment: "COMPREHENSIVE RAG CHUNKING TESTING COMPLETED - MIXED RESULTS: ✅ WORKING COMPONENTS: 1) Chunking Quality Metrics endpoint (/api/rag/chunking-quality) - functioning correctly, returns total_documents: 6, total_chunks: 367, avg_chunk_length: 461, unique_sections: 17, 2) Regulatory document upload with improved chunking - successful, creates chunks with section_header and semantic_unit metadata, 3) Dashboard RAG metrics integration - working, displays rag_metrics with regulatory_docs: 6, total_chunks: 367, avg_chunks_per_doc: 61, 4) Section detection - working correctly, identified 17 unique sections across documents. ❌ CRITICAL ISSUES FOUND: 1) Chunk size NOT meeting target - Current avg: 461 chars vs target 800-1200 chars, chunks still too small, 2) Confidence scores BELOW target - Current avg: 30.5% vs target >60%, RAG compliance analysis shows confidence_distribution: high: 0, medium: 2, low: 18, 3) Clause mapping timeouts - /api/analysis/run-mapping timing out after 120 seconds, preventing full confidence analysis. CONCLUSION: Improved chunking strategy partially implemented but not achieving target metrics. Chunk sizes remain small (461 vs 800-1200 target), confidence scores low (30.5% vs 60% target). Need investigation into chunking algorithm parameters and timeout issues."
 
   - task: "Test basic system functionality"
     implemented: true
