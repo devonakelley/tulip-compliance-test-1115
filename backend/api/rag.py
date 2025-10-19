@@ -295,3 +295,116 @@ async def search_requirements(
     except Exception as e:
         logger.error(f"Search failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/reprocess-document/{doc_id}")
+async def reprocess_regulatory_document(
+    doc_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Reprocess a regulatory document with improved chunking strategy
+    This will delete old chunks and recreate with better accuracy
+    """
+    try:
+        tenant_id = current_user["tenant_id"]
+        user_id = current_user["user_id"]
+        
+        # Get document metadata from MongoDB
+        reg_doc = await db.regulatory_documents.find_one({
+            'doc_id': doc_id,
+            'tenant_id': tenant_id
+        })
+        
+        if not reg_doc:
+            raise HTTPException(status_code=404, detail="Regulatory document not found")
+        
+        # We need the original file content to reprocess
+        # For now, return error if we don't have it stored
+        # In production, you'd retrieve from storage
+        raise HTTPException(
+            status_code=400, 
+            detail="Document reprocessing requires the original file. Please re-upload the document to use improved chunking."
+        )
+        
+        # TODO: Implement file retrieval from storage and reprocessing
+        # filename = reg_doc.get('filename')
+        # file_path = storage_service.get_file_path(tenant_id, filename)
+        # content = extract_text_from_file(file_path)
+        # result = rag_service.reprocess_document(...)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Reprocessing failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/chunking-quality")
+async def get_chunking_quality_metrics(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get metrics about chunking quality for all regulatory documents
+    Shows chunk counts, average sizes, and distribution
+    """
+    try:
+        tenant_id = current_user["tenant_id"]
+        
+        # Get all regulatory documents
+        docs = rag_service.list_regulatory_documents(tenant_id)
+        
+        if not docs:
+            return {
+                'success': True,
+                'total_documents': 0,
+                'metrics': {}
+            }
+        
+        # Calculate metrics
+        total_chunks = sum(doc['chunk_count'] for doc in docs)
+        avg_chunks_per_doc = total_chunks // len(docs) if docs else 0
+        
+        # Get detailed chunk size distribution
+        from core.rag_service import rag_service as rag
+        collection_name = f"regulatory_{tenant_id}".replace("-", "_")
+        try:
+            collection = rag.chroma_client.get_collection(collection_name)
+            results = collection.get()
+            
+            chunk_lengths = [len(doc) for doc in results['documents']]
+            avg_chunk_length = sum(chunk_lengths) // len(chunk_lengths) if chunk_lengths else 0
+            min_chunk_length = min(chunk_lengths) if chunk_lengths else 0
+            max_chunk_length = max(chunk_lengths) if chunk_lengths else 0
+            
+            # Analyze section headers
+            section_headers = [meta.get('section_header', '') for meta in results['metadatas']]
+            unique_sections = len(set(h for h in section_headers if h))
+            
+            metrics = {
+                'total_documents': len(docs),
+                'total_chunks': total_chunks,
+                'avg_chunks_per_doc': avg_chunks_per_doc,
+                'avg_chunk_length': avg_chunk_length,
+                'min_chunk_length': min_chunk_length,
+                'max_chunk_length': max_chunk_length,
+                'unique_sections': unique_sections,
+                'documents': docs
+            }
+            
+        except Exception as e:
+            logger.warning(f"Could not get detailed metrics: {e}")
+            metrics = {
+                'total_documents': len(docs),
+                'total_chunks': total_chunks,
+                'avg_chunks_per_doc': avg_chunks_per_doc,
+                'documents': docs
+            }
+        
+        return {
+            'success': True,
+            'metrics': metrics
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get chunking metrics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
