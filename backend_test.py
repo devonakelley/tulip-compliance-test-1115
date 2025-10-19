@@ -631,6 +631,172 @@ The organization shall continually improve the effectiveness of the quality mana
         temp_file.close()
         return temp_file.name
 
+    def create_enhanced_iso_regulatory_document(self):
+        """Create a more comprehensive ISO 13485 document for improved chunking testing"""
+        content = """ISO 13485:2024 Medical devices — Quality management systems — Requirements for regulatory purposes
+
+1. Scope
+This International Standard specifies requirements for a quality management system where an organization needs to demonstrate its ability to provide medical devices and related services that consistently meet customer and applicable regulatory requirements.
+
+2. Normative references
+The following documents are referred to in the text in such a way that some or all of their content constitutes requirements of this document.
+
+3. Terms and definitions
+For the purposes of this document, the terms and definitions given in ISO 9000 and the following apply.
+
+4. Quality management system
+
+4.1 General requirements
+The organization shall establish, document, implement and maintain a quality management system and maintain its effectiveness in accordance with the requirements of this International Standard. The organization shall document the quality management system and ensure its effectiveness.
+
+The organization shall:
+a) determine the processes needed for the quality management system and their application throughout the organization, taking into account the medical device regulations applicable in the countries where the organization intends to sell its medical devices;
+b) determine the sequence and interaction of these processes;
+c) determine criteria and methods needed to ensure that both the operation and control of these processes are effective;
+d) ensure the availability of resources and information necessary to support the operation and monitoring of these processes;
+e) monitor, measure where applicable, and analyze these processes;
+f) implement actions necessary to achieve planned results and maintain the effectiveness of these processes;
+g) establish processes for communication with regulatory authorities.
+
+4.2 Documentation requirements
+
+4.2.1 General
+The quality management system documentation shall include:
+a) documented statements of a quality policy and quality objectives;
+b) a quality manual;
+c) documented procedures and records required by this International Standard;
+d) documents, including records, determined by the organization to be necessary to ensure the effective planning, operation and control of its processes;
+e) any additional documentation specified by applicable regulatory requirements.
+
+4.2.2 Quality manual
+The organization shall establish and maintain a quality manual that includes:
+a) the scope of the quality management system, including details of and justification for any exclusions or non-application of clauses of this International Standard;
+b) the documented procedures established for the quality management system, or reference to them;
+c) a description of the interaction between the processes of the quality management system.
+
+4.2.3 Medical device file
+For each medical device type or medical device family, the organization shall establish and maintain a file that includes or references documents generated to demonstrate conformity to the requirements of this International Standard and compliance with applicable regulatory requirements.
+
+5. Management responsibility
+
+5.1 Management commitment
+Top management shall provide evidence of its commitment to the development and implementation of the quality management system and to maintaining its effectiveness by:
+a) communicating to the organization the importance of meeting customer as well as statutory and regulatory requirements;
+b) establishing the quality policy;
+c) ensuring that quality objectives are established;
+d) conducting management reviews;
+e) ensuring the availability of resources;
+f) appointing a management representative;
+g) ensuring that appropriate communication processes are established within the organization.
+
+5.2 Customer focus
+Top management shall ensure that customer requirements are determined and are met with the aim of enhancing customer satisfaction. This includes regulatory requirements and requirements derived from applicable standards.
+
+5.3 Quality policy
+Top management shall ensure that the quality policy:
+a) is appropriate to the purpose of the organization;
+b) includes a commitment to comply with requirements and to maintain the effectiveness of the quality management system;
+c) provides a framework for establishing and reviewing quality objectives;
+d) is communicated and understood within the organization;
+e) is reviewed for continuing suitability.
+
+6. Resource management
+
+6.1 Provision of resources
+The organization shall determine and provide the resources needed to implement and maintain the quality management system and continually improve its effectiveness, and to enhance customer satisfaction by meeting customer requirements.
+
+6.2 Human resources
+
+6.2.1 General
+Personnel performing work affecting product quality shall be competent on the basis of appropriate education, training, skills and experience.
+
+6.2.2 Competence, training and awareness
+The organization shall:
+a) determine the necessary competence for personnel performing work affecting product quality;
+b) where applicable, provide training or take other actions to achieve the necessary competence;
+c) evaluate the effectiveness of the actions taken;
+d) ensure that its personnel are aware of the relevance and importance of their activities and how they contribute to the achievement of the quality objectives;
+e) maintain appropriate records of education, training, skills and experience.
+
+7. Product realization
+
+7.1 Planning of product realization
+The organization shall plan and develop the processes needed for product realization. Planning of product realization shall be consistent with the requirements of the other processes of the quality management system.
+
+In planning product realization, the organization shall determine the following, as appropriate:
+a) quality objectives and requirements for the product;
+b) the need to establish processes and documents, and to provide resources specific to the product;
+c) required verification, validation, monitoring, measurement, inspection and test activities specific to the product and the criteria for product acceptance;
+d) records needed to provide evidence that the realization processes and resulting product meet requirements.
+
+7.2 Customer-related processes
+
+7.2.1 Determination of requirements related to the product
+The organization shall determine:
+a) requirements specified by the customer, including the requirements for delivery and post-delivery activities;
+b) requirements not stated by the customer but necessary for specified or intended use, where known;
+c) statutory and regulatory requirements applicable to the product;
+d) any additional requirements considered necessary by the organization.
+
+7.3 Design and development
+
+7.3.1 Design and development planning
+The organization shall plan and control the design and development of the product. During design and development planning, the organization shall determine:
+a) the design and development stages;
+b) the review, verification and validation that are appropriate to each design and development stage;
+c) the responsibilities and authorities for design and development;
+d) the methods to ensure traceability of design and development outputs to design and development inputs;
+e) the resources needed, including necessary competence of personnel.
+
+7.3.2 Design and development inputs
+Inputs relating to product requirements shall be determined and records maintained. These inputs shall include:
+a) functional and performance requirements;
+b) applicable statutory and regulatory requirements;
+c) where applicable, information derived from previous similar designs;
+d) requirements essential for design and development;
+e) output(s) of risk management.
+
+The organization shall establish documented procedures for design and development inputs.
+
+8. Measurement, analysis and improvement
+
+8.1 General
+The organization shall plan and implement the monitoring, measurement, analysis and improvement processes needed:
+a) to demonstrate conformity to product requirements;
+b) to ensure conformity of the quality management system;
+c) to maintain the effectiveness of the quality management system continually.
+
+This shall include determination of applicable methods, including statistical techniques, and the extent of their use.
+
+8.2 Monitoring and measurement
+
+8.2.1 Feedback
+As one of the measurements of the performance of the quality management system, the organization shall establish documented procedures for a feedback system to provide early warning of quality problems and for input into the corrective and preventive action process.
+
+8.2.2 Complaint handling
+The organization shall establish documented procedures for receiving, reviewing and evaluating complaints, including those related to the quality of products.
+
+8.2.3 Reporting to regulatory authorities
+If national or regional regulations require the organization to gain experience from the post-production phase, the organization shall establish documented procedures for these activities and for implementing any necessary corrective and preventive actions.
+
+8.5 Improvement
+
+8.5.1 Continual improvement
+The organization shall continually improve the effectiveness of the quality management system through the use of the quality policy, quality objectives, audit results, analysis of data, corrective and preventive actions and management review.
+
+8.5.2 Corrective action
+The organization shall take action to eliminate the cause of nonconformities in order to prevent recurrence. Corrective actions shall be appropriate to the effects of the nonconformities encountered.
+
+8.5.3 Preventive action
+The organization shall determine action to eliminate the causes of potential nonconformities in order to prevent their occurrence. Preventive actions shall be appropriate to the effects of the potential problems.
+"""
+        
+        # Create temporary file
+        temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False)
+        temp_file.write(content)
+        temp_file.close()
+        return temp_file.name
+
     def test_rag_upload_regulatory_doc(self):
         """Test RAG regulatory document upload with OpenAI text-embedding-3-large"""
         test_file = None
