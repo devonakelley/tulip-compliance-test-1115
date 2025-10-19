@@ -1,0 +1,8 @@
+{
+  "success": true,
+  "message": "Successfully mapped 5 regulatory requirements to QSP sections",
+  "total_mappings": 5,
+  "qsp_documents": 5,
+  "regulatory_docs": 1,
+  "summary": "Analyzed 5 documents using RAG and generated 5 clause mappings"
+}
