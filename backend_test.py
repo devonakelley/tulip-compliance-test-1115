@@ -1350,17 +1350,32 @@ The organization shall plan and control the design and development of the produc
 
 def main():
     """Main test execution"""
-    tester = QSPComplianceAPITester()
+    import sys
     
-    try:
-        success = tester.run_full_test_suite()
-        return 0 if success else 1
-    except KeyboardInterrupt:
-        print("\n⏹️  Tests interrupted by user")
-        return 1
-    except Exception as e:
-        print(f"\n💥 Unexpected error: {str(e)}")
-        return 1
+    # Check if we should run upload investigation
+    if len(sys.argv) > 1 and sys.argv[1] == "--upload-investigation":
+        tester = QSPComplianceAPITester()
+        try:
+            success = tester.run_upload_failure_investigation()
+            return 0 if success else 1
+        except KeyboardInterrupt:
+            print("\n⏹️  Upload investigation interrupted by user")
+            return 1
+        except Exception as e:
+            print(f"\n💥 Unexpected error during upload investigation: {str(e)}")
+            return 1
+    else:
+        # Run full test suite
+        tester = QSPComplianceAPITester()
+        try:
+            success = tester.run_full_test_suite()
+            return 0 if success else 1
+        except KeyboardInterrupt:
+            print("\n⏹️  Tests interrupted by user")
+            return 1
+        except Exception as e:
+            print(f"\n💥 Unexpected error: {str(e)}")
+            return 1
 
 if __name__ == "__main__":
     sys.exit(main())
