@@ -367,7 +367,9 @@ class RAGService:
                     'chunk_id': chunk['chunk_id'],
                     'start_char': chunk['start_char'],
                     'end_char': chunk['end_char'],
-                    'tenant_id': tenant_id
+                    'tenant_id': tenant_id,
+                    'section_header': chunk.get('section_header', ''),
+                    'semantic_unit': chunk.get('semantic_unit', 'paragraph')
                 }
                 if metadata:
                     chunk_meta.update(metadata)
