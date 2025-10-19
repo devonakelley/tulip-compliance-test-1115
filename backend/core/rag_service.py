@@ -586,6 +586,84 @@ class RAGService:
         except Exception as e:
             logger.error(f"Failed to list documents: {e}")
             return []
+    
+    def reprocess_document(
+        self,
+        tenant_id: str,
+        doc_id: str,
+        content: str,
+        doc_name: str,
+        framework: str,
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        Reprocess a regulatory document with improved chunking strategy
+        
+        This method:
+        1. Deletes old chunks
+        2. Rechunks with improved strategy
+        3. Regenerates embeddings
+        4. Provides before/after comparison
+        
+        Args:
+            tenant_id: Tenant ID
+            doc_id: Document ID to reprocess
+            content: Document content
+            doc_name: Document name
+            framework: Regulatory framework
+            metadata: Additional metadata
+            
+        Returns:
+            Comparison of old vs new chunking
+        """
+        try:
+            collection_name = f"regulatory_{tenant_id}".replace("-", "_")
+            collection = self.chroma_client.get_collection(collection_name)
+            
+            # Get old chunk count
+            old_results = collection.get(where={"doc_id": doc_id})
+            old_chunk_count = len(old_results['ids']) if old_results['ids'] else 0
+            old_avg_length = 0
+            if old_results['documents']:
+                old_avg_length = sum(len(doc) for doc in old_results['documents']) // max(len(old_results['documents']), 1)
+            
+            logger.info(f"Reprocessing document {doc_id}: Old chunks={old_chunk_count}, Old avg length={old_avg_length}")
+            
+            # Delete old chunks
+            if old_results['ids']:
+                collection.delete(ids=old_results['ids'])
+                logger.info(f"Deleted {len(old_results['ids'])} old chunks")
+            
+            # Add with new chunking strategy
+            result = self.add_regulatory_document(
+                tenant_id=tenant_id,
+                doc_id=doc_id,
+                doc_name=doc_name,
+                content=content,
+                framework=framework,
+                metadata=metadata
+            )
+            
+            # Calculate improvement
+            new_chunk_count = result['chunks_added']
+            improvement_ratio = old_chunk_count / max(new_chunk_count, 1)
+            
+            logger.info(f"Reprocessed document {doc_id}: New chunks={new_chunk_count}, Improvement ratio={improvement_ratio:.2f}")
+            
+            return {
+                'doc_id': doc_id,
+                'doc_name': doc_name,
+                'old_chunk_count': old_chunk_count,
+                'new_chunk_count': new_chunk_count,
+                'old_avg_length': old_avg_length,
+                'new_avg_length': result['total_chars'] // max(new_chunk_count, 1),
+                'improvement_ratio': improvement_ratio,
+                'status': 'reprocessed'
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to reprocess document: {e}")
+            raise
 
 # Singleton instance
 rag_service = RAGService()
