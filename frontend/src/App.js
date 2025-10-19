@@ -320,25 +320,46 @@ const DocumentUpload = () => {
         
         successCount++;
         
-        // Show progress for multiple files
+        // Show progress for multiple files with enhanced feedback
         if (files.length > 1) {
-          toast.success(`Uploaded ${file.name} (${i + 1}/${files.length})`);
+          toast.success(`✅ Uploaded ${file.name} (${i + 1}/${files.length})`, { duration: 3000 });
         } else {
-          toast.success(response.data.message || `Successfully uploaded ${file.name}`);
+          toast.success(`✅ ${response.data.message || `Successfully uploaded ${file.name}`}`, { 
+            duration: 5000,
+            style: {
+              background: '#10b981',
+              color: '#fff',
+              fontWeight: 'bold',
+            }
+          });
         }
       } catch (error) {
         console.error(`Upload error for ${file.name}:`, error);
         failCount++;
-        toast.error(`Failed to upload ${file.name}: ${error.response?.data?.detail || 'Upload failed'}`);
+        toast.error(`❌ Failed to upload ${file.name}: ${error.response?.data?.detail || 'Upload failed'}`, {
+          duration: 6000,
+          style: {
+            background: '#ef4444',
+            color: '#fff',
+          }
+        });
       }
     }
 
-    // Show final summary for batch uploads
+    // Show final summary for batch uploads with enhanced styling
     if (files.length > 1) {
       if (successCount > 0 && failCount === 0) {
-        toast.success(`✅ All ${successCount} files uploaded successfully!`);
+        toast.success(`🎉 All ${successCount} files uploaded successfully!`, { 
+          duration: 5000,
+          style: {
+            background: '#10b981',
+            color: '#fff',
+            fontWeight: 'bold',
+            fontSize: '16px',
+          }
+        });
       } else if (successCount > 0 && failCount > 0) {
-        toast.info(`Uploaded ${successCount} files, ${failCount} failed`);
+        toast.info(`⚠️ Uploaded ${successCount} files, ${failCount} failed`, { duration: 5000 });
       }
     }
 
