@@ -1,46 +1,51 @@
 <analysis>
-The AI engineer's work pivoted from an abandoned  due to extensive architectural issues to enhancing the stable  and  application. Key enhancements include implementing a multi-tenant architecture with JWT authentication, a configurable storage service (local/S3), persistent report storage, and audit logging. A hybrid regulatory compliance system was then built, combining deterministic citation extraction and a structured knowledge base with RAG for semantic understanding. The RAG implementation was initially limited by basic embeddings, prompting a user request for accuracy, leading to the current task of integrating OpenAI embeddings using a provided API key, abandoning the Emergent LLM key for embeddings.
+The AI engineer successfully enhanced the QSP Compliance Checker, integrating OpenAI  for improved RAG semantic matching. Key frontend improvements included fixing upload button interactivity, implementing batch QSP file uploads, and replacing the ISO Summary upload with a robust Regulatory Document Upload connected to the RAG service. The application branding was updated to Certaro, and a marketing landing page was integrated with conditional rendering for authenticated routes. An analysis dashboard was added for system observability. Backend fixes involved correcting framework enum mismatches, updating clause mapping to utilize RAG data, and resolving a critical ChromaDB dimension mismatch by recreating the database. A persistent issue with ISO PDF uploads, initially due to incorrect UTF-8 decoding, was fixed by integrating  into the RAG API. Subsequently, QSP document deletion and a document hierarchy visualization feature were implemented. The latest issue, uploads are now failing, occurred after the analysis dashboard implementation, necessitating a backend log review to diagnose.
 </analysis>
 
 <product_requirements>
-The goal is an Enterprise QSP Compliance Checker for medical device companies. It validates internal QSP documents (DOCX, text) against regulatory standard changes (e.g., ISO 13485:2024), alerting companies to necessary updates. Key features include manual uploads, AI-powered clause mapping, compliance analysis, and a user-friendly UI. The system must use RAG with a vector database (ChromaDB) and semantic chunking for large data. Recent additions include:
-- Multi-tenancy with secure uploads (local/S3), persistent report storage, and tenant/user isolation.
-- JWT-based authentication.
-- A hybrid regulatory system for comprehensive compliance, including deterministic citation extraction, a structured regulatory knowledge base, and document hierarchy mapping (QSP → WI → Forms).
-- The RAG component must dynamically process uploaded regulatory documents (ISO, FDA) with accurate semantic matching.
+The objective is an Enterprise QSP Compliance Checker for medical device companies, verifying internal QSP documents against evolving regulatory standards like ISO 13485:2024. It requires manual uploads, AI-powered clause mapping, compliance analysis, and a user-friendly UI. The system leverages RAG with ChromaDB and semantic chunking for large datasets. Existing features include multi-tenancy with secure local/S3 uploads, persistent report storage, JWT authentication, and a hybrid regulatory system. Recent work focused on improving RAG semantic matching quality using OpenAI  embeddings for accurate dynamic processing of regulatory documents (ISO, FDA). The system was also updated to include batch QSP uploads, a dedicated Regulatory Document Upload for full standards, QSP document deletion, and a document hierarchy visualization. A marketing landing page and a visual analysis dashboard were integrated for enhanced user experience and system observability.
 </product_requirements>
 
 <key_technical_concepts>
 - **Full-stack Development**: React (frontend), FastAPI (backend), MongoDB (database).
-- **AI/LLM Integration**: Emergent LLM Key (for generation), OpenAI (for embeddings), RAG (Retrieval Augmented Generation), ChromaDB (vector store), semantic chunking.
+- **AI/LLM Integration**: OpenAI (text-embedding-3-large for embeddings), RAG (Retrieval Augmented Generation), ChromaDB (vector store), semantic chunking.
 - **Security/Scalability**: JWT-based authentication, multi-tenancy, configurable local/S3 storage.
-- **Compliance Logic**: Regulatory citation extraction, document hierarchy mapping, compliance matrix, gap analysis.
+- **Compliance Logic**: Regulatory citation extraction, document hierarchy mapping, compliance matrix, gap analysis, PyPDF2 for PDF extraction.
 </key_technical_concepts>
 
 <code_architecture>
-The application primarily resides in  (FastAPI) and  (React), building upon a foundation after an attempt to use  was abandoned due to an incomplete migration from SQLAlchemy to MongoDB.
-
 models.py
 
-- ****: This is the core FastAPI application. It has been extensively modified to integrate multi-tenancy, authentication, storage, report persistence, audit logging, the hybrid regulatory system (citation extraction, traceability), and the RAG service. All API endpoints now require authentication and filter data by .
-- ****: New Pydantic models (User, Tenant, Regulatory) were introduced to support multi-tenancy and the regulatory knowledge base.
-- ****: New services were created for storage, authentication, reporting, auditing, regulatory reference extraction, knowledge base management, traceability, and RAG processing. These encapsulate specific business logic.
-- ****: New API routers were added for authentication, regulatory features, and RAG.
-- ****: Modified to wrap the application with  and define new routes including login, protected dashboards, and reports.
-- ****: Provides global authentication state and functions (, , ).
+-   ****: This is the core FastAPI application. It integrates multi-tenancy, authentication, storage, report persistence, audit logging, the hybrid regulatory system, and RAG. All API endpoints now require authentication and filter data by .
+    -   **Changes**: Added  for QSP deletion. Added  for hierarchy visualization. Modified  to use RAG data. PDF extraction logic was moved from here to .
+-   ****: New Pydantic models (User, Tenant, Regulatory) support multi-tenancy and the regulatory knowledge base.
+    -   **Changes**:  enum values were implicitly crucial for frontend-backend alignment.
+-   ****: New services for storage, authentication, reporting, auditing, regulatory reference extraction, knowledge base management, traceability, and RAG processing.
+    -   **Changes in **: Updated OpenAI embedding model to . Critical fix involved re-initializing ChromaDB client on backend restart to address dimension mismatch.
+-   ****: New API routers for authentication, regulatory features, and RAG.
+    -   **Changes in **: The  function was updated to handle PDF documents using . The  endpoint expects  as a form field.
+-   ****: Wraps the application with  and defines routes.
+    -   **Changes**:
+        -   Routing: Root route () now points to . Authenticated routes (, , , ) are protected. Navigation component is conditionally rendered.
+        -   DocumentUpload Component: Fixed upload buttons by styling labels. Modified  to support batch QSP uploads and dedicated Regulatory Document Upload for full ISO/FDA standards. Added UI for displaying and deleting QSP documents and regulatory documents. Fixed bug in  to correctly process .
+        -   Gaps Component: Added Clause Mappings, Document Hierarchy, and Dashboard tabs for detailed analysis.
+        -   Branding: Updated QSP Compliance to Certaro in navigation and dashboard.
+-   ** & **: New components for the marketing landing page, implementing the provided HTML/CSS design.
+-   ****: New CSS for restyling the Dashboard page to match the new branding.
+-   ****: Provides global authentication state. Axios interceptor handles JWT token.
 
 </code_architecture>
 
 <pending_tasks>
-- Ensure OpenAI embeddings are correctly integrated and configured in the  to provide accurate semantic matching.
-- Verify the RAG system's semantic search and compliance checking against uploaded regulatory and internal documents for accuracy and reliability.
+- Investigate and resolve the low confidence scores (30-40%) in clause mappings by improving the RAG chunking strategy (text cleaning, sentence-aware chunking, larger chunks, filtering non-content).
+- Implement the re-processing of ISO documents with the improved chunking strategy.
+- Provide a before-and-after comparison of embedding quality.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was addressing the user's explicit concern about the RAG system's semantic matching quality being limited due to basic embeddings and not accurate. The user specifically asked How do we get there? and then provided a new OpenAI API key (). The AI engineer confirmed that the Emergent LLM key is for text generation, not embeddings, and decided to integrate the provided OpenAI key for embeddings to achieve higher accuracy. The last action was editing the configuration to use this OpenAI key in the RAG service.
+Immediately before this summary request, the AI engineer had just implemented a new Dashboard tab within the Gaps page to provide visual observability of the system's analysis work, including mapping graphs, coverage statistics, and confidence score distribution. After this implementation and a successful frontend recompile, the user reported, My uploads are now failing. The AI engineer's very last action was to check the backend logs to diagnose this new upload failure, indicating that the system is currently in a state where recent changes might have inadvertently broken the upload functionality again. The specific cause of this latest upload failure is unknown and is the immediate focus of the next investigation.
 </current_work>
 
 <optional_next_step>
-Complete the integration of the provided OpenAI API key for embeddings in  and restart the backend.
+Review backend logs to diagnose the uploads are now failing issue.
 </optional_next_step>
-
