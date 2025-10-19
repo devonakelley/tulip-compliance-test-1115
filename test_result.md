@@ -210,7 +210,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "OpenAI text-embedding-3-large integration for RAG"
+    - "Document upload functionality (QSP and Regulatory)"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
