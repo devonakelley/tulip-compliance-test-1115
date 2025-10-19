@@ -1842,18 +1842,30 @@ def main():
     """Main test execution"""
     import sys
     
-    # Check if we should run upload investigation
-    if len(sys.argv) > 1 and sys.argv[1] == "--upload-investigation":
-        tester = QSPComplianceAPITester()
-        try:
-            success = tester.run_upload_failure_investigation()
-            return 0 if success else 1
-        except KeyboardInterrupt:
-            print("\n⏹️  Upload investigation interrupted by user")
-            return 1
-        except Exception as e:
-            print(f"\n💥 Unexpected error during upload investigation: {str(e)}")
-            return 1
+    # Check command line arguments
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "--upload-investigation":
+            tester = QSPComplianceAPITester()
+            try:
+                success = tester.run_upload_failure_investigation()
+                return 0 if success else 1
+            except KeyboardInterrupt:
+                print("\n⏹️  Upload investigation interrupted by user")
+                return 1
+            except Exception as e:
+                print(f"\n💥 Unexpected error during upload investigation: {str(e)}")
+                return 1
+        elif sys.argv[1] == "--rag-chunking":
+            tester = QSPComplianceAPITester()
+            try:
+                success = tester.run_improved_rag_chunking_tests()
+                return 0 if success else 1
+            except KeyboardInterrupt:
+                print("\n⏹️  RAG chunking tests interrupted by user")
+                return 1
+            except Exception as e:
+                print(f"\n💥 Unexpected error during RAG chunking tests: {str(e)}")
+                return 1
     else:
         # Run full test suite
         tester = QSPComplianceAPITester()
