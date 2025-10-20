@@ -108,21 +108,21 @@ class PostgresVectorDB:
                         section_id UUID NOT NULL REFERENCES document_sections(section_id) ON DELETE CASCADE,
                         tenant_id UUID NOT NULL,
                         
-                        -- Vector embedding (3072 dimensions for text-embedding-3-large)
-                        -- Note: HNSW only supports up to 2000 dims, so we use IVFFlat
-                        embedding vector(3072) NOT NULL,
+                        -- Vector embedding (1536 dimensions - reduced from 3072 due to pgvector limits)
+                        -- text-embedding-3-large supports dimension reduction with minimal accuracy loss
+                        embedding vector(1536) NOT NULL,
                         
                         -- Metadata
                         model_name TEXT DEFAULT 'text-embedding-3-large',
+                        embedding_dimensions INTEGER DEFAULT 1536,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         
                         UNIQUE(section_id)
                     );
                     
-                    -- IVFFlat index for vector similarity search (supports 3072 dimensions)
-                    -- Using 100 lists for good balance between speed and accuracy
+                    -- HNSW index for vector similarity search (fast, accurate)
                     CREATE INDEX IF NOT EXISTS idx_embeddings_vector 
-                        ON section_embeddings USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+                        ON section_embeddings USING hnsw (embedding vector_cosine_ops);
                     
                     CREATE INDEX IF NOT EXISTS idx_embeddings_tenant 
                         ON section_embeddings(tenant_id);
