@@ -604,10 +604,35 @@ const DocumentUpload = () => {
       {/* Documents List */}
       <Card>
         <CardHeader>
-          <CardTitle>Uploaded Documents</CardTitle>
-          <CardDescription>
-            {documents.length} QSP documents uploaded
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Uploaded Documents</CardTitle>
+              <CardDescription>
+                {documents.length} QSP documents uploaded {selectedQSPDocs.length > 0 && `• ${selectedQSPDocs.length} selected`}
+              </CardDescription>
+            </div>
+            {documents.length > 0 && (
+              <div className="flex gap-2">
+                {selectedQSPDocs.length > 0 && (
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={batchDeleteQSPDocs}
+                  >
+                    Delete Selected ({selectedQSPDocs.length})
+                  </Button>
+                )}
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={deleteAllQSPDocs}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  Delete All
+                </Button>
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {loadingDocs ? (
@@ -616,17 +641,30 @@ const DocumentUpload = () => {
             </div>
           ) : documents.length > 0 ? (
             <div className="space-y-3">
+              <div className="flex items-center gap-2 pb-2 border-b">
+                <input
+                  type="checkbox"
+                  checked={selectedQSPDocs.length === documents.length}
+                  onChange={toggleAllQSPDocs}
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+                <span className="text-sm font-medium text-gray-700">Select All</span>
+              </div>
               {documents.map((doc, index) => (
-                <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <FileCheck className="h-5 w-5 text-green-600" />
-                    <div>
-                      <p className="font-medium">{doc.filename}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {doc.sections ? Object.keys(doc.sections).length : 0} sections • 
-                        Uploaded {new Date(doc.upload_date).toLocaleDateString()}
-                      </p>
-                    </div>
+                <div key={doc.id} className="flex items-center gap-3 p-3 border rounded-lg hover:border-blue-300 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={selectedQSPDocs.includes(doc.id)}
+                    onChange={() => toggleQSPDoc(doc.id)}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <FileCheck className="h-5 w-5 text-green-600" />
+                  <div className="flex-1">
+                    <p className="font-medium">{doc.filename}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {doc.sections ? Object.keys(doc.sections).length : 0} sections • 
+                      Uploaded {new Date(doc.upload_date).toLocaleDateString()}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary">
@@ -655,10 +693,35 @@ const DocumentUpload = () => {
       {/* Regulatory Documents List */}
       <Card>
         <CardHeader>
-          <CardTitle>Regulatory Standards</CardTitle>
-          <CardDescription>
-            {regulatoryDocs.length} regulatory documents uploaded for compliance checking
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Regulatory Standards</CardTitle>
+              <CardDescription>
+                {regulatoryDocs.length} regulatory documents uploaded {selectedRegDocs.length > 0 && `• ${selectedRegDocs.length} selected`}
+              </CardDescription>
+            </div>
+            {regulatoryDocs.length > 0 && (
+              <div className="flex gap-2">
+                {selectedRegDocs.length > 0 && (
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={batchDeleteRegDocs}
+                  >
+                    Delete Selected ({selectedRegDocs.length})
+                  </Button>
+                )}
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={deleteAllRegDocs}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  Delete All
+                </Button>
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {loadingRegDocs ? (
@@ -667,17 +730,31 @@ const DocumentUpload = () => {
             </div>
           ) : regulatoryDocs.length > 0 ? (
             <div className="space-y-3">
+              <div className="flex items-center gap-2 pb-2 border-b">
+                <input
+                  type="checkbox"
+                  checked={selectedRegDocs.length === regulatoryDocs.length}
+                  onChange={toggleAllRegDocs}
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+                <span className="text-sm font-medium text-gray-700">Select All</span>
+              </div>
               {regulatoryDocs.map((doc) => (
-                <div key={doc.doc_id} className="flex items-center justify-between p-4 border rounded-lg hover:border-blue-300 transition-colors">
-                  <div className="flex items-center gap-3 flex-1">
-                    <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-500 to-teal-500 rounded-lg">
-                      <Shield className="h-5 w-5 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold text-gray-900">{doc.doc_name}</p>
-                      <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
-                        <span className="flex items-center gap-1">
-                          <Database className="h-3 w-3" />
+                <div key={doc.doc_id} className="flex items-center gap-3 p-4 border rounded-lg hover:border-blue-300 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={selectedRegDocs.includes(doc.doc_id)}
+                    onChange={() => toggleRegDoc(doc.doc_id)}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-500 to-teal-500 rounded-lg">
+                    <Shield className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-gray-900">{doc.doc_name}</p>
+                    <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+                      <span className="flex items-center gap-1">
+                        <Database className="h-3 w-3" />
                           {doc.framework}
                         </span>
                         <span className="flex items-center gap-1">
