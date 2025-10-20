@@ -109,6 +109,7 @@ class PostgresVectorDB:
                         tenant_id UUID NOT NULL,
                         
                         -- Vector embedding (3072 dimensions for text-embedding-3-large)
+                        -- Note: HNSW only supports up to 2000 dims, so we use IVFFlat
                         embedding vector(3072) NOT NULL,
                         
                         -- Metadata
@@ -118,9 +119,10 @@ class PostgresVectorDB:
                         UNIQUE(section_id)
                     );
                     
-                    -- HNSW index for vector similarity search
+                    -- IVFFlat index for vector similarity search (supports 3072 dimensions)
+                    -- Using 100 lists for good balance between speed and accuracy
                     CREATE INDEX IF NOT EXISTS idx_embeddings_vector 
-                        ON section_embeddings USING hnsw (embedding vector_cosine_ops);
+                        ON section_embeddings USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
                     
                     CREATE INDEX IF NOT EXISTS idx_embeddings_tenant 
                         ON section_embeddings(tenant_id);
