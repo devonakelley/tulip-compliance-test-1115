@@ -1,8 +1,0 @@
-{
-  "success": true,
-  "message": "Successfully mapped 646 regulatory requirements to QSP sections",
-  "total_mappings": 646,
-  "qsp_documents": 144,
-  "regulatory_docs": 2,
-  "summary": "Analyzed 144 documents using RAG and generated 646 clause mappings"
-}

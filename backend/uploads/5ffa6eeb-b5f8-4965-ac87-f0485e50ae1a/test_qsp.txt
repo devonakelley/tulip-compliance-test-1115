@@ -1,7 +1,0 @@
-QSP-001: Test Document
-
-1. Purpose
-This is a test QSP document.
-
-2. Scope
-Testing upload functionality.
