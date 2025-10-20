@@ -591,6 +591,119 @@ async def delete_qsp_document(
         logger.error(f"Error deleting document: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.post("/documents/batch-delete")
+async def batch_delete_qsp_documents(
+    doc_ids: List[str],
+    current_user: dict = Depends(get_current_user)
+):
+    """Delete multiple QSP documents - Tenant-aware"""
+    try:
+        tenant_id = current_user["tenant_id"]
+        
+        if not doc_ids:
+            raise HTTPException(status_code=400, detail="No document IDs provided")
+        
+        deleted_count = 0
+        failed_ids = []
+        
+        for doc_id in doc_ids:
+            try:
+                # Delete document (tenant-specific)
+                result = await db.qsp_documents.delete_one({
+                    "id": doc_id,
+                    "tenant_id": tenant_id
+                })
+                
+                if result.deleted_count > 0:
+                    deleted_count += 1
+                    
+                    # Delete related clause mappings
+                    await db.clause_mappings.delete_many({
+                        "qsp_id": doc_id,
+                        "tenant_id": tenant_id
+                    })
+                else:
+                    failed_ids.append(doc_id)
+                    
+            except Exception as e:
+                logger.error(f"Error deleting document {doc_id}: {e}")
+                failed_ids.append(doc_id)
+        
+        # Log the batch deletion
+        await audit_logger.log_action(
+            tenant_id=tenant_id,
+            user_id=current_user["user_id"],
+            action="batch_delete_qsp_documents",
+            details={
+                "requested_count": len(doc_ids),
+                "deleted_count": deleted_count,
+                "failed_ids": failed_ids
+            }
+        )
+        
+        logger.info(f"Batch deleted {deleted_count}/{len(doc_ids)} QSP documents")
+        
+        return {
+            "success": True,
+            "message": f"Deleted {deleted_count} of {len(doc_ids)} documents",
+            "deleted_count": deleted_count,
+            "failed_count": len(failed_ids),
+            "failed_ids": failed_ids
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in batch delete: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.delete("/documents/all")
+async def delete_all_qsp_documents(
+    current_user: dict = Depends(get_current_user)
+):
+    """Delete ALL QSP documents for current tenant - Use with caution!"""
+    try:
+        tenant_id = current_user["tenant_id"]
+        
+        # Count documents before deletion
+        count = await db.qsp_documents.count_documents({"tenant_id": tenant_id})
+        
+        if count == 0:
+            return {
+                "success": True,
+                "message": "No documents to delete",
+                "deleted_count": 0
+            }
+        
+        # Delete all QSP documents for this tenant
+        result = await db.qsp_documents.delete_many({"tenant_id": tenant_id})
+        
+        # Delete all related clause mappings
+        await db.clause_mappings.delete_many({"tenant_id": tenant_id})
+        
+        # Log the deletion
+        await audit_logger.log_action(
+            tenant_id=tenant_id,
+            user_id=current_user["user_id"],
+            action="delete_all_qsp_documents",
+            details={
+                "deleted_count": result.deleted_count
+            }
+        )
+        
+        logger.warning(f"Deleted ALL {result.deleted_count} QSP documents for tenant {tenant_id}")
+        
+        return {
+            "success": True,
+            "message": f"Deleted all {result.deleted_count} documents",
+            "deleted_count": result.deleted_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Error deleting all documents: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.post("/iso-summary/upload")
 async def upload_iso_summary(
     file: UploadFile = File(...),
