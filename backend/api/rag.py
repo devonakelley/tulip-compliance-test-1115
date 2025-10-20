@@ -308,7 +308,8 @@ async def batch_delete_regulatory_documents(
             tenant_id=tenant_id,
             user_id=user_id,
             action="batch_delete_regulatory_docs",
-            details={
+            target=f"{deleted_count}_documents",
+            metadata={
                 'requested_count': len(doc_ids),
                 'deleted_count': deleted_count,
                 'failed_ids': failed_ids
