@@ -64,6 +64,13 @@ chainlit.md
 # Data and databases
 agenthub/agents/youtube/db
 
+# QSP Compliance - Data artifacts (should not be in git)
+backend/uploads/
+backend/_reports/
+backend/chromadb_data/
+*.sqlite3
+*.db
+
 # Archive files and large assets
 **/*.zip
 **/*.tar.gz
