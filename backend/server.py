@@ -687,7 +687,8 @@ async def delete_all_qsp_documents(
             tenant_id=tenant_id,
             user_id=current_user["user_id"],
             action="delete_all_qsp_documents",
-            details={
+            target=f"all_{result.deleted_count}_documents",
+            metadata={
                 "deleted_count": result.deleted_count
             }
         )
