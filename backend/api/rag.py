@@ -369,7 +369,8 @@ async def delete_all_regulatory_documents(
             tenant_id=tenant_id,
             user_id=user_id,
             action="delete_all_regulatory_docs",
-            details={
+            target=f"all_{deleted_count}_documents",
+            metadata={
                 'deleted_count': deleted_count
             }
         )
