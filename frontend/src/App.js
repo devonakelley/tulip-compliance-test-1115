@@ -755,17 +755,12 @@ const DocumentUpload = () => {
                     <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
                       <span className="flex items-center gap-1">
                         <Database className="h-3 w-3" />
-                          {doc.framework}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <FileText className="h-3 w-3" />
-                          {doc.chunks_count || 0} chunks
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {new Date(doc.uploaded_at).toLocaleDateString()}
-                        </span>
-                      </div>
+                        {doc.framework}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <FileText className="h-3 w-3" />
+                        {doc.chunk_count || 0} chunks
+                      </span>
                     </div>
                   </div>
                   <Button 
