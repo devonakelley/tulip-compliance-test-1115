@@ -634,7 +634,8 @@ async def batch_delete_qsp_documents(
             tenant_id=tenant_id,
             user_id=current_user["user_id"],
             action="batch_delete_qsp_documents",
-            details={
+            target=f"{deleted_count}_documents",
+            metadata={
                 "requested_count": len(doc_ids),
                 "deleted_count": deleted_count,
                 "failed_ids": failed_ids
