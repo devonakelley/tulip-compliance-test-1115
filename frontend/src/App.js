@@ -218,6 +218,8 @@ const DocumentUpload = () => {
   const [regulatoryDocs, setRegulatoryDocs] = useState([]);
   const [loadingDocs, setLoadingDocs] = useState(true);
   const [loadingRegDocs, setLoadingRegDocs] = useState(true);
+  const [selectedQSPDocs, setSelectedQSPDocs] = useState([]);
+  const [selectedRegDocs, setSelectedRegDocs] = useState([]);
 
   const fetchDocuments = async () => {
     try {
@@ -270,6 +272,121 @@ const DocumentUpload = () => {
     } catch (error) {
       console.error('Error deleting QSP document:', error);
       toast.error('Failed to delete document');
+    }
+  };
+
+  const batchDeleteQSPDocs = async () => {
+    if (selectedQSPDocs.length === 0) {
+      toast.error('No documents selected');
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete ${selectedQSPDocs.length} QSP document(s)? Related clause mappings will also be deleted.`)) {
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${API}/documents/batch-delete`, selectedQSPDocs);
+      toast.success(`Deleted ${response.data.deleted_count} of ${selectedQSPDocs.length} documents`);
+      if (response.data.failed_count > 0) {
+        toast.warning(`Failed to delete ${response.data.failed_count} documents`);
+      }
+      setSelectedQSPDocs([]);
+      fetchDocuments();
+    } catch (error) {
+      console.error('Error batch deleting QSP documents:', error);
+      toast.error('Failed to delete documents');
+    }
+  };
+
+  const deleteAllQSPDocs = async () => {
+    if (!confirm(`⚠️ WARNING: This will delete ALL ${documents.length} QSP documents! This action cannot be undone. Are you sure?`)) {
+      return;
+    }
+
+    if (!confirm('This is your final warning. Type "DELETE ALL" to confirm... Just kidding, click OK to proceed.')) {
+      return;
+    }
+
+    try {
+      const response = await axios.delete(`${API}/documents/all`);
+      toast.success(`Deleted all ${response.data.deleted_count} QSP documents`);
+      setSelectedQSPDocs([]);
+      fetchDocuments();
+    } catch (error) {
+      console.error('Error deleting all QSP documents:', error);
+      toast.error('Failed to delete all documents');
+    }
+  };
+
+  const batchDeleteRegDocs = async () => {
+    if (selectedRegDocs.length === 0) {
+      toast.error('No documents selected');
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete ${selectedRegDocs.length} regulatory document(s)?`)) {
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      selectedRegDocs.forEach(id => formData.append('doc_ids', id));
+      
+      const response = await axios.post(`${API}/rag/regulatory-docs/batch-delete`, formData);
+      toast.success(`Deleted ${response.data.deleted_count} of ${selectedRegDocs.length} documents`);
+      if (response.data.failed_count > 0) {
+        toast.warning(`Failed to delete ${response.data.failed_count} documents`);
+      }
+      setSelectedRegDocs([]);
+      fetchRegulatoryDocs();
+    } catch (error) {
+      console.error('Error batch deleting regulatory documents:', error);
+      toast.error('Failed to delete documents');
+    }
+  };
+
+  const deleteAllRegDocs = async () => {
+    if (!confirm(`⚠️ WARNING: This will delete ALL ${regulatoryDocs.length} regulatory documents! This action cannot be undone. Are you sure?`)) {
+      return;
+    }
+
+    try {
+      const response = await axios.delete(`${API}/rag/regulatory-docs/all`);
+      toast.success(`Deleted all ${response.data.deleted_count} regulatory documents`);
+      setSelectedRegDocs([]);
+      fetchRegulatoryDocs();
+    } catch (error) {
+      console.error('Error deleting all regulatory documents:', error);
+      toast.error('Failed to delete all documents');
+    }
+  };
+
+  const toggleQSPDoc = (docId) => {
+    setSelectedQSPDocs(prev => 
+      prev.includes(docId) ? prev.filter(id => id !== docId) : [...prev, docId]
+    );
+  };
+
+  const toggleAllQSPDocs = () => {
+    if (selectedQSPDocs.length === documents.length) {
+      setSelectedQSPDocs([]);
+    } else {
+      setSelectedQSPDocs(documents.map(doc => doc.id));
+    }
+  };
+
+  const toggleRegDoc = (docId) => {
+    setSelectedRegDocs(prev => 
+      prev.includes(docId) ? prev.filter(id => id !== docId) : [...prev, docId]
+    );
+  };
+
+  const toggleAllRegDocs = () => {
+    if (selectedRegDocs.length === regulatoryDocs.length) {
+      setSelectedRegDocs([]);
+    } else {
+      setSelectedRegDocs(regulatoryDocs.map(doc => doc.doc_id));
     }
   };
 
