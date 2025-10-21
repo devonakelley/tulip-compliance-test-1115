@@ -1701,6 +1701,17 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/impact" 
+              element={
+                <ProtectedRoute>
+                  <Navigation />
+                  <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+                    <ChangeImpactDetector />
+                  </main>
+                </ProtectedRoute>
+              } 
+            />
           </Routes>
           <Toaster />
         </AuthProvider>
