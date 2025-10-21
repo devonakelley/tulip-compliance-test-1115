@@ -263,37 +263,15 @@ async def list_analysis_runs(
 ):
     """
     List recent impact analysis runs
+    Note: In demo mode, runs are not persisted
     """
     try:
-        tenant_id = current_user["tenant_id"]
-        
-        import psycopg2
-        from psycopg2.extras import RealDictCursor
-        import os
-        
-        conn_str = os.getenv(
-            "POSTGRES_URL",
-            "postgresql://qsp_user:qsp_secure_pass@localhost:5432/qsp_compliance"
-        )
-        
-        with psycopg2.connect(conn_str) as conn:
-            with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                cur.execute("""
-                    SELECT 
-                        run_id::text, run_type, status, total_impacts,
-                        started_at, completed_at
-                    FROM analysis_runs
-                    WHERE tenant_id = %s
-                    ORDER BY started_at DESC
-                    LIMIT %s
-                """, (tenant_id, limit))
-                
-                runs = cur.fetchall()
-                
-                return {
-                    "success": True,
-                    "runs": [dict(row) for row in runs]
-                }
+        # In production, this would query MongoDB for stored runs
+        return {
+            "success": True,
+            "runs": [],
+            "note": "Demo mode: Runs are not persisted. Results are shown immediately after analysis."
+        }
         
     except Exception as e:
         logger.error(f"Failed to list runs: {e}")
