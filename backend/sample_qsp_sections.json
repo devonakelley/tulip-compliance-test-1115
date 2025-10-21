@@ -1,0 +1,62 @@
+[
+  {
+    "section_path": "4.2",
+    "heading": "Document Control Procedure",
+    "text": "This procedure establishes requirements for controlling documents within the quality management system. All controlled documents shall be reviewed and approved prior to issue. Changes to documents shall be reviewed and approved by authorized personnel. The organization maintains both paper-based and electronic document control systems. Electronic documents are stored on the company network drive with access controls. Document revisions are tracked in the Document Control Log (Form 4.2-1).",
+    "version": "R8"
+  },
+  {
+    "section_path": "4.2.4",
+    "heading": "Electronic Records and Signatures",
+    "text": "Electronic records shall be maintained in accordance with applicable regulations. The organization uses a validated electronic quality management system (eQMS) for maintaining quality records. Access to the eQMS requires unique user credentials. Users must not share passwords. All electronic records include audit trails showing who created, modified, or approved the record and when. Electronic signatures are applied using the eQMS signature function, which captures the user's name, date, and time. The IT department is responsible for maintaining backups of all electronic records.",
+    "version": "R8"
+  },
+  {
+    "section_path": "7.5",
+    "heading": "Production and Service Provision",
+    "text": "Production processes are planned and carried out under controlled conditions. Controlled conditions include: availability of work instructions, use of suitable equipment, implementation of monitoring and measurement, and availability of appropriate infrastructure. Production equipment is qualified before use and maintained according to schedule. The Production Manager is responsible for ensuring all production activities comply with this procedure.",
+    "version": "R12"
+  },
+  {
+    "section_path": "7.5.1",
+    "heading": "Process Validation",
+    "text": "The organization validates processes for production and service provision where the resulting output cannot be fully verified by subsequent monitoring or measurement. Validation demonstrates the ability of these processes to achieve planned results consistently. Validation protocols are prepared by Engineering and approved by Quality Assurance. Installation Qualification (IQ), Operational Qualification (OQ), and Performance Qualification (PQ) are performed. Validation records are maintained in the Device Master Record. Revalidation is performed when significant changes are made to the process.",
+    "version": "R12"
+  },
+  {
+    "section_path": "4.1",
+    "heading": "Quality Management System Requirements",
+    "text": "Tulip Medical has established, documented, and maintains a quality management system in accordance with ISO 13485 requirements. The QMS includes documented procedures, work instructions, and forms necessary to ensure effective planning, operation and control of processes. The scope of the QMS covers design, development, production, and servicing of sterile single-use surgical devices. The Quality Manual defines the QMS scope and documents the interaction between processes.",
+    "version": "R15"
+  },
+  {
+    "section_path": "8.2.1",
+    "heading": "Feedback and Complaints Handling",
+    "text": "The organization has established procedures for receiving, documenting, and processing customer feedback and complaints. All complaints are logged in the Complaints Database within 24 hours of receipt. Each complaint is assigned a unique identification number. The Quality Assurance department investigates all complaints to determine if the issue represents a potential product defect or nonconformity. Investigation findings are documented in the complaint file. Complaints potentially related to serious adverse events are reported to regulatory authorities as required. Monthly complaint trend analysis is performed.",
+    "version": "R9"
+  },
+  {
+    "section_path": "8.2.2",
+    "heading": "Post-Market Surveillance",
+    "text": "Post-market surveillance activities are conducted to gather information about device performance in the field. Activities include: review of customer complaints, monitoring of adverse event reports, field corrective actions, and periodic literature reviews. The Post-Market Surveillance Plan (PMS-001) defines specific activities, frequency, and responsibilities. Surveillance data is reviewed quarterly by the cross-functional Post-Market Surveillance Team. Findings that indicate potential safety issues are escalated to the Management Review committee.",
+    "version": "R9"
+  },
+  {
+    "section_path": "6.3",
+    "heading": "Infrastructure",
+    "text": "The organization determines, provides, and maintains the infrastructure needed to achieve product conformity. Infrastructure includes: buildings, workspace, and utilities; process equipment (hardware and software); and supporting services (such as transport, communication or information systems). The Facilities Manager maintains an inventory of all critical infrastructure. Preventive maintenance schedules are established for production equipment. Software used for quality system activities is validated per SOP-IT-003. Annual infrastructure reviews are conducted to ensure adequacy.",
+    "version": "R11"
+  },
+  {
+    "section_path": "7.3.6",
+    "heading": "Design Verification and Validation",
+    "text": "Design verification is performed to ensure design outputs meet design input requirements. Verification methods include: design reviews, alternative calculations, and tests/demonstrations. Design validation is performed to ensure the device meets user needs and intended use requirements. Validation includes clinical evaluation or clinical investigation as applicable. Verification and validation plans are prepared by the Design team and approved by Quality. All verification and validation activities are documented in the Design History File.",
+    "version": "R14"
+  },
+  {
+    "section_path": "5.5.2",
+    "heading": "Management Representative",
+    "text": "Top management has appointed a Management Representative with responsibility and authority for: ensuring QMS processes are established and maintained, reporting to top management on QMS performance and any need for improvement, and ensuring promotion of awareness of regulatory and customer requirements throughout the organization. The VP of Quality Assurance serves as the Management Representative. The Management Representative reports QMS status at quarterly Management Review meetings.",
+    "version": "R10"
+  }
+]
