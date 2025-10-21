@@ -140,10 +140,3 @@ passlib==1.7.4
 python-jose==3.3.0
 chromadb==0.4.22
 openai==1.12.0
-
-# Production RAG dependencies
-pgvector==0.3.6
-psycopg2-binary==2.9.10
-sentence-transformers==3.3.1
-torch==2.5.1
-transformers==4.47.1
