@@ -7,7 +7,7 @@ from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
 import logging
 import json
-from core.change_impact_service import get_change_impact_service
+from core.change_impact_service_mongo import get_change_impact_service
 from core.auth import get_current_user
 
 logger = logging.getLogger(__name__)
