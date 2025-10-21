@@ -69,16 +69,16 @@ const ChangeImpactDetector = () => {
     }
     
     try {
-      toast.loading('Ingesting QSP sections...', { id: 'ingest' });
+      toast.loading('Ingesting QSP sections...');
       
       const response = await axios.post(`${API}/impact/ingest_qsp`, {
         doc_name: 'Uploaded QSP Document',
         sections: qspSections
       });
       
-      toast.success(`Ingested ${response.data.sections_embedded} sections`, { id: 'ingest' });
+      toast.success(`Ingested ${response.data.sections_embedded} sections`);
     } catch (error) {
-      toast.error('Failed to ingest QSP', { id: 'ingest' });
+      toast.error('Failed to ingest QSP');
       console.error(error);
     }
   };
@@ -91,7 +91,7 @@ const ChangeImpactDetector = () => {
     
     try {
       setAnalyzing(true);
-      toast.loading('Analyzing change impacts...', { id: 'analyze' });
+      toast.loading('Analyzing change impacts...');
       
       const response = await axios.post(`${API}/impact/analyze`, {
         deltas: deltasFile.deltas,
@@ -99,14 +99,11 @@ const ChangeImpactDetector = () => {
       });
       
       setResults(response.data);
-      toast.success(
-        `Found ${response.data.total_impacts_found} potential impacts`,
-        { id: 'analyze' }
-      );
+      toast.success(`Found ${response.data.total_impacts_found} potential impacts`);
       
       fetchRuns();
     } catch (error) {
-      toast.error('Analysis failed', { id: 'analyze' });
+      toast.error('Analysis failed');
       console.error(error);
     } finally {
       setAnalyzing(false);
