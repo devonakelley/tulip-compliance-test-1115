@@ -1557,6 +1557,7 @@ const Navigation = () => {
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: Home },
     { path: '/upload', label: 'Documents', icon: Upload },
+    { path: '/impact', label: 'Change Impact', icon: TrendingUp },
     { path: '/analysis', label: 'Analysis', icon: BarChart3 },
     { path: '/gaps', label: 'Gaps', icon: AlertTriangle },
     { path: '/reports', label: 'Reports', icon: FileText }
