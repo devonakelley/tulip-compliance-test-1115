@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './components/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 import Reports from './components/Reports';
+import ChangeImpactDetector from './components/ChangeImpactDetector';
 import LandingPage from './pages/LandingPage';
 
 // Shadcn UI Components
