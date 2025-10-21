@@ -1,0 +1,27 @@
+[
+  {
+    "clause_id": "4.2.4",
+    "change_text": "ISO 13485:2024 now requires organizations to establish and maintain procedures for electronic records that comply with 21 CFR Part 11 or equivalent standards. Electronic signatures must be uniquely attributable, permanently linked to their respective record, and include the date and time of signature. Organizations must implement controls to ensure data integrity, including audit trails for any modifications to electronic records.",
+    "change_type": "modified"
+  },
+  {
+    "clause_id": "7.5.1.1", 
+    "change_text": "New requirement: Organizations must implement risk-based validation for production and service provision processes. Validation activities shall be proportionate to the risk associated with the medical device and shall include: (a) defined criteria for review and approval of processes; (b) qualification of equipment and personnel; (c) use of specific methods, procedures and acceptance criteria; (d) requirements for records; (e) revalidation.",
+    "change_type": "new"
+  },
+  {
+    "clause_id": "4.1.6",
+    "change_text": "Organizations must now document and maintain a risk management process that addresses cybersecurity risks throughout the product lifecycle. This includes: identification of cybersecurity threats, vulnerability assessment, implementation of security controls, monitoring of security events, and incident response procedures. The risk management file must include evidence of cybersecurity risk analysis.",
+    "change_type": "new"
+  },
+  {
+    "clause_id": "8.2.6",
+    "change_text": "Expanded requirements for post-market surveillance: Organizations must establish systematic processes to gather, review and utilize post-market information. This includes: (a) active surveillance of similar devices and related incidents; (b) analysis of customer complaints and adverse events; (c) trending analysis; (d) integration with risk management; (e) reporting to regulatory authorities as required. Post-market surveillance reports must be generated at defined intervals.",
+    "change_type": "modified"
+  },
+  {
+    "clause_id": "6.3",
+    "change_text": "Infrastructure requirements updated to include provisions for data security and integrity. Organizations must ensure that infrastructure, including IT systems and software used for QMS activities, are adequately maintained, validated where applicable, and protected against cybersecurity threats. Regular assessments of infrastructure adequacy must be documented.",
+    "change_type": "modified"
+  }
+]
