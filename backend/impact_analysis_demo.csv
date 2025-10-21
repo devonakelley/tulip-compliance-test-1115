@@ -1,0 +1,7 @@
+clause_id,change_type,qsp_section,qsp_heading,confidence,rationale
+4.2.4,modified,4.2.4,Electronic Records and Signatures,0.76,The change to 4.2.4 has a strong semantic match (confidence: 0.76) with QSP section 'Electronic Records and Signatures'. This suggests the internal procedure may need review.
+7.5.1.1,new,7.5.1,Process Validation,0.703,The change to 7.5.1.1 has a moderate semantic match (confidence: 0.70) with QSP section 'Process Validation'. This suggests the internal procedure may need review.
+7.5.1.1,new,7.3.6,Design Verification and Validation,0.597,The change to 7.5.1.1 has a potential semantic match (confidence: 0.60) with QSP section 'Design Verification and Validation'. This suggests the internal procedure may need review.
+8.2.6,modified,8.2.2,Post-Market Surveillance,0.828,The change to 8.2.6 has a strong semantic match (confidence: 0.83) with QSP section 'Post-Market Surveillance'. This suggests the internal procedure may need review.
+6.3,modified,6.3,Infrastructure,0.708,The change to 6.3 has a moderate semantic match (confidence: 0.71) with QSP section 'Infrastructure'. This suggests the internal procedure may need review.
+6.3,modified,4.2.4,Electronic Records and Signatures,0.58,The change to 6.3 has a potential semantic match (confidence: 0.58) with QSP section 'Electronic Records and Signatures'. This suggests the internal procedure may need review.
