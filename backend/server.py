@@ -22,6 +22,7 @@ from api import auth as auth_router_module
 from api import reports as reports_router_module
 from api import regulatory as regulatory_router_module
 from api import rag as rag_router_module
+from api import change_impact as change_impact_router_module
 from core.auth import get_current_user, get_current_user_optional
 from core.storage_service import storage_service
 from core.report_service import ReportService
