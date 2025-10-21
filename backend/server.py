@@ -1234,6 +1234,9 @@ async def get_clause_mappings(current_user: dict = Depends(get_current_user)):
 # Include the router in the main app
 app.include_router(api_router)
 
+# Include Change Impact Detection router
+app.include_router(change_impact_router_module.router, prefix="/api")
+
 # Store active WebSocket connections for MCP
 active_mcp_connections: Dict[str, WebSocket] = {}
 
