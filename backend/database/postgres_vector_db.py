@@ -248,6 +248,58 @@ class PostgresVectorDB:
                         ON audit_events_prod(actor);
                 """)
                 
+                # Impact analysis tables
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS analysis_runs (
+                        run_id UUID PRIMARY KEY,
+                        tenant_id UUID NOT NULL,
+                        run_type TEXT NOT NULL,
+                        status TEXT NOT NULL CHECK (status IN ('queued', 'running', 'completed', 'failed')),
+                        total_impacts INTEGER DEFAULT 0,
+                        started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        completed_at TIMESTAMP
+                    );
+                    
+                    CREATE INDEX IF NOT EXISTS idx_runs_tenant 
+                        ON analysis_runs(tenant_id);
+                    CREATE INDEX IF NOT EXISTS idx_runs_status 
+                        ON analysis_runs(status);
+                """)
+                
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS impact_results (
+                        impact_id UUID PRIMARY KEY,
+                        run_id UUID NOT NULL REFERENCES analysis_runs(run_id) ON DELETE CASCADE,
+                        tenant_id UUID NOT NULL,
+                        
+                        -- Regulatory change
+                        clause_id TEXT NOT NULL,
+                        change_text TEXT NOT NULL,
+                        change_type TEXT NOT NULL,
+                        
+                        -- Impacted QSP section
+                        qsp_doc TEXT NOT NULL,
+                        section_path TEXT NOT NULL,
+                        heading TEXT NOT NULL,
+                        
+                        -- Match quality
+                        confidence FLOAT NOT NULL CHECK (confidence >= 0 AND confidence <= 1),
+                        rationale TEXT NOT NULL,
+                        
+                        -- Metadata
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    );
+                    
+                    CREATE INDEX IF NOT EXISTS idx_impacts_run 
+                        ON impact_results(run_id);
+                    CREATE INDEX IF NOT EXISTS idx_impacts_tenant 
+                        ON impact_results(tenant_id);
+                    CREATE INDEX IF NOT EXISTS idx_impacts_clause 
+                        ON impact_results(clause_id);
+                    CREATE INDEX IF NOT EXISTS idx_impacts_confidence 
+                        ON impact_results(confidence DESC);
+                """)
+                
                 self.conn.commit()
                 logger.info("PostgreSQL schema initialized successfully")
                 
