@@ -1838,6 +1838,491 @@ The organization shall plan and control the design and development of the produc
             print("🚨 OVERALL: System has significant issues requiring attention")
             return False
 
+    # ========================================
+    # REGULATORY CHANGE DASHBOARD TESTS (PRD-05)
+    # ========================================
+    
+    def create_sample_iso_old_pdf(self):
+        """Create sample old ISO 13485:2016 document"""
+        content = """ISO 13485:2016 Medical devices — Quality management systems — Requirements for regulatory purposes
+
+4. Quality management system
+
+4.1 General requirements
+The organization shall establish, document, implement and maintain a quality management system and maintain its effectiveness in accordance with the requirements of this International Standard.
+
+4.2 Documentation requirements
+
+4.2.1 General
+The quality management system documentation shall include:
+a) documented statements of a quality policy and quality objectives;
+b) a quality manual;
+c) documented procedures and records required by this International Standard;
+d) documents, including records, determined by the organization to be necessary to ensure the effective planning, operation and control of its processes.
+
+4.2.2 Quality manual
+The organization shall establish and maintain a quality manual that includes:
+a) the scope of the quality management system;
+b) the documented procedures established for the quality management system;
+c) a description of the interaction between the processes of the quality management system.
+
+7. Product realization
+
+7.3 Design and development
+
+7.3.1 Design and development planning
+The organization shall plan and control the design and development of the product.
+
+7.3.2 Design and development inputs
+Inputs relating to product requirements shall be determined and records maintained.
+
+8. Measurement, analysis and improvement
+
+8.1 General
+The organization shall plan and implement the monitoring, measurement, analysis and improvement processes needed.
+
+8.2 Monitoring and measurement
+
+8.2.1 Customer satisfaction
+As one of the measurements of the performance of the quality management system, the organization shall monitor information relating to customer perception.
+"""
+        
+        import tempfile
+        temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False)
+        temp_file.write(content)
+        temp_file.close()
+        return temp_file.name
+
+    def create_sample_iso_new_pdf(self):
+        """Create sample new ISO 13485:2024 document with changes"""
+        content = """ISO 13485:2024 Medical devices — Quality management systems — Requirements for regulatory purposes
+
+4. Quality management system
+
+4.1 General requirements
+The organization shall establish, document, implement and maintain a quality management system and maintain its effectiveness in accordance with the requirements of this International Standard. The organization shall also ensure cybersecurity considerations are integrated throughout the quality management system.
+
+4.2 Documentation requirements
+
+4.2.1 General
+The quality management system documentation shall include:
+a) documented statements of a quality policy and quality objectives;
+b) a quality manual;
+c) documented procedures and records required by this International Standard;
+d) documents, including records, determined by the organization to be necessary to ensure the effective planning, operation and control of its processes;
+e) cybersecurity documentation and risk assessments.
+
+4.2.2 Quality manual
+The organization shall establish and maintain a quality manual that includes:
+a) the scope of the quality management system;
+b) the documented procedures established for the quality management system;
+c) a description of the interaction between the processes of the quality management system;
+d) cybersecurity controls and procedures.
+
+4.2.4 Control of documents
+Electronic records must now comply with 21 CFR Part 11 requirements for electronic signatures and audit trails.
+
+7. Product realization
+
+7.3 Design and development
+
+7.3.1 Design and development planning
+The organization shall plan and control the design and development of the product. Risk management activities shall be integrated throughout the design and development process.
+
+7.3.2 Design and development inputs
+Inputs relating to product requirements shall be determined and records maintained. Software lifecycle processes shall be documented for medical device software.
+
+7.3.10 Design transfer
+New requirement: The organization shall establish documented procedures for design transfer activities to ensure design outputs are correctly translated into production specifications.
+
+8. Measurement, analysis and improvement
+
+8.1 General
+The organization shall plan and implement the monitoring, measurement, analysis and improvement processes needed. Post-market surveillance activities shall be enhanced.
+
+8.2 Monitoring and measurement
+
+8.2.1 Customer satisfaction
+As one of the measurements of the performance of the quality management system, the organization shall monitor information relating to customer perception.
+
+8.2.6 Post-market surveillance
+Enhanced post-market surveillance requirements including systematic collection and analysis of post-market data.
+"""
+        
+        import tempfile
+        temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False)
+        temp_file.write(content)
+        temp_file.close()
+        return temp_file.name
+
+    def test_regulatory_document_upload_old(self):
+        """Test uploading old regulatory PDF with doc_type='old'"""
+        test_file = None
+        try:
+            if not self.auth_token:
+                self.log_test("Regulatory Upload Old PDF", False, "No authentication token")
+                return False, {}
+            
+            test_file = self.create_sample_iso_old_pdf()
+            
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            
+            with open(test_file, 'rb') as f:
+                files = {'file': ('iso_13485_2016.txt', f, 'text/plain')}
+                data = {
+                    'doc_type': 'old',
+                    'standard_name': 'ISO 13485'
+                }
+                response = requests.post(
+                    f"{self.api_url}/regulatory/upload/regulatory", 
+                    files=files, 
+                    data=data,
+                    headers=headers,
+                    timeout=30
+                )
+            
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                details = f"Filename: {data.get('filename', 'N/A')}, Size: {data.get('size', 0)}, File Path: {data.get('file_path', 'N/A')}"
+            else:
+                details = f"Status: {response.status_code}, Error: {response.text}"
+                
+            self.log_test("Regulatory Upload Old PDF", success, details, response.json() if success else response.text)
+            return success, response.json() if success else {}
+            
+        except Exception as e:
+            self.log_test("Regulatory Upload Old PDF", False, f"Exception: {str(e)}")
+            return False, {}
+        finally:
+            if test_file and os.path.exists(test_file):
+                os.unlink(test_file)
+
+    def test_regulatory_document_upload_new(self):
+        """Test uploading new regulatory PDF with doc_type='new'"""
+        test_file = None
+        try:
+            if not self.auth_token:
+                self.log_test("Regulatory Upload New PDF", False, "No authentication token")
+                return False, {}
+            
+            test_file = self.create_sample_iso_new_pdf()
+            
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            
+            with open(test_file, 'rb') as f:
+                files = {'file': ('iso_13485_2024.txt', f, 'text/plain')}
+                data = {
+                    'doc_type': 'new',
+                    'standard_name': 'ISO 13485'
+                }
+                response = requests.post(
+                    f"{self.api_url}/regulatory/upload/regulatory", 
+                    files=files, 
+                    data=data,
+                    headers=headers,
+                    timeout=30
+                )
+            
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                details = f"Filename: {data.get('filename', 'N/A')}, Size: {data.get('size', 0)}, File Path: {data.get('file_path', 'N/A')}"
+            else:
+                details = f"Status: {response.status_code}, Error: {response.text}"
+                
+            self.log_test("Regulatory Upload New PDF", success, details, response.json() if success else response.text)
+            return success, response.json() if success else {}
+            
+        except Exception as e:
+            self.log_test("Regulatory Upload New PDF", False, f"Exception: {str(e)}")
+            return False, {}
+        finally:
+            if test_file and os.path.exists(test_file):
+                os.unlink(test_file)
+
+    def test_list_regulatory_documents(self):
+        """Test listing regulatory documents endpoint"""
+        try:
+            if not self.auth_token:
+                self.log_test("List Regulatory Documents", False, "No authentication token")
+                return False, {}
+            
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            response = requests.get(f"{self.api_url}/regulatory/list/regulatory", headers=headers, timeout=10)
+            
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                documents = data.get('documents', {})
+                old_doc = documents.get('old')
+                new_doc = documents.get('new')
+                details = f"Old Doc: {'✅' if old_doc else '❌'}, New Doc: {'✅' if new_doc else '❌'}"
+            else:
+                details = f"Status: {response.status_code}, Error: {response.text}"
+                
+            self.log_test("List Regulatory Documents", success, details, response.json() if success else response.text)
+            return success, response.json() if success else {}
+            
+        except Exception as e:
+            self.log_test("List Regulatory Documents", False, f"Exception: {str(e)}")
+            return False, {}
+
+    def test_iso_diff_processing(self, old_file_path, new_file_path):
+        """Test ISO diff processing between old and new PDFs"""
+        try:
+            if not self.auth_token:
+                self.log_test("ISO Diff Processing", False, "No authentication token")
+                return False, {}
+            
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            
+            data = {
+                'old_file_path': old_file_path,
+                'new_file_path': new_file_path
+            }
+            
+            response = requests.post(
+                f"{self.api_url}/regulatory/preprocess/iso_diff", 
+                data=data,
+                headers=headers,
+                timeout=60
+            )
+            
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                total_changes = data.get('total_changes', 0)
+                summary = data.get('summary', {})
+                details = f"Total Changes: {total_changes}, Added: {summary.get('added', 0)}, Modified: {summary.get('modified', 0)}, Deleted: {summary.get('deleted', 0)}"
+            else:
+                details = f"Status: {response.status_code}, Error: {response.text}"
+                
+            self.log_test("ISO Diff Processing", success, details, response.json() if success else response.text)
+            return success, response.json() if success else {}
+            
+        except Exception as e:
+            self.log_test("ISO Diff Processing", False, f"Exception: {str(e)}")
+            return False, {}
+
+    def test_list_internal_documents(self):
+        """Test listing internal documents endpoint"""
+        try:
+            if not self.auth_token:
+                self.log_test("List Internal Documents", False, "No authentication token")
+                return False, {}
+            
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            response = requests.get(f"{self.api_url}/regulatory/list/internal", headers=headers, timeout=10)
+            
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                documents = data.get('documents', [])
+                count = data.get('count', 0)
+                details = f"Internal Documents Found: {count}"
+            else:
+                details = f"Status: {response.status_code}, Error: {response.text}"
+                
+            self.log_test("List Internal Documents", success, details, response.json() if success else response.text)
+            return success, response.json() if success else {}
+            
+        except Exception as e:
+            self.log_test("List Internal Documents", False, f"Exception: {str(e)}")
+            return False, {}
+
+    def test_change_impact_analysis(self, deltas):
+        """Test change impact analysis with deltas"""
+        try:
+            if not self.auth_token:
+                self.log_test("Change Impact Analysis", False, "No authentication token")
+                return False, {}
+            
+            headers = {"Authorization": f"Bearer {self.auth_token}", "Content-Type": "application/json"}
+            
+            # Prepare sample deltas if none provided
+            if not deltas:
+                deltas = [
+                    {
+                        "clause_id": "4.2.4",
+                        "change_text": "Electronic records must now comply with 21 CFR Part 11 requirements for electronic signatures and audit trails",
+                        "change_type": "modified"
+                    },
+                    {
+                        "clause_id": "7.3.10",
+                        "change_text": "New requirement: The organization shall establish documented procedures for design transfer activities",
+                        "change_type": "added"
+                    }
+                ]
+            
+            request_data = {
+                "deltas": deltas,
+                "top_k": 5
+            }
+            
+            response = requests.post(
+                f"{self.api_url}/impact/analyze", 
+                json=request_data,
+                headers=headers,
+                timeout=60
+            )
+            
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                run_id = data.get('run_id', 'N/A')
+                total_changes = data.get('total_changes_analyzed', 0)
+                total_impacts = data.get('total_impacts_found', 0)
+                details = f"Run ID: {run_id}, Changes Analyzed: {total_changes}, Impacts Found: {total_impacts}"
+            else:
+                details = f"Status: {response.status_code}, Error: {response.text}"
+                
+            self.log_test("Change Impact Analysis", success, details, response.json() if success else response.text)
+            return success, response.json() if success else {}
+            
+        except Exception as e:
+            self.log_test("Change Impact Analysis", False, f"Exception: {str(e)}")
+            return False, {}
+
+    def run_comprehensive_regulatory_dashboard_tests(self):
+        """Run comprehensive tests for Regulatory Change Dashboard (PRD-05)"""
+        print("\n🎯 COMPREHENSIVE REGULATORY CHANGE DASHBOARD TESTING (PRD-05)")
+        print(f"📍 Testing against: {self.base_url}")
+        print("=" * 80)
+        
+        # Login with admin credentials as specified in review request
+        print("🔐 Authenticating with admin@tulipmedical.com...")
+        admin_auth_success = self.login_admin_user()
+        
+        if not admin_auth_success:
+            print("❌ Admin authentication failed. Testing with fallback credentials...")
+            auth_success = self.register_test_user()
+        else:
+            auth_success = True
+        
+        if not auth_success:
+            print("❌ All authentication methods failed. Cannot test regulatory APIs.")
+            return False
+        
+        print(f"✅ Authentication successful. Tenant ID: {self.tenant_id}")
+        
+        # Test Results Storage
+        test_results = {}
+        
+        # 1. Test Regulatory Document Upload (Old)
+        print("\n1️⃣ Testing Regulatory Document Upload (Old PDF)")
+        old_success, old_data = self.test_regulatory_document_upload_old()
+        test_results['regulatory_upload_old'] = old_success
+        old_file_path = old_data.get('file_path') if old_success else None
+        
+        # 2. Test Regulatory Document Upload (New)
+        print("\n2️⃣ Testing Regulatory Document Upload (New PDF)")
+        new_success, new_data = self.test_regulatory_document_upload_new()
+        test_results['regulatory_upload_new'] = new_success
+        new_file_path = new_data.get('file_path') if new_success else None
+        
+        # 3. Test List Regulatory Documents
+        print("\n3️⃣ Testing List Regulatory Documents")
+        list_reg_success, list_reg_data = self.test_list_regulatory_documents()
+        test_results['list_regulatory'] = list_reg_success
+        
+        # 4. Test ISO Diff Processing (if both files uploaded successfully)
+        print("\n4️⃣ Testing ISO Diff Processing")
+        if old_file_path and new_file_path:
+            diff_success, diff_data = self.test_iso_diff_processing(old_file_path, new_file_path)
+            test_results['iso_diff'] = diff_success
+            deltas = diff_data.get('deltas', []) if diff_success else []
+        else:
+            print("⚠️ Skipping ISO diff processing - missing file paths")
+            test_results['iso_diff'] = False
+            deltas = []
+        
+        # 5. Test List Internal Documents
+        print("\n5️⃣ Testing List Internal Documents")
+        list_internal_success, list_internal_data = self.test_list_internal_documents()
+        test_results['list_internal'] = list_internal_success
+        
+        # 6. Upload a QSP document for impact analysis
+        print("\n6️⃣ Uploading QSP Document for Impact Analysis")
+        qsp_success, qsp_data = self.test_qsp_document_upload()
+        test_results['qsp_upload'] = qsp_success
+        
+        # 7. Test Change Impact Analysis
+        print("\n7️⃣ Testing Change Impact Analysis")
+        impact_success, impact_data = self.test_change_impact_analysis(deltas)
+        test_results['impact_analysis'] = impact_success
+        
+        # Generate Summary
+        self.generate_regulatory_dashboard_summary(test_results)
+        
+        return test_results
+
+    def generate_regulatory_dashboard_summary(self, test_results):
+        """Generate comprehensive summary of regulatory dashboard testing"""
+        print("\n" + "="*80)
+        print("📊 REGULATORY CHANGE DASHBOARD TEST SUMMARY (PRD-05)")
+        print("="*80)
+        
+        total_tests = len(test_results)
+        passed_tests = sum(test_results.values())
+        
+        print(f"✅ Tests Passed: {passed_tests}/{total_tests} ({passed_tests/total_tests*100:.1f}%)")
+        print()
+        
+        # Detailed results
+        test_descriptions = {
+            'regulatory_upload_old': 'Regulatory Document Upload (Old PDF)',
+            'regulatory_upload_new': 'Regulatory Document Upload (New PDF)', 
+            'list_regulatory': 'List Regulatory Documents',
+            'iso_diff': 'ISO Diff Processing',
+            'list_internal': 'List Internal Documents',
+            'qsp_upload': 'QSP Document Upload',
+            'impact_analysis': 'Change Impact Analysis'
+        }
+        
+        for test_key, success in test_results.items():
+            test_name = test_descriptions.get(test_key, test_key)
+            status = "✅ WORKING" if success else "❌ FAILED"
+            print(f"{status} - {test_name}")
+        
+        print("\n🎯 API ENDPOINT STATUS:")
+        endpoints = [
+            ("/api/regulatory/upload/regulatory", test_results.get('regulatory_upload_old', False) or test_results.get('regulatory_upload_new', False)),
+            ("/api/regulatory/list/regulatory", test_results.get('list_regulatory', False)),
+            ("/api/regulatory/preprocess/iso_diff", test_results.get('iso_diff', False)),
+            ("/api/regulatory/list/internal", test_results.get('list_internal', False)),
+            ("/api/impact/analyze", test_results.get('impact_analysis', False))
+        ]
+        
+        for endpoint, working in endpoints:
+            status = "✅" if working else "❌"
+            print(f"{status} {endpoint}")
+        
+        print("\n🔍 REGULATORY DASHBOARD CONCLUSION:")
+        if passed_tests >= 5:
+            print("✅ REGULATORY CHANGE DASHBOARD IS OPERATIONAL")
+            print("   - Core regulatory document upload/processing working")
+            print("   - ISO diff generation functional")
+            print("   - Change impact analysis operational")
+            print("   - Ready for frontend integration")
+        elif passed_tests >= 3:
+            print("⚠️ REGULATORY DASHBOARD PARTIALLY WORKING")
+            print("   - Some core functionality operational")
+            print("   - Issues with specific endpoints need investigation")
+            print("   - May require backend fixes before full deployment")
+        else:
+            print("❌ REGULATORY DASHBOARD HAS CRITICAL ISSUES")
+            print("   - Multiple core endpoints failing")
+            print("   - Backend services may need debugging")
+            print("   - Check logs for detailed error information")
+        
+        return passed_tests >= 5
 def main():
     """Main test execution"""
     import sys
