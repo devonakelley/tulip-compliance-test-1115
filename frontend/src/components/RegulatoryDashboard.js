@@ -193,7 +193,7 @@ const RegulatoryDashboard = () => {
       toast.loading('Analyzing impact on QSP sections...', { id: 'analyze' });
       
       // Use the deltas to run impact analysis
-      const response = await axios.post(`${API}/impact/analyze`, {
+      const response = await axios.post(`${API}/api/impact/analyze`, {
         deltas: deltas.deltas || deltas.deltas?.slice(0, 10) || [],
         top_k: 5
       });
