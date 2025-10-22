@@ -2038,7 +2038,7 @@ Enhanced post-market surveillance requirements including systematic collection a
             headers = {"Authorization": f"Bearer {self.auth_token}"}
             
             with open(test_file, 'rb') as f:
-                files = {'file': ('iso_13485_2024.txt', f, 'text/plain')}
+                files = {'file': ('iso_13485_2024.pdf', f, 'application/pdf')}
                 data = {
                     'doc_type': 'new',
                     'standard_name': 'ISO 13485'
