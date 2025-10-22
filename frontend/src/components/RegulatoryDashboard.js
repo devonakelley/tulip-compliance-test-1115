@@ -468,25 +468,95 @@ const RegulatoryDashboard = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            {impactResults.warning && (
+              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
+                <div className="flex items-center gap-2 text-yellow-800">
+                  <AlertCircle className="h-5 w-5" />
+                  <p className="text-sm">{impactResults.warning}</p>
+                </div>
+              </div>
+            )}
+            
+            <div className="space-y-4 max-h-[600px] overflow-y-auto">
               {(impactResults.impacts || []).map((impact, idx) => (
-                <div key={idx} className="border rounded-lg p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <AlertCircle className="h-5 w-5 text-orange-500" />
-                        <div>
-                          <h4 className="font-semibold">
-                            Clause {impact.clause_id} → {impact.section_path}
-                          </h4>
-                          <p className="text-sm text-muted-foreground">{impact.heading}</p>
+                <div key={idx} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                  <div className="bg-orange-50 p-3 flex items-start justify-between">
+                    <div className="flex items-center gap-3 flex-1">
+                      <AlertCircle className="h-5 w-5 text-orange-500 flex-shrink-0 mt-1" />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-mono font-bold text-blue-600 text-sm">Reg: {impact.clause_id}</span>
+                          <span className="text-gray-400">→</span>
+                          <span className="font-mono font-semibold text-sm">{impact.section_path}</span>
+                          {getChangeTypeBadge(impact.change_type)}
                         </div>
+                        <p className="font-medium text-sm">{impact.qsp_doc}</p>
+                        <p className="text-sm text-gray-600">{impact.heading}</p>
                       </div>
-                      <p className="text-sm mt-2 ml-8">{impact.rationale}</p>
                     </div>
-                    <div className="ml-4">
+                    <div className="ml-4 flex-shrink-0">
                       {getConfidenceBadge(impact.confidence)}
                     </div>
+                  </div>
+                  
+                  <div className="p-4 bg-white space-y-3">
+                    <div 
+                      className="cursor-pointer flex items-center gap-2 text-blue-600 hover:text-blue-800"
+                      onClick={() => setExpandedImpacts(prev => ({...prev, [idx]: !prev[idx]}))}
+                    >
+                      <span className="text-sm font-semibold">
+                        {expandedImpacts[idx] ? '▼' : '▶'} Show Details
+                      </span>
+                    </div>
+                    
+                    {expandedImpacts[idx] && (
+                      <div className="space-y-3 pl-4 border-l-2 border-blue-200">
+                        <div className="bg-blue-50 p-3 rounded">
+                          <div className="text-xs font-semibold text-blue-900 mb-2">🔍 WHY THIS WAS FLAGGED:</div>
+                          <p className="text-sm text-blue-800">{impact.rationale}</p>
+                        </div>
+                        
+                        <div className="bg-gray-50 p-3 rounded">
+                          <div className="text-xs font-semibold text-gray-900 mb-2">📄 REGULATORY CHANGE SOURCE:</div>
+                          <div className="text-sm text-gray-700">
+                            <span className="font-mono font-bold text-blue-600">Clause {impact.clause_id}</span>
+                            {deltas && deltas.deltas && (() => {
+                              const relatedDelta = deltas.deltas.find(d => d.clause_id === impact.clause_id);
+                              if (relatedDelta) {
+                                return (
+                                  <div className="mt-2 space-y-2">
+                                    {relatedDelta.change_type === 'added' && (
+                                      <div className="bg-green-50 border-l-2 border-green-500 p-2 rounded text-xs">
+                                        <div className="font-semibold text-green-900 mb-1">New Requirement:</div>
+                                        <div className="text-green-800">{relatedDelta.new_text?.slice(0, 300)}...</div>
+                                      </div>
+                                    )}
+                                    {relatedDelta.change_type === 'modified' && (
+                                      <div className="bg-yellow-50 border-l-2 border-yellow-500 p-2 rounded text-xs">
+                                        <div className="font-semibold text-yellow-900 mb-1">Modified Requirement:</div>
+                                        <div className="text-yellow-800">{relatedDelta.new_text?.slice(0, 300)}...</div>
+                                      </div>
+                                    )}
+                                    {relatedDelta.change_type === 'deleted' && (
+                                      <div className="bg-red-50 border-l-2 border-red-500 p-2 rounded text-xs">
+                                        <div className="font-semibold text-red-900 mb-1">Deleted Requirement:</div>
+                                        <div className="text-red-800">{relatedDelta.old_text?.slice(0, 300)}...</div>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              }
+                              return <p className="text-xs text-gray-500 mt-1">(Full text available in Diff view)</p>;
+                            })()}
+                          </div>
+                        </div>
+                        
+                        <div className="bg-purple-50 p-3 rounded">
+                          <div className="text-xs font-semibold text-purple-900 mb-2">✏️ ACTION REQUIRED:</div>
+                          <p className="text-sm text-purple-800">Review section "{impact.heading}" in {impact.qsp_doc} and update to align with the new regulatory requirement.</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
