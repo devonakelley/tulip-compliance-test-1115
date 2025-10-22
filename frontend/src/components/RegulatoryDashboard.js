@@ -1,0 +1,409 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Upload, FileText, GitCompare, TrendingUp, Download, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
+
+const API = process.env.REACT_APP_BACKEND_URL;
+
+const RegulatoryDashboard = () => {
+  const [oldPdf, setOldPdf] = useState(null);
+  const [newPdf, setNewPdf] = useState(null);
+  const [uploadingOld, setUploadingOld] = useState(false);
+  const [uploadingNew, setUploadingNew] = useState(false);
+  const [processingDiff, setProcessingDiff] = useState(false);
+  const [deltas, setDeltas] = useState(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [impactResults, setImpactResults] = useState(null);
+  
+  const handleOldPdfUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      toast.error('Please upload a PDF file');
+      return;
+    }
+    
+    try {
+      setUploadingOld(true);
+      toast.loading('Uploading old version...', { id: 'old-upload' });
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('doc_type', 'old');
+      formData.append('standard_name', 'ISO 13485');
+      
+      const response = await axios.post(`${API}/regulatory/upload/regulatory`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      setOldPdf(response.data);
+      toast.success('Old version uploaded', { id: 'old-upload' });
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to upload old version', { id: 'old-upload' });
+    } finally {
+      setUploadingOld(false);
+    }
+  };
+  
+  const handleNewPdfUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      toast.error('Please upload a PDF file');
+      return;
+    }
+    
+    try {
+      setUploadingNew(true);
+      toast.loading('Uploading new version...', { id: 'new-upload' });
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('doc_type', 'new');
+      formData.append('standard_name', 'ISO 13485');
+      
+      const response = await axios.post(`${API}/regulatory/upload/regulatory`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      setNewPdf(response.data);
+      toast.success('New version uploaded', { id: 'new-upload' });
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to upload new version', { id: 'new-upload' });
+    } finally {
+      setUploadingNew(false);
+    }
+  };
+  
+  const processDiff = async () => {
+    if (!oldPdf || !newPdf) {
+      toast.error('Please upload both old and new versions');
+      return;
+    }
+    
+    try {
+      setProcessingDiff(true);
+      toast.loading('Processing differences...', { id: 'diff' });
+      
+      const formData = new FormData();
+      formData.append('old_file_path', oldPdf.file_path);
+      formData.append('new_file_path', newPdf.file_path);
+      
+      const response = await axios.post(`${API}/regulatory/preprocess/iso_diff`, formData);
+      
+      setDeltas(response.data);
+      toast.success(`Found ${response.data.total_changes} changes`, { id: 'diff' });
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to process differences', { id: 'diff' });
+    } finally {
+      setProcessingDiff(false);
+    }
+  };
+  
+  const runImpactAnalysis = async () => {
+    if (!deltas) {
+      toast.error('Please process differences first');
+      return;
+    }
+    
+    try {
+      setAnalyzing(true);
+      toast.loading('Analyzing impact on QSP sections...', { id: 'analyze' });
+      
+      // Use the deltas to run impact analysis
+      const response = await axios.post(`${API}/impact/analyze`, {
+        deltas: deltas.deltas || deltas.deltas?.slice(0, 10) || [],
+        top_k: 5
+      });
+      
+      setImpactResults(response.data);
+      toast.success(`Found ${response.data.total_impacts_found} potential impacts`, { id: 'analyze' });
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to analyze impacts', { id: 'analyze' });
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+  
+  const getChangeTypeBadge = (type) => {
+    if (type === 'added') return <Badge className="bg-green-500">Added</Badge>;
+    if (type === 'modified') return <Badge className="bg-yellow-500">Modified</Badge>;
+    if (type === 'deleted') return <Badge className="bg-red-500">Deleted</Badge>;
+    return <Badge>{type}</Badge>;
+  };
+  
+  const getConfidenceBadge = (confidence) => {
+    if (confidence > 0.75) return <Badge className="bg-green-500">High: {(confidence * 100).toFixed(0)}%</Badge>;
+    if (confidence > 0.60) return <Badge className="bg-yellow-500">Medium: {(confidence * 100).toFixed(0)}%</Badge>;
+    return <Badge className="bg-gray-500">Low: {(confidence * 100).toFixed(0)}%</Badge>;
+  };
+  
+  return (
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Regulatory Change Dashboard</h1>
+          <p className="text-muted-foreground mt-1">
+            Upload old & new regulatory PDFs to auto-detect changes and map impacts
+          </p>
+        </div>
+      </div>
+      
+      {/* Step 1: Upload PDFs */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Step 1: Upload Regulatory Documents</CardTitle>
+          <CardDescription>
+            Upload both old and new versions to automatically detect changes
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Old Version Upload */}
+            <div className="space-y-4">
+              <h3 className="font-semibold flex items-center gap-2">
+                <FileText className="h-5 w-5 text-blue-500" />
+                Old Version (e.g., ISO 13485:2016)
+              </h3>
+              <div>
+                <input
+                  type="file"
+                  id="old-pdf-upload"
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={handleOldPdfUpload}
+                  disabled={uploadingOld}
+                />
+                <label
+                  htmlFor="old-pdf-upload"
+                  className={`flex items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors ${
+                    uploadingOld ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  <Upload className="h-5 w-5" />
+                  <span>{oldPdf ? oldPdf.filename : 'Choose PDF file'}</span>
+                </label>
+              </div>
+              
+              {oldPdf && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <div>
+                      <p className="font-medium">{oldPdf.filename}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {(oldPdf.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* New Version Upload */}
+            <div className="space-y-4">
+              <h3 className="font-semibold flex items-center gap-2">
+                <FileText className="h-5 w-5 text-green-500" />
+                New Version (e.g., ISO 13485:2024)
+              </h3>
+              <div>
+                <input
+                  type="file"
+                  id="new-pdf-upload"
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={handleNewPdfUpload}
+                  disabled={uploadingNew}
+                />
+                <label
+                  htmlFor="new-pdf-upload"
+                  className={`flex items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg cursor-pointer hover:border-green-500 hover:bg-green-50 transition-colors ${
+                    uploadingNew ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  <Upload className="h-5 w-5" />
+                  <span>{newPdf ? newPdf.filename : 'Choose PDF file'}</span>
+                </label>
+              </div>
+              
+              {newPdf && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <div>
+                      <p className="font-medium">{newPdf.filename}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {(newPdf.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="mt-6">
+            <Button
+              onClick={processDiff}
+              disabled={!oldPdf || !newPdf || processingDiff}
+              className="w-full h-12"
+            >
+              {processingDiff ? (
+                <>
+                  <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                  Processing Differences...
+                </>
+              ) : (
+                <>
+                  <GitCompare className="h-5 w-5 mr-2" />
+                  Generate Diff & Detect Changes
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Step 2: Diff Results */}
+      {deltas && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Step 2: Detected Changes</CardTitle>
+                <CardDescription>
+                  {deltas.total_changes} changes found between versions
+                </CardDescription>
+              </div>
+              <div className="flex gap-2 text-sm">
+                <Badge className="bg-green-500">{deltas.summary?.added || 0} Added</Badge>
+                <Badge className="bg-yellow-500">{deltas.summary?.modified || 0} Modified</Badge>
+                <Badge className="bg-red-500">{deltas.summary?.deleted || 0} Deleted</Badge>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {(deltas.deltas || []).map((delta, idx) => (
+                <div key={idx} className="border rounded-lg p-4 hover:border-blue-300 transition-colors">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-semibold">Clause {delta.clause_id}</h4>
+                      {getChangeTypeBadge(delta.change_type)}
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {delta.change_text?.slice(0, 200)}...
+                  </p>
+                </div>
+              ))}
+            </div>
+            
+            <div className="mt-6">
+              <Button
+                onClick={runImpactAnalysis}
+                disabled={analyzing}
+                className="w-full h-12"
+              >
+                {analyzing ? (
+                  <>
+                    <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                    Analyzing Impact on QSPs...
+                  </>
+                ) : (
+                  <>
+                    <TrendingUp className="h-5 w-5 mr-2" />
+                    Run Impact Analysis on Internal QSPs
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      {/* Step 3: Impact Results */}
+      {impactResults && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Step 3: Impact on Internal QSPs</CardTitle>
+                <CardDescription>
+                  {impactResults.total_impacts_found} QSP sections may need review
+                </CardDescription>
+              </div>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Export Report
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {(impactResults.impacts || []).map((impact, idx) => (
+                <div key={idx} className="border rounded-lg p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <AlertCircle className="h-5 w-5 text-orange-500" />
+                        <div>
+                          <h4 className="font-semibold">
+                            Clause {impact.clause_id} → {impact.section_path}
+                          </h4>
+                          <p className="text-sm text-muted-foreground">{impact.heading}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm mt-2 ml-8">{impact.rationale}</p>
+                    </div>
+                    <div className="ml-4">
+                      {getConfidenceBadge(impact.confidence)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      {/* Instructions */}
+      {!deltas && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="pt-6">
+            <div className="flex gap-4">
+              <div className="flex-shrink-0">
+                <div className="h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                  ?
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-2">How to Use This Dashboard</h3>
+                <ol className="space-y-2 text-sm">
+                  <li>1. Upload the <strong>old version</strong> of your regulatory standard (e.g., ISO 13485:2016)</li>
+                  <li>2. Upload the <strong>new version</strong> (e.g., ISO 13485:2024)</li>
+                  <li>3. Click <strong>"Generate Diff"</strong> to automatically detect all changes</li>
+                  <li>4. Review the detected changes (added, modified, deleted clauses)</li>
+                  <li>5. Click <strong>"Run Impact Analysis"</strong> to see which QSP sections need updating</li>
+                  <li>6. Export the report for your QA/RA team to review</li>
+                </ol>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+export default RegulatoryDashboard;
