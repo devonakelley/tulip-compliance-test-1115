@@ -296,6 +296,58 @@ const RegulatoryDashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Internal QSP Upload */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Upload Internal QSP Documents</CardTitle>
+          <CardDescription>
+            Upload your Quality System Procedure documents to analyze impact
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+            <Upload className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+            <input
+              type="file"
+              id="qsp-upload"
+              accept=".docx,.txt,.pdf"
+              multiple
+              className="hidden"
+              onChange={handleQSPUpload}
+            />
+            <label
+              htmlFor="qsp-upload"
+              className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
+            >
+              <Upload className="h-5 w-5 mr-2" />
+              Select QSP Files
+            </label>
+            <p className="mt-2 text-sm text-gray-500">
+              Supports .docx, .txt, and .pdf files • Select multiple files at once
+            </p>
+          </div>
+          
+          {internalDocs.length > 0 && (
+            <div className="mt-4">
+              <p className="text-sm font-medium text-gray-700 mb-2">
+                {internalDocs.length} QSP document(s) uploaded
+              </p>
+              <div className="max-h-40 overflow-y-auto space-y-2">
+                {internalDocs.map((doc, idx) => (
+                  <div key={idx} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                    <FileText className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm flex-1">{doc.filename}</span>
+                    <span className="text-xs text-gray-500">
+                      {(doc.size / 1024).toFixed(2)} KB
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
       
       {/* Step 2: Diff Results */}
       {deltas && (
