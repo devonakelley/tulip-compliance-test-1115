@@ -1843,7 +1843,7 @@ The organization shall plan and control the design and development of the produc
     # ========================================
     
     def create_sample_iso_old_pdf(self):
-        """Create sample old ISO 13485:2016 document"""
+        """Create sample old ISO 13485:2016 document as PDF"""
         content = """ISO 13485:2016 Medical devices — Quality management systems — Requirements for regulatory purposes
 
 4. Quality management system
@@ -1888,13 +1888,26 @@ As one of the measurements of the performance of the quality management system, 
 """
         
         import tempfile
-        temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False)
-        temp_file.write(content)
+        import fitz  # PyMuPDF
+        
+        # Create PDF document
+        doc = fitz.open()
+        page = doc.new_page()
+        
+        # Add text to PDF
+        text_rect = fitz.Rect(50, 50, 550, 750)
+        page.insert_textbox(text_rect, content, fontsize=10, fontname="helv")
+        
+        # Save to temporary file
+        temp_file = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
+        doc.save(temp_file.name)
+        doc.close()
         temp_file.close()
+        
         return temp_file.name
 
     def create_sample_iso_new_pdf(self):
-        """Create sample new ISO 13485:2024 document with changes"""
+        """Create sample new ISO 13485:2024 document with changes as PDF"""
         content = """ISO 13485:2024 Medical devices — Quality management systems — Requirements for regulatory purposes
 
 4. Quality management system
@@ -1950,9 +1963,22 @@ Enhanced post-market surveillance requirements including systematic collection a
 """
         
         import tempfile
-        temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False)
-        temp_file.write(content)
+        import fitz  # PyMuPDF
+        
+        # Create PDF document
+        doc = fitz.open()
+        page = doc.new_page()
+        
+        # Add text to PDF
+        text_rect = fitz.Rect(50, 50, 550, 750)
+        page.insert_textbox(text_rect, content, fontsize=10, fontname="helv")
+        
+        # Save to temporary file
+        temp_file = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
+        doc.save(temp_file.name)
+        doc.close()
         temp_file.close()
+        
         return temp_file.name
 
     def test_regulatory_document_upload_old(self):
