@@ -1716,6 +1716,17 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/regulatory" 
+              element={
+                <ProtectedRoute>
+                  <Navigation />
+                  <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+                    <RegulatoryDashboard />
+                  </main>
+                </ProtectedRoute>
+              } 
+            />
           </Routes>
           <Toaster />
         </AuthProvider>
