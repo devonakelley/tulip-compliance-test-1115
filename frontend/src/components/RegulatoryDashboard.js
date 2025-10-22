@@ -106,6 +106,56 @@ const RegulatoryDashboard = () => {
     }
   };
   
+  const handleQSPUpload = async (event) => {
+    const files = Array.from(event.target.files);
+    if (files.length === 0) return;
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const file of files) {
+      try {
+        toast.loading(`Uploading ${file.name}...`, { id: `qsp-${file.name}` });
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const response = await axios.post(`${API}/api/documents/upload`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        
+        successCount++;
+        toast.success(`✅ Uploaded ${file.name}`, { id: `qsp-${file.name}` });
+      } catch (error) {
+        console.error(`Error uploading ${file.name}:`, error);
+        failCount++;
+        toast.error(`❌ Failed to upload ${file.name}`, { id: `qsp-${file.name}` });
+      }
+    }
+
+    if (files.length > 1) {
+      if (successCount > 0 && failCount === 0) {
+        toast.success(`🎉 All ${successCount} files uploaded successfully!`);
+      } else if (successCount > 0) {
+        toast.info(`⚠️ Uploaded ${successCount} files, ${failCount} failed`);
+      }
+    }
+
+    // Refresh internal docs list
+    if (successCount > 0) {
+      try {
+        const response = await axios.get(`${API}/api/documents`);
+        if (response.data) {
+          setInternalDocs(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching updated docs:', error);
+      }
+    }
+
+    event.target.value = '';
+  };
+
   const processDiff = async () => {
     if (!oldPdf || !newPdf) {
       toast.error('Please upload both old and new versions');
