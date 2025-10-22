@@ -502,8 +502,8 @@ const DocumentUpload = () => {
         </p>
       </div>
 
-      {/* Upload Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* Upload Card - QSP Only */}
+      <div className="max-w-2xl mx-auto">
         {/* QSP Document Upload */}
         <Card data-testid="qsp-upload-card">
           <CardHeader>
@@ -516,8 +516,8 @@ const DocumentUpload = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-              <Upload className="mx-auto h-12 w-12 text-gray-400" />
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+              <Upload className="mx-auto h-16 w-16 text-gray-400" />
               <div className="mt-4">
                 <input
                   id="qsp-file"
@@ -533,71 +533,21 @@ const DocumentUpload = () => {
                     uploading 
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                       : 'bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer'
-                  } h-10 px-4 py-2`}
+                  } h-12 px-6 py-2 text-lg`}
                   data-testid="qsp-upload-btn"
                 >
                   {uploading ? 'Uploading...' : 'Select QSP Files'}
                 </label>
               </div>
-              <p className="mt-2 text-sm text-muted-foreground">
+              <p className="mt-3 text-sm text-muted-foreground">
                 Supports .docx and .txt files • Select multiple files at once
+              </p>
+              <p className="mt-1 text-xs text-gray-500">
+                Note: For regulatory document diff analysis, use the "Regulatory Changes" page
               </p>
             </div>
           </CardContent>
         </Card>
-
-        {/* Regulatory Document Upload */}
-        <Card data-testid="regulatory-upload-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              Regulatory Documents
-            </CardTitle>
-            <CardDescription>
-              Upload full regulatory standards (ISO, FDA, MDR, etc.)
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-              <Upload className="mx-auto h-12 w-12 text-gray-400" />
-              <div className="mt-4 space-y-3">
-                <select
-                  id="regulatory-framework"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                  disabled={uploading}
-                >
-                  <option value="ISO_13485">ISO 13485 (Medical Devices QMS)</option>
-                  <option value="ISO_14971">ISO 14971 (Risk Management)</option>
-                  <option value="FDA_21CFR820">FDA 21 CFR Part 820 (QSR)</option>
-                  <option value="MDR_2017_745">EU MDR 2017/745</option>
-                  <option value="ISO_10993">ISO 10993 (Biological Evaluation)</option>
-                  <option value="ISO_11135">ISO 11135 (Sterilization)</option>
-                  <option value="ISO_11607">ISO 11607 (Packaging)</option>
-                  <option value="21CFR_PART11">21 CFR Part 11 (Electronic Records)</option>
-                  <option value="MDSAP">MDSAP (Medical Device Single Audit Program)</option>
-                </select>
-                <input
-                  id="regulatory-file"
-                  type="file"
-                  accept=".pdf,.docx,.txt"
-                  className="hidden"
-                  onChange={(e) => handleFileUpload(e, 'regulatory')}
-                />
-                <label 
-                  htmlFor="regulatory-file" 
-                  className={`inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-                    uploading 
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80 cursor-pointer'
-                  } h-10 px-4 py-2`}
-                  data-testid="regulatory-upload-btn"
-                >
-                  {uploading ? 'Uploading...' : 'Select Regulatory Document'}
-                </label>
-              </div>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Upload complete regulatory standards for accurate compliance checking
-              </p>
             </div>
           </CardContent>
         </Card>
