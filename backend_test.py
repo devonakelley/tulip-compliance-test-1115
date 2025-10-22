@@ -2700,6 +2700,17 @@ def main():
             except Exception as e:
                 print(f"\n💥 Unexpected error during regulatory dashboard tests: {str(e)}")
                 return 1
+        elif sys.argv[1] == "--regulatory-upload":
+            tester = QSPComplianceAPITester()
+            try:
+                success = tester.run_regulatory_upload_tests()
+                return 0 if success else 1
+            except KeyboardInterrupt:
+                print("\n⏹️  Regulatory upload tests interrupted by user")
+                return 1
+            except Exception as e:
+                print(f"\n💥 Unexpected error during regulatory upload tests: {str(e)}")
+                return 1
     else:
         # Run full test suite
         tester = QSPComplianceAPITester()
