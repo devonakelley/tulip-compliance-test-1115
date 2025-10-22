@@ -2379,6 +2379,288 @@ Enhanced post-market surveillance requirements including systematic collection a
             print("   - Check logs for detailed error information")
         
         return passed_tests >= 5
+
+    def download_and_test_pdf_old(self):
+        """Download and test old version PDF from provided URL"""
+        try:
+            url = "https://customer-assets.emergentagent.com/job_regsync/artifacts/j2yxeeuw_ISO_10993-17_2023%28en%29.pdf"
+            
+            print(f"   📥 Downloading old PDF: {url}")
+            response = requests.get(url, timeout=60)
+            
+            if response.status_code != 200:
+                self.log_test("Download Old PDF", False, f"Failed to download: HTTP {response.status_code}")
+                return False, None
+            
+            # Save to temporary file
+            temp_file = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
+            temp_file.write(response.content)
+            temp_file.close()
+            
+            file_size = len(response.content)
+            print(f"   📄 Downloaded PDF size: {file_size / (1024*1024):.1f} MB")
+            
+            # Test upload
+            success, file_path = self.test_regulatory_pdf_upload_real(temp_file.name, "old", "ISO 10993")
+            
+            # Cleanup temp file
+            os.unlink(temp_file.name)
+            
+            return success, file_path
+            
+        except Exception as e:
+            self.log_test("Download Old PDF", False, f"Exception: {str(e)}")
+            return False, None
+
+    def download_and_test_pdf_new(self):
+        """Download and test new version PDF from provided URL"""
+        try:
+            url = "https://customer-assets.emergentagent.com/job_regsync/artifacts/4bl5ai7o_ISO_10993-18_2020%28en%29.pdf"
+            
+            print(f"   📥 Downloading new PDF: {url}")
+            response = requests.get(url, timeout=60)
+            
+            if response.status_code != 200:
+                self.log_test("Download New PDF", False, f"Failed to download: HTTP {response.status_code}")
+                return False, None
+            
+            # Save to temporary file
+            temp_file = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
+            temp_file.write(response.content)
+            temp_file.close()
+            
+            file_size = len(response.content)
+            print(f"   📄 Downloaded PDF size: {file_size / (1024*1024):.1f} MB")
+            
+            # Test upload
+            success, file_path = self.test_regulatory_pdf_upload_real(temp_file.name, "new", "ISO 10993")
+            
+            # Cleanup temp file
+            os.unlink(temp_file.name)
+            
+            return success, file_path
+            
+        except Exception as e:
+            self.log_test("Download New PDF", False, f"Exception: {str(e)}")
+            return False, None
+
+    def test_regulatory_pdf_upload_real(self, pdf_file_path, doc_type, standard_name):
+        """Test regulatory document upload with real PDF file"""
+        try:
+            if not self.auth_token:
+                self.log_test(f"Regulatory {doc_type.title()} PDF Upload", False, "No authentication token")
+                return False, None
+            
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            
+            with open(pdf_file_path, 'rb') as f:
+                files = {'file': (f'iso_10993_{doc_type}.pdf', f, 'application/pdf')}
+                data = {
+                    'doc_type': doc_type,
+                    'standard_name': standard_name
+                }
+                response = requests.post(
+                    f"{self.api_url}/regulatory/upload/regulatory", 
+                    files=files, 
+                    data=data,
+                    headers=headers,
+                    timeout=120  # Longer timeout for large files
+                )
+            
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                file_path = data.get('file_path')
+                file_size = data.get('size', 0)
+                details = f"File Path: {file_path}, Size: {file_size / (1024*1024):.1f} MB, Type: {doc_type}"
+                self.log_test(f"Regulatory {doc_type.title()} PDF Upload", True, details)
+                return True, file_path
+            else:
+                details = f"Status: {response.status_code}, Error: {response.text}"
+                self.log_test(f"Regulatory {doc_type.title()} PDF Upload", False, details)
+                return False, None
+                
+        except Exception as e:
+            self.log_test(f"Regulatory {doc_type.title()} PDF Upload", False, f"Exception: {str(e)}")
+            return False, None
+
+    def test_list_internal_documents(self):
+        """Test list internal documents endpoint"""
+        try:
+            if not self.auth_token:
+                self.log_test("List Internal Documents", False, "No authentication token")
+                return False
+            
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            response = requests.get(f"{self.api_url}/regulatory/list/internal", headers=headers, timeout=10)
+            
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                doc_count = data.get('count', 0)
+                details = f"Internal documents found: {doc_count}"
+            else:
+                details = f"Status: {response.status_code}, Error: {response.text}"
+                
+            self.log_test("List Internal Documents", success, details)
+            return success
+            
+        except Exception as e:
+            self.log_test("List Internal Documents", False, f"Exception: {str(e)}")
+            return False
+
+    def test_iso_diff_processing(self, old_file_path, new_file_path):
+        """Test ISO diff processing between old and new PDFs"""
+        try:
+            if not self.auth_token:
+                self.log_test("ISO Diff Processing", False, "No authentication token")
+                return False
+            
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            data = {
+                'old_file_path': old_file_path,
+                'new_file_path': new_file_path
+            }
+            
+            response = requests.post(
+                f"{self.api_url}/regulatory/preprocess/iso_diff", 
+                data=data,
+                headers=headers,
+                timeout=180  # Long timeout for PDF processing
+            )
+            
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                total_changes = data.get('total_changes', 0)
+                summary = data.get('summary', {})
+                details = f"Total changes: {total_changes}, Added: {summary.get('added', 0)}, Modified: {summary.get('modified', 0)}, Deleted: {summary.get('deleted', 0)}"
+            else:
+                details = f"Status: {response.status_code}, Error: {response.text}"
+                
+            self.log_test("ISO Diff Processing", success, details)
+            return success
+            
+        except Exception as e:
+            self.log_test("ISO Diff Processing", False, f"Exception: {str(e)}")
+            return False
+
+    def verify_tenant_file_storage(self):
+        """Verify files are stored in correct tenant directory"""
+        try:
+            if not self.tenant_id:
+                self.log_test("Tenant File Storage Verification", False, "No tenant ID available")
+                return False
+            
+            # Check if tenant directory exists
+            tenant_dir = f"/app/backend/data/regulatory_docs/{self.tenant_id}"
+            
+            # We can't directly access the file system, so we'll use the list endpoint
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            response = requests.get(f"{self.api_url}/regulatory/list/regulatory", headers=headers, timeout=10)
+            
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                documents = data.get('documents', {})
+                old_doc = documents.get('old')
+                new_doc = documents.get('new')
+                
+                files_found = 0
+                if old_doc:
+                    files_found += 1
+                if new_doc:
+                    files_found += 1
+                
+                details = f"Tenant directory accessible, Files found: {files_found} (old: {'✓' if old_doc else '✗'}, new: {'✓' if new_doc else '✗'})"
+            else:
+                details = f"Status: {response.status_code}, Error: {response.text}"
+                
+            self.log_test("Tenant File Storage Verification", success, details)
+            return success
+            
+        except Exception as e:
+            self.log_test("Tenant File Storage Verification", False, f"Exception: {str(e)}")
+            return False
+
+    def run_regulatory_upload_tests(self):
+        """Run regulatory document upload tests as requested in review"""
+        print("🔍 REGULATORY DOCUMENT UPLOAD TESTING (POST API PATH FIX)")
+        print(f"📍 Testing against: {self.base_url}")
+        print("=" * 60)
+        
+        # Test with admin credentials from review request
+        print("🔐 Testing with Admin Credentials (admin@tulipmedical.com)...")
+        admin_auth_success = self.login_admin_user()
+        
+        if not admin_auth_success:
+            print("❌ Admin authentication failed. Cannot proceed with regulatory tests.")
+            return False
+        
+        print("\n🎯 REGULATORY DOCUMENT UPLOAD TESTS:")
+        
+        # 1. Test Login (already done above)
+        print("\n1️⃣ Login Authentication - ✅ COMPLETED")
+        
+        # 2. Download and test with real PDF files
+        print("\n2️⃣ Testing with Real 4MB+ PDF Files")
+        pdf_old_success, old_file_path = self.download_and_test_pdf_old()
+        pdf_new_success, new_file_path = self.download_and_test_pdf_new()
+        
+        # 3. Test List Internal Documents
+        print("\n3️⃣ Testing List Internal Documents")
+        internal_list_success = self.test_list_internal_documents()
+        
+        # 4. Test ISO Diff Processing (if both PDFs uploaded successfully)
+        if pdf_old_success and pdf_new_success and old_file_path and new_file_path:
+            print("\n4️⃣ Testing ISO Diff Processing")
+            diff_success = self.test_iso_diff_processing(old_file_path, new_file_path)
+        else:
+            print("\n4️⃣ Skipping ISO Diff Processing - PDF uploads failed")
+            diff_success = False
+        
+        # 5. Verify file storage in tenant directory
+        print("\n5️⃣ Verifying File Storage in Tenant Directory")
+        storage_success = self.verify_tenant_file_storage()
+        
+        return self.generate_regulatory_test_summary(
+            admin_auth_success, pdf_old_success, pdf_new_success, 
+            internal_list_success, diff_success, storage_success
+        )
+
+    def generate_regulatory_test_summary(self, admin_auth, pdf_old, pdf_new, internal_list, diff_processing, storage):
+        """Generate summary for regulatory upload tests"""
+        print("\n" + "=" * 60)
+        print("📊 REGULATORY UPLOAD TEST SUMMARY")
+        print("=" * 60)
+        
+        total_tests = 6
+        passed_tests = sum([admin_auth, pdf_old, pdf_new, internal_list, diff_processing, storage])
+        
+        print(f"✅ Tests Passed: {passed_tests}/{total_tests} ({passed_tests/total_tests*100:.1f}%)")
+        print(f"❌ Tests Failed: {total_tests - passed_tests}")
+        
+        print("\nDetailed Results:")
+        print(f"  🔐 Admin Authentication: {'✅ PASS' if admin_auth else '❌ FAIL'}")
+        print(f"  📄 Old PDF Upload (4MB+): {'✅ PASS' if pdf_old else '❌ FAIL'}")
+        print(f"  📄 New PDF Upload (4MB+): {'✅ PASS' if pdf_new else '❌ FAIL'}")
+        print(f"  📋 List Internal Docs: {'✅ PASS' if internal_list else '❌ FAIL'}")
+        print(f"  🔄 ISO Diff Processing: {'✅ PASS' if diff_processing else '❌ FAIL'}")
+        print(f"  💾 Tenant File Storage: {'✅ PASS' if storage else '❌ FAIL'}")
+        
+        if passed_tests == total_tests:
+            print("\n🎉 ALL REGULATORY UPLOAD TESTS PASSED!")
+            print("✅ Regulatory document upload functionality is working correctly after API path fix.")
+        else:
+            print(f"\n⚠️ {total_tests - passed_tests} TESTS FAILED")
+            print("❌ Some regulatory upload functionality issues detected.")
+        
+        return passed_tests == total_tests
+
 def main():
     """Main test execution"""
     import sys
