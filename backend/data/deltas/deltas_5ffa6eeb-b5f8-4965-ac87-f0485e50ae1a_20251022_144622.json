@@ -1,0 +1,72 @@
+[
+  {
+    "clause_id": "4.1",
+    "change_type": "deleted",
+    "old_text": "4.1 General requirements\nThe organization shall establish, document, implement and maintain a quality management system and maintain\nits effectiveness in accordance with the requirements of this International Standard.",
+    "new_text": "",
+    "change_text": "Deleted requirement: 4.1 General requirements\nThe organization shall establish, document, implement and maintain a quality management system and maintain\nits effectiveness in accordance with the requirements of this International Standard...."
+  },
+  {
+    "clause_id": "4.2",
+    "change_type": "deleted",
+    "old_text": "4.2 Documentation requirements",
+    "new_text": "",
+    "change_text": "Deleted requirement: 4.2 Documentation requirements..."
+  },
+  {
+    "clause_id": "4.2.1",
+    "change_type": "deleted",
+    "old_text": "4.2.1 General\nThe quality management system documentation shall include:\na) documented statements of a quality policy and quality objectives;\nb) a quality manual;\nc) documented procedures and records required by this International Standard;\nd) documents, including records, determined by the organization to be necessary to ensure the effective\nplanning, operation and control of its processes.",
+    "new_text": "",
+    "change_text": "Deleted requirement: 4.2.1 General\nThe quality management system documentation shall include:\na) documented statements of a quality policy and quality objectives;\nb) a quality manual;\nc) documented procedures and records required by this International Standard;\nd) documents, including records, determined by the organization to be necessary to ensure the effective\nplanning, operation and control of its processes...."
+  },
+  {
+    "clause_id": "4.2.2",
+    "change_type": "deleted",
+    "old_text": "4.2.2 Quality manual\nThe organization shall establish and maintain a quality manual that includes:\na) the scope of the quality management system;\nb) the documented procedures established for the quality management system;\nc) a description of the interaction between the processes of the quality management system.\n7. Product realization",
+    "new_text": "",
+    "change_text": "Deleted requirement: 4.2.2 Quality manual\nThe organization shall establish and maintain a quality manual that includes:\na) the scope of the quality management system;\nb) the documented procedures established for the quality management system;\nc) a description of the interaction between the processes of the quality management system.\n7. Product realization..."
+  },
+  {
+    "clause_id": "7.3",
+    "change_type": "deleted",
+    "old_text": "7.3 Design and development",
+    "new_text": "",
+    "change_text": "Deleted requirement: 7.3 Design and development..."
+  },
+  {
+    "clause_id": "7.3.1",
+    "change_type": "deleted",
+    "old_text": "7.3.1 Design and development planning\nThe organization shall plan and control the design and development of the product.",
+    "new_text": "",
+    "change_text": "Deleted requirement: 7.3.1 Design and development planning\nThe organization shall plan and control the design and development of the product...."
+  },
+  {
+    "clause_id": "7.3.2",
+    "change_type": "deleted",
+    "old_text": "7.3.2 Design and development inputs\nInputs relating to product requirements shall be determined and records maintained.\n8. Measurement, analysis and improvement",
+    "new_text": "",
+    "change_text": "Deleted requirement: 7.3.2 Design and development inputs\nInputs relating to product requirements shall be determined and records maintained.\n8. Measurement, analysis and improvement..."
+  },
+  {
+    "clause_id": "8.1",
+    "change_type": "deleted",
+    "old_text": "8.1 General\nThe organization shall plan and implement the monitoring, measurement, analysis and improvement processes\nneeded.",
+    "new_text": "",
+    "change_text": "Deleted requirement: 8.1 General\nThe organization shall plan and implement the monitoring, measurement, analysis and improvement processes\nneeded...."
+  },
+  {
+    "clause_id": "8.2",
+    "change_type": "deleted",
+    "old_text": "8.2 Monitoring and measurement",
+    "new_text": "",
+    "change_text": "Deleted requirement: 8.2 Monitoring and measurement..."
+  },
+  {
+    "clause_id": "8.2.1",
+    "change_type": "deleted",
+    "old_text": "8.2.1 Customer satisfaction\nAs one of the measurements of the performance of the quality management system, the organization shall\nmonitor information relating to customer perception.",
+    "new_text": "",
+    "change_text": "Deleted requirement: 8.2.1 Customer satisfaction\nAs one of the measurements of the performance of the quality management system, the organization shall\nmonitor information relating to customer perception...."
+  }
+]
