@@ -303,7 +303,7 @@ const RegulatoryDashboard = () => {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Step 2: Detected Changes</CardTitle>
+                <CardTitle>Step 2: Detected Changes (Unified Diff)</CardTitle>
                 <CardDescription>
                   {deltas.total_changes} changes found between versions
                 </CardDescription>
@@ -316,41 +316,136 @@ const RegulatoryDashboard = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3 max-h-96 overflow-y-auto">
+            <div className="space-y-4 max-h-[500px] overflow-y-auto">
               {(deltas.deltas || []).map((delta, idx) => (
-                <div key={idx} className="border rounded-lg p-4 hover:border-blue-300 transition-colors">
-                  <div className="flex items-start justify-between mb-2">
+                <div key={idx} className="border rounded-lg overflow-hidden">
+                  <div className="bg-gray-50 p-3 flex items-center justify-between cursor-pointer hover:bg-gray-100" onClick={() => setExpandedDeltas(prev => ({...prev, [idx]: !prev[idx]}))}>
                     <div className="flex items-center gap-2">
-                      <h4 className="font-semibold">Clause {delta.clause_id}</h4>
+                      <h4 className="font-semibold text-blue-600 font-mono">Clause {delta.clause_id}</h4>
                       {getChangeTypeBadge(delta.change_type)}
                     </div>
+                    <span className="text-sm text-gray-500">{expandedDeltas[idx] ? '▲' : '▼'} Details</span>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    {delta.change_text?.slice(0, 200)}...
-                  </p>
+                  
+                  {expandedDeltas[idx] && (
+                    <div className="p-4 space-y-3 bg-white">
+                      {delta.change_type === 'added' && (
+                        <div className="bg-green-50 border-l-4 border-green-500 p-3 rounded">
+                          <div className="text-sm font-semibold text-green-900 mb-2">✅ ADDED (New Requirement)</div>
+                          <div className="text-sm text-green-800 whitespace-pre-wrap">{delta.new_text}</div>
+                        </div>
+                      )}
+                      
+                      {delta.change_type === 'deleted' && (
+                        <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded">
+                          <div className="text-sm font-semibold text-red-900 mb-2">❌ DELETED (Removed Requirement)</div>
+                          <div className="text-sm text-red-800 line-through whitespace-pre-wrap">{delta.old_text}</div>
+                        </div>
+                      )}
+                      
+                      {delta.change_type === 'modified' && (
+                        <>
+                          <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded">
+                            <div className="text-sm font-semibold text-red-900 mb-2">📝 OLD VERSION</div>
+                            <div className="text-sm text-red-800 whitespace-pre-wrap">{delta.old_text}</div>
+                          </div>
+                          <div className="bg-green-50 border-l-4 border-green-500 p-3 rounded">
+                            <div className="text-sm font-semibold text-green-900 mb-2">📝 NEW VERSION</div>
+                            <div className="text-sm text-green-800 whitespace-pre-wrap">{delta.new_text}</div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
-            
-            <div className="mt-6">
-              <Button
-                onClick={runImpactAnalysis}
-                disabled={analyzing}
-                className="w-full h-12"
-              >
-                {analyzing ? (
-                  <>
-                    <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2"></div>
-                    Analyzing Impact on QSPs...
-                  </>
-                ) : (
-                  <>
-                    <TrendingUp className="h-5 w-5 mr-2" />
-                    Run Impact Analysis on Internal QSPs
-                  </>
-                )}
-              </Button>
-            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      {/* Step 2.5: Select Internal Docs */}
+      {deltas && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Step 2.5: Select Internal QSP Documents ({selectedDocs.length} selected)</CardTitle>
+            <CardDescription>
+              Choose which internal documents to analyze for potential impacts
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loadingInternalDocs ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+              </div>
+            ) : internalDocs.length === 0 ? (
+              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-center gap-2 text-yellow-800">
+                  <AlertCircle className="h-5 w-5" />
+                  <p className="text-sm">No internal documents found. Please upload QSP documents first via the Documents page.</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2 max-h-80 overflow-y-auto mb-4">
+                  {internalDocs.map((doc, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                        selectedDocs.some(d => d.filename === doc.filename)
+                          ? 'bg-blue-50 border-blue-300'
+                          : 'bg-white hover:bg-gray-50'
+                      }`}
+                      onClick={() => {
+                        setSelectedDocs(prev => {
+                          const isSelected = prev.some(d => d.filename === doc.filename);
+                          if (isSelected) {
+                            return prev.filter(d => d.filename !== doc.filename);
+                          } else {
+                            return [...prev, doc];
+                          }
+                        });
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedDocs.some(d => d.filename === doc.filename)}
+                          onChange={() => {}}
+                          className="w-4 h-4"
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">{doc.filename}</div>
+                          <div className="text-xs text-gray-500">
+                            {(doc.size / 1024).toFixed(2)} KB
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="mt-4">
+                  <Button
+                    onClick={runImpactAnalysis}
+                    disabled={analyzing || selectedDocs.length === 0}
+                    className="w-full h-12"
+                  >
+                    {analyzing ? (
+                      <>
+                        <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                        Analyzing Impact on {selectedDocs.length} QSPs...
+                      </>
+                    ) : (
+                      <>
+                        <TrendingUp className="h-5 w-5 mr-2" />
+                        Run Impact Analysis on {selectedDocs.length} Selected QSPs
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       )}
