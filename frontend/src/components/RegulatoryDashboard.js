@@ -60,7 +60,7 @@ const RegulatoryDashboard = () => {
       formData.append('doc_type', 'old');
       formData.append('standard_name', 'ISO 13485');
       
-      const response = await axios.post(`${API}/regulatory/upload/regulatory`, formData, {
+      const response = await axios.post(`${API}/api/regulatory/upload/regulatory`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
@@ -92,7 +92,7 @@ const RegulatoryDashboard = () => {
       formData.append('doc_type', 'new');
       formData.append('standard_name', 'ISO 13485');
       
-      const response = await axios.post(`${API}/regulatory/upload/regulatory`, formData, {
+      const response = await axios.post(`${API}/api/regulatory/upload/regulatory`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
