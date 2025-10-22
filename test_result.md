@@ -235,15 +235,53 @@ frontend:
         agent: "testing"
         comment: "Minor: Upload functionality is working correctly but may have UI feedback issues. INVESTIGATION FINDINGS: 1) File uploads are processing successfully (confirmed by backend logs), 2) API calls are being made with proper authentication, 3) Files are being saved and processed, 4) Upload mechanism (labels, inputs, change events) working correctly. POTENTIAL UI IMPROVEMENTS: Users may not see clear success feedback, toast notifications might not be prominent enough, or upload progress indicators could be enhanced. Core functionality is operational - this is a UX enhancement opportunity, not a critical failure."
 
+  - task: "Regulatory Change Dashboard Frontend UI"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/RegulatoryDashboard.js"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Built comprehensive Regulatory Dashboard UI with: 1) Old/New regulatory PDF upload sections, 2) Unified diff visualization with expandable details and color-coded changes (green=added, red=deleted, yellow=modified), 3) Internal QSP document selection from previously uploaded docs, 4) Impact analysis results showing WHY sections were flagged and WHAT regulatory text triggered them, 5) Workflow progress indicator. Added route at /regulatory in App.js. Ready for backend testing."
+
+  - task: "Regulatory document upload and diff API"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/api/regulatory_upload.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Backend APIs exist: /api/regulatory/upload/regulatory (upload old/new PDFs), /api/regulatory/preprocess/iso_diff (generate diff), /api/regulatory/list/internal (list internal docs), /api/regulatory/list/regulatory (list uploaded regulatory docs). iso_diff_processor.py uses PyMuPDF to extract text, parse clauses, and generate deltas JSON. Need to test end-to-end workflow."
+
+  - task: "Change impact analysis API"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/api/change_impact.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Impact analysis API exists: /api/impact/analyze (analyze deltas against QSPs), /api/impact/ingest_qsp (ingest QSP sections). Uses change_impact_service_mongo.py with OpenAI text-embedding-3-large for semantic matching. Threshold set to 0.55. Need to test if impact detection works correctly with regulatory deltas."
+
 metadata:
   created_by: "main_agent"
-  version: "1.0"
-  test_sequence: 2
-  run_ui: true
+  version: "1.1"
+  test_sequence: 3
+  run_ui: false
 
 test_plan:
   current_focus:
-    - "Improved RAG chunking strategy for accuracy"
+    - "Regulatory document upload and diff API"
+    - "Change impact analysis API"
+    - "Regulatory Change Dashboard Frontend UI"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
