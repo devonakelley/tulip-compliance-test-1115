@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: Build a robust, enterprise-grade QSP Compliance Checker that takes regulatory standard changes (like ISO 13485:2024) and alerts companies where their internal QSP documents need updates. System processes manual uploads of both QSP docs and regulatory change summaries, uses AI-powered impact analysis with RAG (Retrieval Augmented Generation) using OpenAI text-embedding-3-large for accurate semantic matching, and generates specific alerts via dashboard notifications and detailed reports.
+user_problem_statement: Build a Regulatory Change Dashboard (PRD-05) that allows users to upload old/new regulatory PDFs, automatically generates unified diffs with color-coded changes, and maps those changes to internal QSP documents. System should display clause-level impacts with clear reasoning (WHY flagged) and regulatory source text (WHAT triggered it). Frontend UI integrated into App.js at /regulatory route.
 
 backend:
   - task: "Enterprise QSP system foundation setup"
