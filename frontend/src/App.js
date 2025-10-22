@@ -548,9 +548,6 @@ const DocumentUpload = () => {
             </div>
           </CardContent>
         </Card>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Documents List */}
