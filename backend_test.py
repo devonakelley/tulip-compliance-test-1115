@@ -2171,6 +2171,36 @@ Enhanced post-market surveillance requirements including systematic collection a
             
             headers = {"Authorization": f"Bearer {self.auth_token}", "Content-Type": "application/json"}
             
+            # First, ingest some QSP sections for impact analysis
+            qsp_sections = [
+                {
+                    "section_path": "4.2.1",
+                    "heading": "Document Control General Requirements",
+                    "text": "The organization shall establish documented procedures for document control including electronic records management and version control systems."
+                },
+                {
+                    "section_path": "7.3.1",
+                    "heading": "Design and Development Planning",
+                    "text": "Design and development planning shall include risk management activities and design transfer procedures to ensure proper implementation."
+                }
+            ]
+            
+            ingest_data = {
+                "doc_name": "QSP 4.2 Document Control R5",
+                "sections": qsp_sections
+            }
+            
+            # Ingest QSP sections first
+            ingest_response = requests.post(
+                f"{self.api_url}/impact/ingest_qsp",
+                json=ingest_data,
+                headers=headers,
+                timeout=30
+            )
+            
+            if ingest_response.status_code != 200:
+                print(f"   Warning: QSP ingestion failed: {ingest_response.text}")
+            
             # Prepare sample deltas if none provided
             if not deltas:
                 deltas = [
