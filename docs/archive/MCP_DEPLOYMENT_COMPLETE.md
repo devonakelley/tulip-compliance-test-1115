@@ -5,7 +5,7 @@
 ### ✅ What's Available Now
 
 #### 1. Web Interface (Active)
-- **URL**: https://compliantsuite.preview.emergentagent.com
+- **URL**: https://regsync.preview.emergentagent.com
 - **Status**: ✅ Fully functional
 - **Users**: Quality teams, auditors, managers
 - **Features**: Visual dashboard, document upload, interactive reports
