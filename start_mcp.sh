@@ -3,10 +3,10 @@
 
 echo "🚀 Starting QSP Compliance Checker MCP Server..."
 
-# Set environment variables
-export MONGO_URL="mongodb://localhost:27017"
-export DB_NAME="test_database"
-export EMERGENT_LLM_KEY="sk-emergent-f33C62eB0958b4547F"
+# Set environment variables (fallbacks for local development)
+export MONGO_URL="${MONGO_URL:-mongodb://localhost:27017}"
+export DB_NAME="${DB_NAME:-test_database}"
+export EMERGENT_LLM_KEY="${EMERGENT_LLM_KEY:-}"
 
 # Change to backend directory
 cd /app/backend
