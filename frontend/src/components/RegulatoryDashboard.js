@@ -18,6 +18,11 @@ const RegulatoryDashboard = () => {
   const [deltas, setDeltas] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [impactResults, setImpactResults] = useState(null);
+  const [internalDocs, setInternalDocs] = useState([]);
+  const [selectedDocs, setSelectedDocs] = useState([]);
+  const [loadingInternalDocs, setLoadingInternalDocs] = useState(false);
+  const [expandedDeltas, setExpandedDeltas] = useState({});
+  const [expandedImpacts, setExpandedImpacts] = useState({});
   
   const handleOldPdfUpload = async (event) => {
     const file = event.target.files[0];
