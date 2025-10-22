@@ -170,7 +170,7 @@ const RegulatoryDashboard = () => {
       formData.append('old_file_path', oldPdf.file_path);
       formData.append('new_file_path', newPdf.file_path);
       
-      const response = await axios.post(`${API}/regulatory/preprocess/iso_diff`, formData);
+      const response = await axios.post(`${API}/api/regulatory/preprocess/iso_diff`, formData);
       
       setDeltas(response.data);
       toast.success(`Found ${response.data.total_changes} changes`, { id: 'diff' });
