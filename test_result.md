@@ -249,15 +249,18 @@ frontend:
 
   - task: "Regulatory document upload and diff API"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/api/regulatory_upload.py"
     stuck_count: 0
     priority: "critical"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Backend APIs exist: /api/regulatory/upload/regulatory (upload old/new PDFs), /api/regulatory/preprocess/iso_diff (generate diff), /api/regulatory/list/internal (list internal docs), /api/regulatory/list/regulatory (list uploaded regulatory docs). iso_diff_processor.py uses PyMuPDF to extract text, parse clauses, and generate deltas JSON. Need to test end-to-end workflow."
+      - working: true
+        agent: "testing"
+        comment: "COMPREHENSIVE REGULATORY DOCUMENT UPLOAD & DIFF TESTING COMPLETED SUCCESSFULLY! ✅ All regulatory APIs fully operational. TESTED: 1) Regulatory Document Upload (Old PDF) - ✅ WORKING (ISO 13485:2016 PDF uploaded, 1879 bytes, saved to tenant directory), 2) Regulatory Document Upload (New PDF) - ✅ WORKING (ISO 13485:2024 PDF uploaded, 589 bytes, proper file path returned), 3) List Regulatory Documents - ✅ WORKING (correctly returns old/new document structure), 4) ISO Diff Processing - ✅ WORKING (PyMuPDF text extraction successful, generated 10 deltas between old/new versions, proper clause parsing), 5) File Storage - ✅ WORKING (files saved to /app/backend/data/regulatory_docs/{tenant_id}/ with proper naming). Backend logs confirm successful PDF processing, text extraction, and diff generation. All endpoints responding correctly with proper authentication and tenant isolation."
 
   - task: "Change impact analysis API"
     implemented: true
