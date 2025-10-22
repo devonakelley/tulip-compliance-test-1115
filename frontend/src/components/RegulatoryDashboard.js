@@ -24,6 +24,24 @@ const RegulatoryDashboard = () => {
   const [expandedDeltas, setExpandedDeltas] = useState({});
   const [expandedImpacts, setExpandedImpacts] = useState({});
   
+  // Fetch previously uploaded internal documents
+  useEffect(() => {
+    const fetchInternalDocs = async () => {
+      try {
+        setLoadingInternalDocs(true);
+        const response = await axios.get(`${API}/regulatory/list/internal`);
+        if (response.data.success) {
+          setInternalDocs(response.data.documents || []);
+        }
+      } catch (error) {
+        console.error('Error fetching internal docs:', error);
+      } finally {
+        setLoadingInternalDocs(false);
+      }
+    };
+    fetchInternalDocs();
+  }, []);
+
   const handleOldPdfUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
