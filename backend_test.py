@@ -2351,6 +2351,17 @@ def main():
             except Exception as e:
                 print(f"\n💥 Unexpected error during RAG chunking tests: {str(e)}")
                 return 1
+        elif sys.argv[1] == "--regulatory-dashboard":
+            tester = QSPComplianceAPITester()
+            try:
+                success = tester.run_comprehensive_regulatory_dashboard_tests()
+                return 0 if success else 1
+            except KeyboardInterrupt:
+                print("\n⏹️  Regulatory dashboard tests interrupted by user")
+                return 1
+            except Exception as e:
+                print(f"\n💥 Unexpected error during regulatory dashboard tests: {str(e)}")
+                return 1
     else:
         # Run full test suite
         tester = QSPComplianceAPITester()
