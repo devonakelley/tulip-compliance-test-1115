@@ -29,7 +29,7 @@ const RegulatoryDashboard = () => {
     const fetchInternalDocs = async () => {
       try {
         setLoadingInternalDocs(true);
-        const response = await axios.get(`${API}/regulatory/list/internal`);
+        const response = await axios.get(`${API}/api/regulatory/list/internal`);
         if (response.data.success) {
           setInternalDocs(response.data.documents || []);
         }
