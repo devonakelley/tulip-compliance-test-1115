@@ -1497,85 +1497,23 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            {/* Public Routes - No Navigation */}
-            <Route path="/" element={<LandingPage />} />
+            {/* Public Route - Login */}
             <Route path="/login" element={<Login />} />
             
-            {/* Protected Routes - With Navigation */}
+            {/* Protected Route - Main Workflow (3 Tabs) */}
             <Route 
-              path="/dashboard" 
+              path="/" 
               element={
                 <ProtectedRoute>
-                  <Navigation />
-                  <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-                    <Dashboard />
-                  </main>
+                  <MainWorkflow />
                 </ProtectedRoute>
               } 
             />
             <Route 
-              path="/upload" 
+              path="/workflow" 
               element={
                 <ProtectedRoute>
-                  <Navigation />
-                  <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-                    <DocumentUpload />
-                  </main>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/analysis" 
-              element={
-                <ProtectedRoute>
-                  <Navigation />
-                  <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-                    <Analysis />
-                  </main>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/gaps" 
-              element={
-                <ProtectedRoute>
-                  <Navigation />
-                  <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-                    <Gaps />
-                  </main>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/reports" 
-              element={
-                <ProtectedRoute>
-                  <Navigation />
-                  <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-                    <Reports />
-                  </main>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/impact" 
-              element={
-                <ProtectedRoute>
-                  <Navigation />
-                  <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-                    <ChangeImpactDetector />
-                  </main>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/regulatory" 
-              element={
-                <ProtectedRoute>
-                  <Navigation />
-                  <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-                    <RegulatoryDashboard />
-                  </main>
+                  <MainWorkflow />
                 </ProtectedRoute>
               } 
             />
