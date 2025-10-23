@@ -3350,11 +3350,22 @@ def main():
             except Exception as e:
                 print(f"\n💥 Unexpected error during regulatory upload tests: {str(e)}")
                 return 1
+        elif sys.argv[1] == "--qsp-parser":
+            tester = QSPComplianceAPITester()
+            try:
+                success = tester.run_qsp_parser_gap_analysis_tests()
+                return 0 if success else 1
+            except KeyboardInterrupt:
+                print("\n⏹️  QSP parser tests interrupted by user")
+                return 1
+            except Exception as e:
+                print(f"\n💥 Unexpected error during QSP parser tests: {str(e)}")
+                return 1
     else:
-        # Run full test suite
+        # Run QSP Parser and Gap Analysis Tests by default (as requested in review)
         tester = QSPComplianceAPITester()
         try:
-            success = tester.run_full_test_suite()
+            success = tester.run_qsp_parser_gap_analysis_tests()
             return 0 if success else 1
         except KeyboardInterrupt:
             print("\n⏹️  Tests interrupted by user")
