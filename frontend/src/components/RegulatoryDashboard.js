@@ -69,6 +69,7 @@ const RegulatoryDashboard = () => {
       
       setOldPdf(response.data);
       toast.success('Old version uploaded', { id: 'old-upload' });
+      fetchRegulatoryDocs(); // Refresh list
     } catch (error) {
       console.error(error);
       toast.error('Failed to upload old version', { id: 'old-upload' });
