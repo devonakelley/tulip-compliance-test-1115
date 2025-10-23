@@ -227,6 +227,61 @@ async def list_regulatory_documents(
         logger.error(f"Failed to list regulatory docs: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.delete("/regulatory-docs/all")
+async def delete_all_regulatory_documents(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Delete ALL regulatory documents for current tenant - Use with caution!
+    """
+    try:
+        tenant_id = current_user["tenant_id"]
+        user_id = current_user["user_id"]
+        
+        # Get all regulatory documents for this tenant
+        docs = rag_service.list_regulatory_documents(tenant_id)
+        
+        if not docs:
+            return {
+                'success': True,
+                'message': 'No documents to delete',
+                'deleted_count': 0
+            }
+        
+        deleted_count = 0
+        for doc in docs:
+            try:
+                rag_service.delete_document(tenant_id, doc['doc_id'])
+                deleted_count += 1
+            except Exception as e:
+                logger.error(f"Failed to delete doc {doc['doc_id']}: {e}")
+        
+        # Delete all metadata from MongoDB
+        result = await db.regulatory_documents.delete_many({'tenant_id': tenant_id})
+        
+        # Log audit
+        await audit_logger.log_action(
+            tenant_id=tenant_id,
+            user_id=user_id,
+            action="delete_all_regulatory_docs",
+            target=f"all_{deleted_count}_documents",
+            metadata={
+                'deleted_count': deleted_count
+            }
+        )
+        
+        logger.warning(f"Deleted ALL {deleted_count} regulatory documents for tenant {tenant_id}")
+        
+        return {
+            'success': True,
+            'message': f'Deleted all {deleted_count} documents',
+            'deleted_count': deleted_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to delete all regulatory docs: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.delete("/regulatory-docs/{doc_id}")
 async def delete_regulatory_document(
     doc_id: str,
