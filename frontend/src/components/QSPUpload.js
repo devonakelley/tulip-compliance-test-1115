@@ -90,6 +90,21 @@ const QSPUpload = () => {
     }
   };
 
+  const handleDeleteAllQSPs = async () => {
+    if (!window.confirm(`Are you sure you want to delete ALL ${qspDocuments.length} QSP documents? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API}/api/documents/all`);
+      toast.success('All QSP documents deleted successfully');
+      fetchQSPDocuments(); // Refresh list
+    } catch (error) {
+      console.error('Error deleting all documents:', error);
+      toast.error('Failed to delete all documents');
+    }
+  };
+
   const handleGenerateClauseMap = async () => {
     if (uploadedDocs.length === 0) {
       toast.error('Please upload QSP documents first');
