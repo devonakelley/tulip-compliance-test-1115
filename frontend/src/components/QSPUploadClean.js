@@ -154,31 +154,13 @@ const QSPUploadClean = () => {
       return;
     }
 
-    try {
-      await axios.delete(`${API}/api/documents/${docId}`);
-      toast.success('Document deleted successfully');
-      fetchQSPDocuments();
-    } catch (error) {
-      console.error('Error deleting document:', error);
-      toast.error('Failed to delete document');
-    }
+    // TODO: Implement delete functionality when backend endpoint is ready
+    toast.info('Delete functionality coming soon');
   };
 
   const handleDeleteAllQSPs = async () => {
-    if (!window.confirm(`Are you sure you want to delete ALL ${qspDocuments.length} QSP documents? This action cannot be undone.`)) {
-      return;
-    }
-
-    try {
-      await axios.delete(`${API}/api/documents/all`);
-      toast.success('All QSP documents deleted successfully');
-      setParsedQSPs([]);
-      setMappingComplete(false);
-      fetchQSPDocuments();
-    } catch (error) {
-      console.error('Error deleting all documents:', error);
-      toast.error('Failed to delete all documents');
-    }
+    // TODO: Implement delete all functionality when backend endpoint is ready
+    toast.info('Delete all functionality coming soon');
   };
 
   return (
@@ -186,7 +168,7 @@ const QSPUploadClean = () => {
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Internal Docs (QSPs)</h2>
         <p className="text-gray-600 mt-1">
-          Upload Quality System Procedure documents for clause mapping
+          Upload Quality System Procedure documents (DOCX, PDF, or TXT) for clause mapping
         </p>
       </div>
 
@@ -195,7 +177,7 @@ const QSPUploadClean = () => {
         <CardHeader>
           <CardTitle>Upload QSP Documents</CardTitle>
           <CardDescription>
-            Upload .docx or .pdf files containing your internal procedures
+            Supported formats: .docx, .pdf, .txt • Parser extracts document number, clause numbers, and text
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -217,7 +199,7 @@ const QSPUploadClean = () => {
               Select QSP Files
             </label>
             <p className="mt-2 text-sm text-gray-500">
-              Supports .docx, .txt, and .pdf files • Multiple files allowed
+              Multiple files allowed • Files are automatically parsed on upload
             </p>
           </div>
 
@@ -241,10 +223,10 @@ const QSPUploadClean = () => {
                 {uploading ? (
                   <>
                     <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2"></div>
-                    Uploading...
+                    Uploading & Parsing...
                   </>
                 ) : (
-                  'Upload Files'
+                  'Upload & Parse Files'
                 )}
               </Button>
             </div>
@@ -252,13 +234,13 @@ const QSPUploadClean = () => {
         </CardContent>
       </Card>
 
-      {/* Parsed QSP Structure Table */}
-      {parsedQSPs.length > 0 && (
+      {/* Uploaded QSP Documents Table */}
+      {qspDocuments.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Parsed QSP Structure</CardTitle>
+            <CardTitle>Uploaded QSP Documents</CardTitle>
             <CardDescription>
-              Review extracted clauses from uploaded documents
+              {qspDocuments.length} document(s) parsed • Click "View Text" to see clause content
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -267,6 +249,7 @@ const QSPUploadClean = () => {
                 <thead>
                   <tr className="border-b bg-gray-50">
                     <th className="px-4 py-3 text-left font-semibold">Document</th>
+                    <th className="px-4 py-3 text-left font-semibold">Revision</th>
                     <th className="px-4 py-3 text-left font-semibold">Clause</th>
                     <th className="px-4 py-3 text-left font-semibold">Title</th>
                     <th className="px-4 py-3 text-left font-semibold">Characters</th>
@@ -274,22 +257,25 @@ const QSPUploadClean = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {parsedQSPs.map((doc, docIdx) =>
-                    doc.clauses.map((clause, clauseIdx) => (
+                  {qspDocuments.map((doc, docIdx) =>
+                    doc.clauses && doc.clauses.map((clause, clauseIdx) => (
                       <tr key={`${docIdx}-${clauseIdx}`} className="border-b hover:bg-gray-50">
-                        <td className="px-4 py-3 font-mono text-sm">
+                        <td className="px-4 py-3 font-mono text-sm font-bold text-blue-900">
                           {doc.document_number}
+                        </td>
+                        <td className="px-4 py-3 font-mono text-xs text-gray-500">
+                          {doc.revision}
                         </td>
                         <td className="px-4 py-3 font-mono font-bold text-blue-700">
                           {clause.clause_number}
                         </td>
                         <td className="px-4 py-3">{clause.title}</td>
-                        <td className="px-4 py-3 text-gray-600">{clause.char_count}</td>
+                        <td className="px-4 py-3 text-gray-600">{clause.characters}</td>
                         <td className="px-4 py-3">
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => setViewingText(clause.text)}
+                            onClick={() => handleViewText(clause)}
                           >
                             <Eye className="h-4 w-4 mr-1" />
                             View
@@ -312,86 +298,83 @@ const QSPUploadClean = () => {
             {mappingComplete ? (
               <div className="flex items-center gap-3 text-green-900">
                 <CheckCircle className="h-6 w-6" />
-                <span className="font-semibold">Clause map generated and ready for gap analysis</span>
+                <div>
+                  <div className="font-semibold">✅ Clause mapping complete!</div>
+                  <div className="text-sm">QSP clauses are now ready for gap analysis in Tab 3</div>
+                </div>
               </div>
             ) : (
-              <Button
-                onClick={handleGenerateClauseMap}
-                disabled={mapping}
-                size="lg"
-                className="w-full h-14 text-lg"
-              >
-                {mapping ? (
-                  <>
-                    <div className="animate-spin h-6 w-6 border-2 border-white border-t-transparent rounded-full mr-2"></div>
-                    Generating Clause Map...
-                  </>
-                ) : (
-                  'Generate Clause Map'
-                )}
-              </Button>
+              <div className="space-y-3">
+                <div className="flex items-start gap-2 text-sm text-blue-900">
+                  <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                  <p>
+                    <strong>Important:</strong> Click "Generate Clause Map" to prepare your QSP clauses for gap analysis. 
+                    This creates semantic embeddings that enable AI-powered regulatory change detection.
+                  </p>
+                </div>
+                <Button
+                  onClick={handleGenerateClauseMap}
+                  disabled={mapping}
+                  size="lg"
+                  className="w-full h-14 text-lg"
+                >
+                  {mapping ? (
+                    <>
+                      <div className="animate-spin h-6 w-6 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                      Generating Clause Map...
+                    </>
+                  ) : (
+                    'Generate Clause Map'
+                  )}
+                </Button>
+              </div>
             )}
           </CardContent>
         </Card>
       )}
 
-      {/* Uploaded QSP Documents */}
-      {qspDocuments.length > 0 && (
+      {/* Loading State */}
+      {loadingDocs && (
         <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Uploaded QSP Documents</CardTitle>
-                <CardDescription>
-                  {qspDocuments.length} document(s) in system
-                </CardDescription>
-              </div>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleDeleteAllQSPs}
-              >
-                <Trash2 className="h-4 w-4 mr-1" />
-                Delete All ({qspDocuments.length})
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {qspDocuments.map((doc, idx) => (
-                <div key={idx} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-5 w-5 text-blue-600" />
-                    <span className="font-medium text-sm">{doc.filename || doc.doc_name}</span>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDeleteQSP(doc.doc_id || doc._id)}
-                    className="text-red-600"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
+          <CardContent className="py-8 text-center">
+            <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-3"></div>
+            <p className="text-gray-600">Loading QSP documents...</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Empty State */}
+      {!loadingDocs && qspDocuments.length === 0 && (
+        <Card className="bg-gray-50">
+          <CardContent className="py-8 text-center">
+            <FileText className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+            <p className="text-gray-600">No QSP documents uploaded yet</p>
+            <p className="text-sm text-gray-500 mt-1">Upload your first QSP document to get started</p>
           </CardContent>
         </Card>
       )}
 
       {/* Text Viewing Modal */}
-      {viewingText && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setViewingText(null)}>
-          <div className="bg-white rounded-lg p-6 max-w-2xl max-h-[80vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold">Clause Text</h3>
-              <Button size="sm" variant="outline" onClick={() => setViewingText(null)}>Close</Button>
+      {viewingClause && (
+        <Dialog open={!!viewingClause} onOpenChange={() => setViewingClause(null)}>
+          <DialogContent className="max-w-3xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-blue-600" />
+                Clause {viewingClause.clause_number}: {viewingClause.title}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="overflow-auto max-h-[60vh] mt-4">
+              <div className="text-sm text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 rounded border">
+                {viewingClause.text || 'No text available'}
+              </div>
+              <div className="mt-4 text-xs text-gray-500 flex justify-between">
+                <span>Clause Number: <strong>{viewingClause.clause_number}</strong></span>
+                <span>Characters: <strong>{viewingClause.characters || 0}</strong></span>
+              </div>
             </div>
-            <div className="text-sm text-gray-700 whitespace-pre-wrap font-mono bg-gray-50 p-4 rounded">
-              {viewingText}
-            </div>
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
