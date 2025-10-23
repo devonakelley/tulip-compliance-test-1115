@@ -306,10 +306,23 @@ const QSPUpload = () => {
       {/* Uploaded QSP Documents */}
       <Card>
         <CardHeader>
-          <CardTitle>Uploaded QSP Documents</CardTitle>
-          <CardDescription>
-            Manage your uploaded internal procedure documents
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Uploaded QSP Documents</CardTitle>
+              <CardDescription>
+                Manage your uploaded internal procedure documents
+              </CardDescription>
+            </div>
+            {qspDocuments.length > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDeleteAllQSPs}
+              >
+                Delete All ({qspDocuments.length})
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {loadingDocs ? (
