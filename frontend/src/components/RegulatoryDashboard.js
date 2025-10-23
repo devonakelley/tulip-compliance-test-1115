@@ -26,22 +26,23 @@ const RegulatoryDashboard = () => {
   const [regulatoryDocs, setRegulatoryDocs] = useState([]);
   const [loadingRegDocs, setLoadingRegDocs] = useState(false);
   
-  // Fetch previously uploaded internal documents
-  useEffect(() => {
-    const fetchInternalDocs = async () => {
-      try {
-        setLoadingInternalDocs(true);
-        const response = await axios.get(`${API}/api/regulatory/list/internal`);
-        if (response.data.success) {
-          setInternalDocs(response.data.documents || []);
-        }
-      } catch (error) {
-        console.error('Error fetching internal docs:', error);
-      } finally {
-        setLoadingInternalDocs(false);
+  // Fetch regulatory documents
+  const fetchRegulatoryDocs = async () => {
+    try {
+      setLoadingRegDocs(true);
+      const response = await axios.get(`${API}/api/rag/regulatory-docs`);
+      if (response.data) {
+        setRegulatoryDocs(response.data);
       }
-    };
-    fetchInternalDocs();
+    } catch (error) {
+      console.error('Error fetching regulatory docs:', error);
+    } finally {
+      setLoadingRegDocs(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRegulatoryDocs();
   }, []);
 
   const handleOldPdfUpload = async (event) => {
