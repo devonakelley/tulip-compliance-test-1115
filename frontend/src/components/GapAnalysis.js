@@ -19,10 +19,19 @@ const GapAnalysis = () => {
       setAnalyzing(true);
       toast.loading('Running gap analysis...', { id: 'analysis' });
 
-      // Get diff results from localStorage or state management
+      // Get diff results from Tab 1
       const diffResults = localStorage.getItem('regulatory_diff');
       if (!diffResults) {
         toast.error('No regulatory diff found. Please complete Tab 1 first.', { id: 'analysis' });
+        setAnalyzing(false);
+        return;
+      }
+
+      // Get clause map from Tab 2
+      const clauseMap = localStorage.getItem('clause_map');
+      if (!clauseMap) {
+        toast.error('No clause map found. Please complete Tab 2 first.', { id: 'analysis' });
+        setAnalyzing(false);
         return;
       }
 
@@ -38,7 +47,7 @@ const GapAnalysis = () => {
         setAnalysisResults(response.data);
         setRunId(response.data.run_id);
         toast.success(
-          `Analysis complete: ${response.data.total_impacts_found} impacts found`,
+          `✅ Analysis complete: ${response.data.total_impacts_found} impacts found`,
           { id: 'analysis' }
         );
       }
