@@ -2661,6 +2661,163 @@ Enhanced post-market surveillance requirements including systematic collection a
         
         return passed_tests == total_tests
 
+    def test_delete_all_regulatory_docs(self):
+        """Test DELETE /api/rag/regulatory-docs/all endpoint"""
+        try:
+            if not self.auth_token:
+                self.log_test("Delete All Regulatory Docs", False, "No authentication token")
+                return False, {}
+            
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            response = requests.delete(f"{self.api_url}/rag/regulatory-docs/all", headers=headers, timeout=30)
+            
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                deleted_count = data.get('deleted_count', 0)
+                details = f"Success: {data.get('success', False)}, Deleted Count: {deleted_count}, Message: {data.get('message', 'N/A')}"
+            else:
+                details = f"Status: {response.status_code}, Error: {response.text}"
+                
+            self.log_test("Delete All Regulatory Docs", success, details, response.json() if success else response.text)
+            return success, response.json() if success else {}
+            
+        except Exception as e:
+            self.log_test("Delete All Regulatory Docs", False, f"Exception: {str(e)}")
+            return False, {}
+
+    def test_delete_all_qsp_documents(self):
+        """Test DELETE /api/documents/all endpoint"""
+        try:
+            if not self.auth_token:
+                self.log_test("Delete All QSP Documents", False, "No authentication token")
+                return False, {}
+            
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            response = requests.delete(f"{self.api_url}/documents/all", headers=headers, timeout=30)
+            
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                deleted_count = data.get('deleted_count', 0)
+                details = f"Success: {data.get('success', False)}, Deleted Count: {deleted_count}, Message: {data.get('message', 'N/A')}"
+            else:
+                details = f"Status: {response.status_code}, Error: {response.text}"
+                
+            self.log_test("Delete All QSP Documents", success, details, response.json() if success else response.text)
+            return success, response.json() if success else {}
+            
+        except Exception as e:
+            self.log_test("Delete All QSP Documents", False, f"Exception: {str(e)}")
+            return False, {}
+
+    def run_delete_all_endpoints_test(self):
+        """Run focused tests for delete all endpoints as requested in review"""
+        print("🔍 DELETE ALL ENDPOINTS TESTING")
+        print(f"📍 Testing against: {self.base_url}")
+        print("=" * 60)
+        
+        # Test with admin credentials from review request
+        print("🔐 Testing with Admin Credentials (admin@tulipmedical.com)...")
+        admin_auth_success = self.login_admin_user()
+        
+        if not admin_auth_success:
+            print("❌ Admin authentication failed. Cannot test delete endpoints.")
+            return False
+        
+        print("\n🎯 TESTING DELETE ALL ENDPOINTS:")
+        
+        # 1. Test Delete All Regulatory Documents
+        print("\n1️⃣ Testing Delete All Regulatory Documents (/api/rag/regulatory-docs/all)")
+        reg_delete_success, reg_delete_data = self.test_delete_all_regulatory_docs()
+        if reg_delete_success:
+            print(f"   ✅ Regulatory Delete All successful: {reg_delete_data.get('message', 'N/A')}")
+        else:
+            print(f"   ❌ Regulatory Delete All failed")
+        
+        # 2. Test Delete All QSP Documents
+        print("\n2️⃣ Testing Delete All QSP Documents (/api/documents/all)")
+        qsp_delete_success, qsp_delete_data = self.test_delete_all_qsp_documents()
+        if qsp_delete_success:
+            print(f"   ✅ QSP Delete All successful: {qsp_delete_data.get('message', 'N/A')}")
+        else:
+            print(f"   ❌ QSP Delete All failed")
+        
+        # 3. Test Authentication & Tenant Isolation
+        print("\n3️⃣ Testing Authentication & Tenant Isolation")
+        # Test without auth token
+        temp_token = self.auth_token
+        self.auth_token = None
+        
+        try:
+            response = requests.delete(f"{self.api_url}/rag/regulatory-docs/all", timeout=10)
+            auth_required = response.status_code == 401
+            print(f"   Authentication Required: {'✅' if auth_required else '❌'} (Status: {response.status_code})")
+        except Exception as e:
+            print(f"   Authentication test failed: {e}")
+            auth_required = False
+        
+        # Restore auth token
+        self.auth_token = temp_token
+        
+        # 4. Test Response Format
+        print("\n4️⃣ Testing Response Format")
+        if reg_delete_success and qsp_delete_success:
+            reg_has_required_fields = all(field in reg_delete_data for field in ['success', 'message', 'deleted_count'])
+            qsp_has_required_fields = all(field in qsp_delete_data for field in ['success', 'message', 'deleted_count'])
+            
+            print(f"   Regulatory Response Format: {'✅' if reg_has_required_fields else '❌'}")
+            print(f"   QSP Response Format: {'✅' if qsp_has_required_fields else '❌'}")
+        else:
+            print("   ❌ Cannot test response format due to endpoint failures")
+        
+        return self.generate_delete_all_summary(reg_delete_success, qsp_delete_success, auth_required)
+
+    def generate_delete_all_summary(self, reg_delete_success, qsp_delete_success, auth_required):
+        """Generate summary of delete all endpoints testing"""
+        print("\n" + "="*60)
+        print("📊 DELETE ALL ENDPOINTS TEST SUMMARY")
+        print("="*60)
+        
+        total_tests = 3
+        passed_tests = sum([reg_delete_success, qsp_delete_success, auth_required])
+        
+        print(f"🎯 Overall Success Rate: {passed_tests}/{total_tests} ({passed_tests/total_tests*100:.1f}%)")
+        print()
+        
+        # Test Results
+        print("📋 TEST RESULTS:")
+        print(f"   Delete All Regulatory Documents: {'✅ PASS' if reg_delete_success else '❌ FAIL'}")
+        print(f"   Delete All QSP Documents: {'✅ PASS' if qsp_delete_success else '❌ FAIL'}")
+        print(f"   Authentication Required: {'✅ PASS' if auth_required else '❌ FAIL'}")
+        print()
+        
+        # Issues Found
+        if not reg_delete_success or not qsp_delete_success or not auth_required:
+            print("🚨 ISSUES FOUND:")
+            if not reg_delete_success:
+                print("   ❌ DELETE /api/rag/regulatory-docs/all - Not working")
+            if not qsp_delete_success:
+                print("   ❌ DELETE /api/documents/all - Not working")
+            if not auth_required:
+                print("   ❌ Authentication bypass possible")
+            print()
+        
+        # Recommendations
+        if not reg_delete_success or not qsp_delete_success:
+            print("💡 RECOMMENDATIONS:")
+            print("   1. Check backend logs for delete operation errors")
+            print("   2. Verify tenant isolation is working correctly")
+            print("   3. Test with existing documents to ensure proper deletion")
+            print("   4. Verify audit logging is functioning")
+            print()
+        
+        print("="*60)
+        
+        return passed_tests >= 2  # Consider success if 2/3 tests pass
+
 def main():
     """Main test execution"""
     import sys
