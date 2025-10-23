@@ -281,3 +281,262 @@ async def list_regulatory_documents(
     except Exception as e:
         logger.error(f"Failed to list regulatory documents: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ===== QSP Document Upload and Parsing =====
+
+QSP_DOCS_DIR = UPLOAD_DIR / "qsp_docs"
+QSP_DOCS_DIR.mkdir(parents=True, exist_ok=True)
+
+
+@router.post("/upload/qsp")
+async def upload_qsp_document(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Upload and parse QSP document (DOCX, PDF, or TXT)
+    Returns structured clause-level data
+    
+    Response:
+    {
+        "success": true,
+        "document_number": "7.3-3",
+        "revision": "R9",
+        "filename": "QSP 7.3-3 R9 Risk Management.docx",
+        "total_clauses": 12,
+        "clauses": [
+            {
+                "document_number": "7.3-3",
+                "clause_number": "7.3.5",
+                "title": "Risk Analysis",
+                "text": "The risk analysis can be recorded...",
+                "characters": 312
+            }
+        ]
+    }
+    """
+    try:
+        from core.qsp_parser import get_qsp_parser
+        
+        tenant_id = current_user["tenant_id"]
+        
+        # Validate file type
+        file_ext = file.filename.lower().split('.')[-1]
+        if file_ext not in ['docx', 'pdf', 'txt']:
+            raise HTTPException(
+                status_code=400, 
+                detail="Only DOCX, PDF, and TXT files are supported"
+            )
+        
+        # Read file content
+        file_content = await file.read()
+        
+        # Parse document
+        parser = get_qsp_parser()
+        parsed_data = parser.parse_file(file_content, file.filename)
+        
+        # Save file to disk
+        tenant_dir = QSP_DOCS_DIR / tenant_id
+        tenant_dir.mkdir(exist_ok=True)
+        
+        file_path = tenant_dir / file.filename
+        with open(file_path, "wb") as f:
+            f.write(file_content)
+        
+        # Store parsed data in MongoDB
+        # TODO: Implement MongoDB storage
+        # await db.qsp_documents.insert_one({
+        #     'tenant_id': tenant_id,
+        #     'document_number': parsed_data['document_number'],
+        #     'revision': parsed_data['revision'],
+        #     'filename': file.filename,
+        #     'file_path': str(file_path),
+        #     'total_clauses': parsed_data['total_clauses'],
+        #     'clauses': parsed_data['clauses'],
+        #     'uploaded_at': datetime.utcnow(),
+        #     'uploaded_by': current_user['user_id']
+        # })
+        
+        logger.info(f"✅ Uploaded and parsed QSP: {file.filename} - {parsed_data['total_clauses']} clauses")
+        
+        return {
+            'success': True,
+            'file_path': str(file_path),
+            **parsed_data
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to upload/parse QSP document: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/list/qsp")
+async def list_qsp_documents(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    List all uploaded QSP documents with parsed clause data
+    
+    Response:
+    {
+        "success": true,
+        "count": 3,
+        "documents": [
+            {
+                "document_number": "7.3-3",
+                "revision": "R9",
+                "filename": "QSP 7.3-3 R9 Risk Management.docx",
+                "total_clauses": 12,
+                "clauses": [...]
+            }
+        ]
+    }
+    """
+    try:
+        from core.qsp_parser import get_qsp_parser
+        
+        tenant_id = current_user["tenant_id"]
+        tenant_dir = QSP_DOCS_DIR / tenant_id
+        
+        if not tenant_dir.exists():
+            return {'success': True, 'count': 0, 'documents': []}
+        
+        documents = []
+        parser = get_qsp_parser()
+        
+        for file_path in tenant_dir.iterdir():
+            if file_path.is_file():
+                try:
+                    # Re-parse document to get structured data
+                    with open(file_path, 'rb') as f:
+                        file_content = f.read()
+                    
+                    parsed_data = parser.parse_file(file_content, file_path.name)
+                    
+                    # Add file metadata
+                    stat = file_path.stat()
+                    parsed_data['file_path'] = str(file_path)
+                    parsed_data['size'] = stat.st_size
+                    parsed_data['uploaded_at'] = datetime.fromtimestamp(stat.st_mtime).isoformat()
+                    
+                    documents.append(parsed_data)
+                    
+                except Exception as e:
+                    logger.error(f"Failed to parse {file_path.name}: {e}")
+                    continue
+        
+        # Sort by document number
+        documents.sort(key=lambda x: x['document_number'])
+        
+        logger.info(f"Listed {len(documents)} QSP documents for tenant {tenant_id}")
+        
+        return {
+            'success': True,
+            'count': len(documents),
+            'documents': documents
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to list QSP documents: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/map_clauses")
+async def map_clauses(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Generate clause mappings between regulatory deltas and QSP documents
+    This endpoint processes all uploaded QSP documents and prepares them for gap analysis
+    
+    Response:
+    {
+        "success": true,
+        "total_qsp_documents": 3,
+        "total_clauses_mapped": 45,
+        "message": "Clause mapping complete"
+    }
+    """
+    try:
+        from core.qsp_parser import get_qsp_parser
+        from core.change_impact_service_mongo import get_change_impact_service
+        
+        tenant_id = current_user["tenant_id"]
+        tenant_dir = QSP_DOCS_DIR / tenant_id
+        
+        if not tenant_dir.exists() or not any(tenant_dir.iterdir()):
+            raise HTTPException(
+                status_code=400,
+                detail="No QSP documents found. Please upload QSP documents first."
+            )
+        
+        parser = get_qsp_parser()
+        impact_service = get_change_impact_service()
+        
+        total_documents = 0
+        total_clauses = 0
+        
+        # Process each QSP document
+        for file_path in tenant_dir.iterdir():
+            if file_path.is_file():
+                try:
+                    # Parse document
+                    with open(file_path, 'rb') as f:
+                        file_content = f.read()
+                    
+                    parsed_data = parser.parse_file(file_content, file_path.name)
+                    
+                    # Ingest into change impact service for semantic matching
+                    import uuid
+                    doc_id = str(uuid.uuid4())
+                    
+                    # Convert clauses to sections format expected by impact service
+                    sections = [
+                        {
+                            'section_path': clause['clause_number'],
+                            'heading': clause['title'],
+                            'text': clause['text'],
+                            'version': parsed_data['revision']
+                        }
+                        for clause in parsed_data['clauses']
+                    ]
+                    
+                    result = impact_service.ingest_qsp_document(
+                        tenant_id=tenant_id,
+                        doc_id=doc_id,
+                        doc_name=f"{parsed_data['document_number']} {parsed_data['filename']}",
+                        sections=sections
+                    )
+                    
+                    total_documents += 1
+                    total_clauses += result['sections_embedded']
+                    
+                    logger.info(f"Mapped {result['sections_embedded']} clauses from {file_path.name}")
+                    
+                except Exception as e:
+                    logger.error(f"Failed to map clauses from {file_path.name}: {e}")
+                    continue
+        
+        if total_documents == 0:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to map any QSP documents. Please check document format."
+            )
+        
+        logger.info(f"✅ Clause mapping complete: {total_documents} docs, {total_clauses} clauses")
+        
+        return {
+            'success': True,
+            'total_qsp_documents': total_documents,
+            'total_clauses_mapped': total_clauses,
+            'message': f'Successfully mapped {total_clauses} clauses from {total_documents} QSP documents'
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to map clauses: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
