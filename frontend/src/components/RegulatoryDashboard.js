@@ -23,6 +23,8 @@ const RegulatoryDashboard = () => {
   const [loadingInternalDocs, setLoadingInternalDocs] = useState(false);
   const [expandedDeltas, setExpandedDeltas] = useState({});
   const [expandedImpacts, setExpandedImpacts] = useState({});
+  const [regulatoryDocs, setRegulatoryDocs] = useState([]);
+  const [loadingRegDocs, setLoadingRegDocs] = useState(false);
   
   // Fetch previously uploaded internal documents
   useEffect(() => {
