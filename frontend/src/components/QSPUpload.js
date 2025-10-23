@@ -95,8 +95,12 @@ const QSPUpload = () => {
 
       if (response.data.success) {
         setMappingResults(response.data);
+        
+        // Save clause map to localStorage for Gap Analysis tab
+        localStorage.setItem('clause_map', JSON.stringify(response.data));
+        
         toast.success(
-          `Successfully mapped ${response.data.sections_count} QSP clauses from ${documents.length} documents`,
+          `✅ Clause map created for ${documents.length} documents (${response.data.sections_count} clauses)`,
           { id: 'mapping' }
         );
       }
