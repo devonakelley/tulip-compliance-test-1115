@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GitCompare, Upload, TrendingUp } from 'lucide-react';
 import RegulatoryDashboard from './RegulatoryDashboard';
 import QSPUpload from './QSPUpload';
-import GapAnalysis from './GapAnalysis';
+import GapAnalysisNew from './GapAnalysisNew';
 
 const MainWorkflow = () => {
   const [activeTab, setActiveTab] = useState('diff');
