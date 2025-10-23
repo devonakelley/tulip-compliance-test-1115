@@ -16,6 +16,25 @@ const QSPUpload = () => {
   const [qspDocuments, setQspDocuments] = useState([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
 
+  // Fetch QSP documents
+  const fetchQSPDocuments = async () => {
+    try {
+      setLoadingDocs(true);
+      const response = await axios.get(`${API}/api/documents`);
+      if (response.data) {
+        setQspDocuments(Array.isArray(response.data) ? response.data : []);
+      }
+    } catch (error) {
+      console.error('Error fetching QSP documents:', error);
+    } finally {
+      setLoadingDocs(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchQSPDocuments();
+  }, []);
+
   const handleFileSelect = (event) => {
     const selectedFiles = Array.from(event.target.files);
     setFiles(selectedFiles);
