@@ -287,6 +287,52 @@ const QSPUpload = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Uploaded QSP Documents */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Uploaded QSP Documents</CardTitle>
+          <CardDescription>
+            Manage your uploaded internal procedure documents
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loadingDocs ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+            </div>
+          ) : qspDocuments.length > 0 ? (
+            <div className="space-y-3">
+              {qspDocuments.map((doc) => (
+                <div key={doc.doc_id || doc._id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                  <div className="flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <p className="font-medium">{doc.filename || doc.doc_name}</p>
+                      <p className="text-sm text-gray-500">
+                        Uploaded: {doc.upload_date ? new Date(doc.upload_date).toLocaleDateString() : 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeleteQSP(doc.doc_id || doc._id)}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    Delete
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+              <p>No QSP documents uploaded yet</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
