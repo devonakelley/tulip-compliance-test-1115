@@ -239,16 +239,13 @@ const GapAnalysis = () => {
                     <thead>
                       <tr className="border-b bg-gray-50">
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                          Clause ID
+                          Regulatory Clause
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                           Change Type
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                          Mapped QSP Section
-                        </th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                          Confidence
+                          QSP Document & Clause
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                           Rationale
@@ -268,14 +265,16 @@ const GapAnalysis = () => {
                           </td>
                           <td className="px-4 py-3">
                             <div>
-                              <div className="font-medium text-sm">{impact.qsp_doc}</div>
-                              <div className="text-xs text-gray-600">
-                                {impact.section_path} - {impact.heading}
+                              <div className="font-medium text-sm text-gray-900">
+                                📄 {impact.qsp_doc}
+                              </div>
+                              <div className="font-mono text-xs text-blue-700 font-semibold mt-1">
+                                Clause: {impact.section_path}
+                              </div>
+                              <div className="text-xs text-gray-600 mt-1">
+                                {impact.heading}
                               </div>
                             </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            {getConfidenceBadge(impact.confidence)}
                           </td>
                           <td className="px-4 py-3">
                             <div className="text-sm text-gray-700 max-w-md">
