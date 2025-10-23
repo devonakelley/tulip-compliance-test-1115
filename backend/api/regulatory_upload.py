@@ -11,9 +11,17 @@ import shutil
 from datetime import datetime
 from core.iso_diff_processor import get_iso_diff_processor
 from core.auth import get_current_user
+from motor.motor_asyncio import AsyncIOMotorDatabase
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/regulatory", tags=["regulatory_docs"])
+
+# Database will be injected
+db: AsyncIOMotorDatabase = None
+
+def set_database(database):
+    global db
+    db = database
 
 # Storage paths
 UPLOAD_DIR = Path("/app/backend/data")
