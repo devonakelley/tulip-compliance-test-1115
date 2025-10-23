@@ -152,7 +152,7 @@ async def process_iso_diff(
 ):
     """
     Process diff between old and new regulatory PDFs
-    Generates deltas JSON file
+    Generates deltas JSON file and stores in MongoDB
     
     Args:
         old_file_path: Path to old version PDF
@@ -160,6 +160,7 @@ async def process_iso_diff(
     """
     try:
         tenant_id = current_user["tenant_id"]
+        user_id = current_user["user_id"]
         
         # Validate files exist
         if not os.path.exists(old_file_path):
@@ -192,10 +193,33 @@ async def process_iso_diff(
         modified = sum(1 for d in deltas if d['change_type'] == 'modified')
         deleted = sum(1 for d in deltas if d['change_type'] == 'deleted')
         
-        logger.info(f"✅ Diff processing complete: {len(deltas)} changes detected")
+        # Store in MongoDB for Gap Analysis reference
+        import uuid
+        diff_result_id = str(uuid.uuid4())
+        
+        diff_document = {
+            'diff_id': diff_result_id,
+            'tenant_id': tenant_id,
+            'old_file_path': old_file_path,
+            'new_file_path': new_file_path,
+            'deltas': deltas,
+            'total_changes': len(deltas),
+            'summary': {
+                'added': added,
+                'modified': modified,
+                'deleted': deleted
+            },
+            'created_at': datetime.utcnow(),
+            'created_by': user_id
+        }
+        
+        await db.diff_results.insert_one(diff_document)
+        
+        logger.info(f"✅ Diff processing complete: {len(deltas)} changes detected, stored in MongoDB")
         
         return {
             'success': True,
+            'diff_id': diff_result_id,
             'deltas_file': str(output_path),
             'total_changes': len(deltas),
             'summary': {
