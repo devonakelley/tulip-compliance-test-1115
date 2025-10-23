@@ -71,6 +71,22 @@ const QSPUpload = () => {
     if (successCount > 0) {
       toast.success(`Successfully uploaded ${successCount} document(s)`);
       setFiles([]);
+      fetchQSPDocuments(); // Refresh list
+    }
+  };
+
+  const handleDeleteQSP = async (docId) => {
+    if (!window.confirm('Are you sure you want to delete this QSP document?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API}/api/documents/${docId}`);
+      toast.success('Document deleted successfully');
+      fetchQSPDocuments(); // Refresh list
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast.error('Failed to delete document');
     }
   };
 
