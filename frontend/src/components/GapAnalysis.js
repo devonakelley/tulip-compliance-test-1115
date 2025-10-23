@@ -264,19 +264,19 @@ const GapAnalysis = () => {
                           <td className="px-4 py-3">
                             <div>
                               <div className="font-medium text-sm text-gray-900">
-                                📄 {impact.qsp_doc}
+                                📄 Document: {impact.qsp_doc || 'N/A'}
                               </div>
-                              <div className="font-mono text-xs text-blue-700 font-semibold mt-1">
-                                Clause: {impact.section_path}
+                              <div className="font-mono text-sm text-blue-700 font-bold mt-1">
+                                Clause: {impact.section_path || 'N/A'}
                               </div>
                               <div className="text-xs text-gray-600 mt-1">
-                                {impact.heading}
+                                Section: {impact.heading}
                               </div>
                             </div>
                           </td>
                           <td className="px-4 py-3">
                             <div className="text-sm text-gray-700 max-w-md">
-                              {impact.rationale}
+                              {impact.rationale ? impact.rationale.replace(/confidence[:\s]*[\d.]+/gi, '').replace(/\(confidence[^)]*\)/gi, '').trim() : 'No rationale provided'}
                             </div>
                           </td>
                         </tr>
