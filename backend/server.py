@@ -58,6 +58,7 @@ auth_router_module.set_database(db)
 reports_router_module.set_database(db)
 regulatory_router_module.set_database(db)
 rag_router_module.set_database(db)
+regulatory_upload_router_module.set_database(db)
 audit_logger.set_database(db)
 
 # Register routers
