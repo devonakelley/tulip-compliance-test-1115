@@ -63,7 +63,7 @@ const MainWorkflow = () => {
           </TabsContent>
 
           <TabsContent value="analysis" className="mt-6">
-            <GapAnalysis />
+            <GapAnalysisNew />
           </TabsContent>
         </Tabs>
       </div>
