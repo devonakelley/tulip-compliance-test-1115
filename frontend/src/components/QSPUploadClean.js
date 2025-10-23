@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Upload, FileText, CheckCircle, Eye, Trash2 } from 'lucide-react';
+import { Upload, FileText, CheckCircle, Eye, Trash2, AlertCircle } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -11,25 +12,35 @@ const QSPUploadClean = () => {
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [mapping, setMapping] = useState(false);
-  const [parsedQSPs, setParsedQSPs] = useState([]);
   const [qspDocuments, setQspDocuments] = useState([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
-  const [viewingText, setViewingText] = useState(null);
+  const [viewingClause, setViewingClause] = useState(null);
   const [mappingComplete, setMappingComplete] = useState(false);
 
   useEffect(() => {
     fetchQSPDocuments();
   }, []);
 
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+  };
+
   const fetchQSPDocuments = async () => {
     try {
       setLoadingDocs(true);
-      const response = await axios.get(`${API}/api/documents`);
-      if (response.data) {
-        setQspDocuments(Array.isArray(response.data) ? response.data : []);
+      const response = await axios.get(`${API}/api/regulatory/list/qsp`, {
+        headers: getAuthHeaders()
+      });
+      
+      if (response.data && response.data.success) {
+        setQspDocuments(response.data.documents || []);
       }
     } catch (error) {
       console.error('Error fetching QSP documents:', error);
+      if (error.response?.status === 401) {
+        toast.error('Please login to access QSP documents');
+      }
     } finally {
       setLoadingDocs(false);
     }
@@ -37,7 +48,18 @@ const QSPUploadClean = () => {
 
   const handleFileSelect = (event) => {
     const selectedFiles = Array.from(event.target.files);
-    setFiles(selectedFiles);
+    
+    // Validate file types
+    const validFiles = selectedFiles.filter(file => {
+      const ext = file.name.toLowerCase().split('.').pop();
+      return ['docx', 'pdf', 'txt'].includes(ext);
+    });
+    
+    if (validFiles.length !== selectedFiles.length) {
+      toast.error('Only DOCX, PDF, and TXT files are supported');
+    }
+    
+    setFiles(validFiles);
   };
 
   const handleUpload = async () => {
@@ -48,46 +70,46 @@ const QSPUploadClean = () => {
 
     setUploading(true);
     let successCount = 0;
-    const newParsedDocs = [];
+    let failCount = 0;
 
     for (const file of files) {
       try {
         const formData = new FormData();
         formData.append('file', file);
         
-        const response = await axios.post(`${API}/api/documents/upload`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        const response = await axios.post(
+          `${API}/api/regulatory/upload/qsp`, 
+          formData,
+          {
+            headers: {
+              ...getAuthHeaders(),
+              'Content-Type': 'multipart/form-data'
+            }
+          }
+        );
         
-        // Parse response to extract structure
-        if (response.data && response.data.sections) {
-          const parsed = {
-            document_number: response.data.doc_id || file.name,
-            revision: 'R1',
-            clauses: Object.entries(response.data.sections).map(([key, value]) => ({
-              clause_number: key,
-              title: key,
-              text: typeof value === 'string' ? value : JSON.stringify(value),
-              char_count: typeof value === 'string' ? value.length : JSON.stringify(value).length
-            }))
-          };
-          newParsedDocs.push(parsed);
+        if (response.data && response.data.success) {
+          successCount++;
+          toast.success(`✅ ${file.name}: Parsed ${response.data.total_clauses} clauses`);
         }
-        
-        successCount++;
       } catch (error) {
+        failCount++;
         console.error(`Error uploading ${file.name}:`, error);
-        toast.error(`Failed to upload ${file.name}`);
+        const errorMsg = error.response?.data?.detail || 'Upload failed';
+        toast.error(`❌ ${file.name}: ${errorMsg}`);
       }
     }
 
     setUploading(false);
     
     if (successCount > 0) {
-      toast.success(`Successfully uploaded ${successCount} document(s)`);
-      setParsedQSPs([...parsedQSPs, ...newParsedDocs]);
       setFiles([]);
       fetchQSPDocuments();
+      toast.success(`Successfully uploaded ${successCount} document(s)`);
+    }
+    
+    if (failCount > 0) {
+      toast.error(`Failed to upload ${failCount} document(s)`);
     }
   };
 
@@ -101,47 +123,30 @@ const QSPUploadClean = () => {
       setMapping(true);
       toast.loading('Generating clause map...', { id: 'mapping' });
 
-      const docsResponse = await axios.get(`${API}/api/documents`);
-      const documents = docsResponse.data;
+      const response = await axios.post(
+        `${API}/api/regulatory/map_clauses`,
+        {},
+        { headers: getAuthHeaders() }
+      );
 
-      if (!documents || documents.length === 0) {
-        toast.error('No documents found to map', { id: 'mapping' });
-        return;
-      }
-
-      const qspSections = [];
-      documents.forEach(doc => {
-        if (doc.sections) {
-          Object.entries(doc.sections).forEach(([sectionPath, content]) => {
-            qspSections.push({
-              section_path: sectionPath,
-              heading: `Section ${sectionPath}`,
-              text: typeof content === 'string' ? content : JSON.stringify(content),
-              source: doc.filename
-            });
-          });
-        }
-      });
-
-      const response = await axios.post(`${API}/api/impact/ingest_qsp`, {
-        doc_name: 'Consolidated QSP',
-        sections: qspSections
-      });
-
-      if (response.data.success) {
-        localStorage.setItem('clause_map', JSON.stringify(response.data));
+      if (response.data && response.data.success) {
         setMappingComplete(true);
         toast.success(
-          `✅ Clause map created for ${documents.length} documents (${response.data.sections_count} clauses)`,
+          `✅ Mapped ${response.data.total_clauses_mapped} clauses from ${response.data.total_qsp_documents} documents`,
           { id: 'mapping' }
         );
       }
     } catch (error) {
       console.error('Error generating clause map:', error);
-      toast.error('Failed to generate clause map', { id: 'mapping' });
+      const errorMsg = error.response?.data?.detail || 'Failed to generate clause map';
+      toast.error(errorMsg, { id: 'mapping' });
     } finally {
       setMapping(false);
     }
+  };
+
+  const handleViewText = (clause) => {
+    setViewingClause(clause);
   };
 
   const handleDeleteQSP = async (docId) => {
