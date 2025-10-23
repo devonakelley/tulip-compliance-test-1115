@@ -59,11 +59,11 @@ const MainWorkflow = () => {
           </TabsContent>
 
           <TabsContent value="qsp" className="mt-6">
-            <QSPUpload />
+            <QSPUploadClean />
           </TabsContent>
 
           <TabsContent value="analysis" className="mt-6">
-            <GapAnalysisNew />
+            <GapAnalysisClean />
           </TabsContent>
         </Tabs>
       </div>
