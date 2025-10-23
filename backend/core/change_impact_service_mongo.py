@@ -161,33 +161,54 @@ class ChangeImpactServiceMongo:
                 similarities.sort(key=lambda x: x['confidence'], reverse=True)
                 top_matches = similarities[:top_k]
                 
-                # Generate impacts
+                # Generate impacts with new unified structure
                 for match in top_matches:
                     section = match['section']
                     confidence = match['confidence']
                     
-                    # Generate rationale
+                    # Extract document number from doc_name (e.g., "7.3-3 QSP 7.3-3 R9..." -> "7.3-3")
+                    doc_name = section['doc_name']
+                    doc_number_match = re.match(r'^(\d+\.\d+-\d+|\d+\.\d+)', doc_name)
+                    qsp_doc = doc_number_match.group(1) if doc_number_match else doc_name.split()[0]
+                    
+                    # Generate rationale without confidence score
                     if confidence > 0.75:
-                        strength = "strong"
+                        strength = "Strong"
                     elif confidence > 0.65:
-                        strength = "moderate"
+                        strength = "Moderate"
                     else:
-                        strength = "potential"
+                        strength = "Potential"
                     
-                    rationale = (
-                        f"The change to {clause_id} has a {strength} semantic match "
-                        f"(confidence: {confidence:.2f}) with QSP section '{section['heading']}'. "
-                        f"This suggests the internal procedure may need review."
-                    )
+                    # Create human-readable rationale
+                    if change_type.lower() == 'added' or change_type.lower() == 'new':
+                        rationale = (
+                            f"{strength} match: New regulatory requirement introduced in clause {clause_id}. "
+                            f"Review QSP section '{section['heading']}' to ensure alignment with new requirements."
+                        )
+                    elif change_type.lower() == 'modified':
+                        rationale = (
+                            f"{strength} match: Regulatory clause {clause_id} has been modified. "
+                            f"QSP section '{section['heading']}' may require updates to maintain compliance."
+                        )
+                    elif change_type.lower() == 'deleted':
+                        rationale = (
+                            f"{strength} match: Regulatory clause {clause_id} has been removed. "
+                            f"Review QSP section '{section['heading']}' for potential simplification or removal."
+                        )
+                    else:
+                        rationale = (
+                            f"{strength} match: Change to regulatory clause {clause_id}. "
+                            f"Review QSP section '{section['heading']}' for consistency."
+                        )
                     
+                    # New unified structure (without confidence)
                     all_impacts.append({
-                        'impact_id': str(uuid.uuid4()),
-                        'clause_id': clause_id,
-                        'change_type': change_type,
-                        'qsp_doc': section['doc_name'],
-                        'section_path': section['section_path'],
-                        'heading': section['heading'],
-                        'confidence': round(confidence, 3),
+                        'reg_clause': clause_id,
+                        'change_type': change_type.capitalize(),
+                        'qsp_doc': qsp_doc,
+                        'qsp_clause': section['section_path'] if section['section_path'] else 'Unknown',
+                        'qsp_text': section['text'][:200] if len(section['text']) > 200 else section['text'],  # Preview (first 200 chars)
+                        'qsp_text_full': section['text'],  # Full text for modal/expansion
                         'rationale': rationale
                     })
                 
