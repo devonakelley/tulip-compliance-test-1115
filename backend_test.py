@@ -524,6 +524,7 @@ software lifecycle processes, and cybersecurity considerations for medical devic
     def login_admin_user(self):
         """Login with admin credentials from review request"""
         try:
+            # First try the admin credentials from review request
             login_data = {
                 "email": "admin@tulipmedical.com",
                 "password": "admin123"  # Updated password from review request
@@ -539,11 +540,60 @@ software lifecycle processes, and cybersecurity considerations for medical devic
                 self.log_test("Admin User Login", True, f"Logged in admin user: {login_data['email']}")
                 return True
             else:
-                self.log_test("Admin User Login", False, f"Status: {response.status_code}, Response: {response.text}")
+                # If admin login fails, create a new test user
+                self.log_test("Admin User Login", False, f"Admin login failed: {response.status_code}, trying to create test user...")
+                return self.create_and_login_test_user()
+                
+        except Exception as e:
+            self.log_test("Admin User Login", False, f"Exception: {str(e)}, trying to create test user...")
+            return self.create_and_login_test_user()
+
+    def create_and_login_test_user(self):
+        """Create and login with a new test user for QSP testing"""
+        try:
+            import uuid
+            
+            # Create unique test credentials
+            test_email = f"qsp_test_{str(uuid.uuid4())[:8]}@example.com"
+            test_password = "TestPassword123!"
+            
+            # Create tenant
+            tenant_data = {
+                "name": "QSP Test Tenant",
+                "plan": "enterprise"
+            }
+            
+            tenant_response = requests.post(f"{self.api_url}/auth/tenant/create", json=tenant_data, timeout=10)
+            
+            if tenant_response.status_code == 200:
+                tenant = tenant_response.json()
+                tenant_id = tenant["id"]
+            else:
+                tenant_id = "qsp-test-tenant"
+            
+            # Register test user
+            user_data = {
+                "email": test_email,
+                "password": test_password,
+                "tenant_id": tenant_id,
+                "full_name": "QSP Test User"
+            }
+            
+            register_response = requests.post(f"{self.api_url}/auth/register", json=user_data, timeout=10)
+            
+            if register_response.status_code == 200:
+                token_data = register_response.json()
+                self.auth_token = token_data["access_token"]
+                self.tenant_id = token_data["tenant_id"]
+                self.user_id = token_data["user_id"]
+                self.log_test("Test User Creation", True, f"Created and logged in test user: {test_email}")
+                return True
+            else:
+                self.log_test("Test User Creation", False, f"Failed to create test user: {register_response.status_code}")
                 return False
                 
         except Exception as e:
-            self.log_test("Admin User Login", False, f"Exception: {str(e)}")
+            self.log_test("Test User Creation", False, f"Exception: {str(e)}")
             return False
 
     def create_test_regulatory_document(self):
