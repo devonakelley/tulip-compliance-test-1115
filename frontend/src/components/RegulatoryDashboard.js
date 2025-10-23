@@ -109,6 +109,21 @@ const RegulatoryDashboard = () => {
     }
   };
   
+  const handleDeleteRegDoc = async (docId) => {
+    if (!window.confirm('Are you sure you want to delete this regulatory document?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API}/api/rag/regulatory-docs/${docId}`);
+      toast.success('Document deleted successfully');
+      fetchRegulatoryDocs(); // Refresh list
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast.error('Failed to delete document');
+    }
+  };
+
   const processDiff = async () => {
     if (!oldPdf || !newPdf) {
       toast.error('Please upload both old and new versions');
