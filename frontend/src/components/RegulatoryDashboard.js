@@ -607,10 +607,23 @@ const RegulatoryDashboard = () => {
       {/* Uploaded Regulatory Documents */}
       <Card>
         <CardHeader>
-          <CardTitle>Uploaded Regulatory Documents</CardTitle>
-          <CardDescription>
-            Manage your uploaded regulatory standards
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Uploaded Regulatory Documents</CardTitle>
+              <CardDescription>
+                Manage your uploaded regulatory standards
+              </CardDescription>
+            </div>
+            {regulatoryDocs.length > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDeleteAllRegDocs}
+              >
+                Delete All ({regulatoryDocs.length})
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {loadingRegDocs ? (
