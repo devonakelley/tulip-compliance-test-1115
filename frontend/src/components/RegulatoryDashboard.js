@@ -102,6 +102,7 @@ const RegulatoryDashboard = () => {
       
       setNewPdf(response.data);
       toast.success('New version uploaded', { id: 'new-upload' });
+      fetchRegulatoryDocs(); // Refresh list
     } catch (error) {
       console.error(error);
       toast.error('Failed to upload new version', { id: 'new-upload' });
