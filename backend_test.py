@@ -2753,7 +2753,7 @@ Enhanced post-market surveillance requirements including systematic collection a
         
         try:
             response = requests.delete(f"{self.api_url}/rag/regulatory-docs/all", timeout=10)
-            auth_required = response.status_code == 401
+            auth_required = response.status_code in [401, 403]  # Both 401 and 403 are valid auth failures
             print(f"   Authentication Required: {'✅' if auth_required else '❌'} (Status: {response.status_code})")
         except Exception as e:
             print(f"   Authentication test failed: {e}")
