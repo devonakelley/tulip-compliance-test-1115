@@ -67,24 +67,33 @@ const GapAnalysis = () => {
 
     try {
       setExporting(true);
+      toast.loading('Generating CSV...', { id: 'csv-export' });
+      
       const response = await axios.get(
         `${API}/api/impact/report/${runId}?format=csv`,
-        { responseType: 'blob' }
+        { 
+          responseType: 'blob',
+          headers: {
+            'Accept': 'text/csv'
+          }
+        }
       );
 
       // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `gap_analysis_${runId}.csv`);
+      const timestamp = new Date().toISOString().slice(0, 10);
+      link.setAttribute('download', `gap_analysis_${timestamp}_${runId}.csv`);
       document.body.appendChild(link);
       link.click();
       link.remove();
+      window.URL.revokeObjectURL(url);
 
-      toast.success('CSV exported successfully');
+      toast.success('CSV exported successfully', { id: 'csv-export' });
     } catch (error) {
       console.error('Error exporting CSV:', error);
-      toast.error('Failed to export CSV');
+      toast.error(error.response?.data?.message || 'Failed to export CSV', { id: 'csv-export' });
     } finally {
       setExporting(false);
     }
