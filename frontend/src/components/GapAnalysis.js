@@ -103,17 +103,6 @@ const GapAnalysis = () => {
     }
   };
 
-  const getConfidenceBadge = (confidence) => {
-    const percent = (confidence * 100).toFixed(0);
-    if (confidence > 0.75) {
-      return <Badge className="bg-green-500">High: {percent}%</Badge>;
-    } else if (confidence > 0.60) {
-      return <Badge className="bg-yellow-500">Medium: {percent}%</Badge>;
-    } else {
-      return <Badge className="bg-gray-500">Low: {percent}%</Badge>;
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div>
