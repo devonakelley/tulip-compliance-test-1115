@@ -289,7 +289,7 @@ const GapAnalysis = () => {
                   <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-3" />
                   <p className="text-gray-600 font-medium">No impacts found</p>
                   <p className="text-sm text-gray-500 mt-1">
-                    The regulatory changes may not affect your current QSP sections, or the confidence threshold is too high.
+                    The regulatory changes may not affect your current QSP sections.
                   </p>
                 </div>
               )}
