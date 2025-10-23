@@ -7,10 +7,7 @@ import '@/App.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './components/Login';
 import ProtectedRoute from './components/ProtectedRoute';
-import Reports from './components/Reports';
-import ChangeImpactDetector from './components/ChangeImpactDetector';
-import RegulatoryDashboard from './components/RegulatoryDashboard';
-import LandingPage from './pages/LandingPage';
+import MainWorkflow from './components/MainWorkflow';
 
 // Shadcn UI Components
 import { Button } from '@/components/ui/button';
