@@ -13,6 +13,8 @@ const QSPUpload = () => {
   const [mapping, setMapping] = useState(false);
   const [uploadedDocs, setUploadedDocs] = useState([]);
   const [mappingResults, setMappingResults] = useState(null);
+  const [qspDocuments, setQspDocuments] = useState([]);
+  const [loadingDocs, setLoadingDocs] = useState(false);
 
   const handleFileSelect = (event) => {
     const selectedFiles = Array.from(event.target.files);
