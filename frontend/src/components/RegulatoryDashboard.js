@@ -126,6 +126,21 @@ const RegulatoryDashboard = () => {
     }
   };
 
+  const handleDeleteAllRegDocs = async () => {
+    if (!window.confirm(`Are you sure you want to delete ALL ${regulatoryDocs.length} regulatory documents? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API}/api/rag/regulatory-docs/all`);
+      toast.success('All regulatory documents deleted successfully');
+      fetchRegulatoryDocs(); // Refresh list
+    } catch (error) {
+      console.error('Error deleting all documents:', error);
+      toast.error('Failed to delete all documents');
+    }
+  };
+
   const processDiff = async () => {
     if (!oldPdf || !newPdf) {
       toast.error('Please upload both old and new versions');
