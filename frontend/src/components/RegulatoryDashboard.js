@@ -173,6 +173,10 @@ const RegulatoryDashboard = () => {
       const response = await axios.post(`${API}/api/regulatory/preprocess/iso_diff`, formData);
       
       setDeltas(response.data);
+      
+      // Save diff results to localStorage for Gap Analysis tab
+      localStorage.setItem('regulatory_diff', JSON.stringify(response.data));
+      
       toast.success(`Found ${response.data.total_changes} changes`, { id: 'diff' });
     } catch (error) {
       console.error(error);
