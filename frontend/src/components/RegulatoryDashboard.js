@@ -589,31 +589,52 @@ const RegulatoryDashboard = () => {
         </Card>
       )}
       
-      {/* Instructions */}
-      {!deltas && (
-        <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="pt-6">
-            <div className="flex gap-4">
-              <div className="flex-shrink-0">
-                <div className="h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
-                  ?
-                </div>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2">How to Use This Dashboard</h3>
-                <ol className="space-y-2 text-sm">
-                  <li>1. Upload the <strong>old version</strong> of your regulatory standard (e.g., ISO 13485:2016)</li>
-                  <li>2. Upload the <strong>new version</strong> (e.g., ISO 13485:2024)</li>
-                  <li>3. Click <strong>"Generate Diff"</strong> to automatically detect all changes</li>
-                  <li>4. Review the detected changes (added, modified, deleted clauses)</li>
-                  <li>5. Click <strong>"Run Impact Analysis"</strong> to see which QSP sections need updating</li>
-                  <li>6. Export the report for your QA/RA team to review</li>
-                </ol>
-              </div>
+      {/* Uploaded Regulatory Documents */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Uploaded Regulatory Documents</CardTitle>
+          <CardDescription>
+            Manage your uploaded regulatory standards
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loadingRegDocs ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ) : regulatoryDocs.length > 0 ? (
+            <div className="space-y-3">
+              {regulatoryDocs.map((doc) => (
+                <div key={doc.doc_id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                  <div className="flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <p className="font-medium">{doc.doc_name}</p>
+                      <p className="text-sm text-gray-500">
+                        {doc.framework} • {doc.chunk_count || 0} chunks
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeleteRegDoc(doc.doc_id)}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <XCircle className="h-4 w-4 mr-1" />
+                    Delete
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+              <p>No regulatory documents uploaded yet</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
