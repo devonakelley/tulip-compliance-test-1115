@@ -547,6 +547,53 @@ async def upload_qsp_document(
         logger.error(f"Error uploading document: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.delete("/documents/all")
+async def delete_all_qsp_documents(
+    current_user: dict = Depends(get_current_user)
+):
+    """Delete ALL QSP documents for current tenant - Use with caution!"""
+    try:
+        tenant_id = current_user["tenant_id"]
+        
+        # Count documents before deletion
+        count = await db.qsp_documents.count_documents({"tenant_id": tenant_id})
+        
+        if count == 0:
+            return {
+                "success": True,
+                "message": "No documents to delete",
+                "deleted_count": 0
+            }
+        
+        # Delete all QSP documents for this tenant
+        result = await db.qsp_documents.delete_many({"tenant_id": tenant_id})
+        
+        # Delete all related clause mappings
+        await db.clause_mappings.delete_many({"tenant_id": tenant_id})
+        
+        # Log the deletion
+        await audit_logger.log_action(
+            tenant_id=tenant_id,
+            user_id=current_user["user_id"],
+            action="delete_all_qsp_documents",
+            target=f"all_{result.deleted_count}_documents",
+            metadata={
+                "deleted_count": result.deleted_count
+            }
+        )
+        
+        logger.warning(f"Deleted ALL {result.deleted_count} QSP documents for tenant {tenant_id}")
+        
+        return {
+            "success": True,
+            "message": f"Deleted all {result.deleted_count} documents",
+            "deleted_count": result.deleted_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Error deleting all documents: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.delete("/documents/{doc_id}")
 async def delete_qsp_document(
     doc_id: str,
