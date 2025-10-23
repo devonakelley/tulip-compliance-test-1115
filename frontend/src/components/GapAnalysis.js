@@ -227,6 +227,12 @@ const GapAnalysis = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {/* Disclaimer */}
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-xs text-blue-900 italic">
+                  ⚠️ Certaro makes intelligent suggestions for human teams to review.
+                </p>
+              </div>
               {analysisResults.impacts && analysisResults.impacts.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
