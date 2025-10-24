@@ -4197,11 +4197,22 @@ def main():
             except Exception as e:
                 print(f"\n💥 Unexpected error during QSP parser validation tests: {str(e)}")
                 return 1
+        elif sys.argv[1] == "--qsp-deletion":
+            tester = QSPComplianceAPITester()
+            try:
+                success = tester.run_qsp_deletion_and_clause_mapping_tests()
+                return 0 if success else 1
+            except KeyboardInterrupt:
+                print("\n⏹️  QSP deletion and clause mapping tests interrupted by user")
+                return 1
+            except Exception as e:
+                print(f"\n💥 Unexpected error during QSP deletion tests: {str(e)}")
+                return 1
     else:
-        # Run QSP Parser Validation Tests by default (as requested in review)
+        # Run QSP Deletion and Clause Mapping Tests by default (as requested in review)
         tester = QSPComplianceAPITester()
         try:
-            success = tester.run_qsp_parser_validation_testing()
+            success = tester.run_qsp_deletion_and_clause_mapping_tests()
             return 0 if success else 1
         except KeyboardInterrupt:
             print("\n⏹️  Tests interrupted by user")
