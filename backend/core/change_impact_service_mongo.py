@@ -119,7 +119,16 @@ class ChangeImpactServiceMongo:
                 # Use run_sync for async operation in sync context
                 import asyncio
                 try:
-                    # Store in MongoDB collection
+                    # Clear existing sections for this tenant and doc before inserting new ones
+                    # This ensures idempotency - can run multiple times without duplicates
+                    asyncio.get_event_loop().run_until_complete(
+                        self.db.qsp_sections.delete_many({
+                            'tenant_id': tenant_id,
+                            'doc_id': doc_id
+                        })
+                    )
+                    
+                    # Now insert the new sections
                     asyncio.get_event_loop().run_until_complete(
                         self.db.qsp_sections.insert_many(embedded_sections)
                     )
@@ -128,6 +137,16 @@ class ChangeImpactServiceMongo:
                     # If no event loop, create one
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
+                    
+                    # Clear existing sections first
+                    loop.run_until_complete(
+                        self.db.qsp_sections.delete_many({
+                            'tenant_id': tenant_id,
+                            'doc_id': doc_id
+                        })
+                    )
+                    
+                    # Insert new sections
                     loop.run_until_complete(
                         self.db.qsp_sections.insert_many(embedded_sections)
                     )
