@@ -386,7 +386,9 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "QSP document deletion functionality (single and batch)"
+    - "MongoDB BulkWriteError fix for clause mapping"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
