@@ -131,6 +131,15 @@ const QSPUploadClean = () => {
 
       if (response.data && response.data.success) {
         setMappingComplete(true);
+        
+        // Save mapping confirmation to localStorage for Gap Analysis check
+        localStorage.setItem('clause_map', JSON.stringify({
+          success: true,
+          total_qsp_documents: response.data.total_qsp_documents,
+          total_clauses_mapped: response.data.total_clauses_mapped,
+          timestamp: new Date().toISOString()
+        }));
+        
         toast.success(
           `✅ Mapped ${response.data.total_clauses_mapped} clauses from ${response.data.total_qsp_documents} documents`,
           { id: 'mapping' }
