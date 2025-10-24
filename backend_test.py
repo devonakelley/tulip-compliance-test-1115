@@ -3461,7 +3461,7 @@ Enhanced post-market surveillance requirements including systematic collection a
         
         # Generate summary
         return self.generate_qsp_deletion_summary(
-            upload1_success and upload2_success,
+            upload1_success and upload2_success and upload3_success,
             single_delete_success,
             clause_mapping_success,
             batch_delete_success,
