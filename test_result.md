@@ -357,15 +357,18 @@ frontend:
 
   - task: "QSP document deletion functionality (single and batch)"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/components/QSPUploadClean.js, /app/backend/api/regulatory_upload.py"
     stuck_count: 0
     priority: "critical"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "IMPLEMENTED QSP DOCUMENT DELETION: 1) Frontend (QSPUploadClean.js) - Connected delete buttons with proper confirmation dialogs, loading states, success/error handling, clears localStorage clause_map on deletion, 2) Backend (regulatory_upload.py) - Created DELETE /api/regulatory/delete/qsp/{filename} for single document deletion, DELETE /api/regulatory/delete/qsp/all for batch deletion, both endpoints clear MongoDB qsp_sections to force re-mapping after deletion. Backend restarted successfully. READY FOR TESTING: Test single document deletion with confirmation, test delete all with double confirmation, verify MongoDB sections cleared, verify frontend updates document list after deletion."
+      - working: true
+        agent: "testing"
+        comment: "✅ QSP DOCUMENT DELETION FULLY TESTED AND WORKING! COMPREHENSIVE TEST RESULTS: 1) Single Document Deletion (DELETE /api/regulatory/delete/qsp/{filename}) - ✅ WORKING: Successfully deletes specific QSP documents by filename, properly clears MongoDB qsp_sections for tenant, returns correct success response format. 2) Batch Deletion (DELETE /api/regulatory/delete/qsp/all) - ✅ WORKING: Successfully deletes all QSP documents for current tenant, returns accurate deleted_count, properly clears MongoDB qsp_sections. 3) Tenant Isolation - ✅ VERIFIED: All deletion operations properly filter by tenant_id, no cross-tenant data access. 4) File System Operations - ✅ WORKING: Documents properly deleted from /app/backend/data/qsp_docs/{tenant_id}/ directory. FIXES APPLIED: Fixed route ordering issue (moved /delete/qsp/all before /delete/qsp/{filename} to prevent path conflicts), corrected directory paths from INTERNAL_DOCS_DIR to QSP_DOCS_DIR. All deletion functionality is production-ready."
 
   - task: "MongoDB BulkWriteError fix for clause mapping"
     implemented: true
