@@ -629,7 +629,7 @@ async def delete_all_qsp_documents(
     """Delete ALL QSP documents for current tenant"""
     try:
         tenant_id = current_user["tenant_id"]
-        tenant_dir = INTERNAL_DOCS_DIR / tenant_id / "qsp"
+        tenant_dir = QSP_DOCS_DIR / tenant_id
         
         deleted_count = 0
         
