@@ -83,7 +83,7 @@ class AuthService:
                 detail="Token has expired",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        except jwt.JWTError:
+        except (jwt.InvalidTokenError, jwt.DecodeError, jwt.InvalidSignatureError):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Could not validate credentials",
