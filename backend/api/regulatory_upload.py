@@ -549,6 +549,25 @@ async def map_clauses(
                         sections=sections
                     )
                     
+                    # Handle MongoDB persistence if there are pending operations
+                    if hasattr(impact_service, '_pending_mongo_operations'):
+                        pending = impact_service._pending_mongo_operations
+                        
+                        # Clear existing sections for this doc first (idempotency)
+                        await db.qsp_sections.delete_many({
+                            'tenant_id': pending['tenant_id'],
+                            'doc_id': pending['doc_id']
+                        })
+                        
+                        # Insert new sections
+                        if pending['sections']:
+                            await db.qsp_sections.insert_many(pending['sections'])
+                        
+                        logger.info(f"✅ Persisted {pending['count']} sections to MongoDB for {file_path.name}")
+                        
+                        # Clear pending operations
+                        delattr(impact_service, '_pending_mongo_operations')
+                    
                     total_documents += 1
                     total_clauses += result['sections_embedded']
                     
