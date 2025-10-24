@@ -588,7 +588,7 @@ async def delete_qsp_document(
     """Delete a specific QSP document by filename"""
     try:
         tenant_id = current_user["tenant_id"]
-        tenant_dir = INTERNAL_DOCS_DIR / tenant_id / "qsp"
+        tenant_dir = QSP_DOCS_DIR / tenant_id
         
         if not tenant_dir.exists():
             raise HTTPException(status_code=404, detail="No QSP documents found")
