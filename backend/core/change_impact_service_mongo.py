@@ -116,42 +116,14 @@ class ChangeImpactServiceMongo:
             
             # Persist to MongoDB if available
             if self.db is not None:
-                # Use run_sync for async operation in sync context
-                import asyncio
-                try:
-                    # Clear existing sections for this tenant and doc before inserting new ones
-                    # This ensures idempotency - can run multiple times without duplicates
-                    asyncio.get_event_loop().run_until_complete(
-                        self.db.qsp_sections.delete_many({
-                            'tenant_id': tenant_id,
-                            'doc_id': doc_id
-                        })
-                    )
-                    
-                    # Now insert the new sections
-                    asyncio.get_event_loop().run_until_complete(
-                        self.db.qsp_sections.insert_many(embedded_sections)
-                    )
-                    logger.info(f"✅ Persisted {embedded_count} sections to MongoDB")
-                except RuntimeError:
-                    # If no event loop, create one
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-                    
-                    # Clear existing sections first
-                    loop.run_until_complete(
-                        self.db.qsp_sections.delete_many({
-                            'tenant_id': tenant_id,
-                            'doc_id': doc_id
-                        })
-                    )
-                    
-                    # Insert new sections
-                    loop.run_until_complete(
-                        self.db.qsp_sections.insert_many(embedded_sections)
-                    )
-                    loop.close()
-                    logger.info(f"✅ Persisted {embedded_count} sections to MongoDB (new loop)")
+                # Store for async processing - we'll handle this in the calling async function
+                self._pending_mongo_operations = {
+                    'tenant_id': tenant_id,
+                    'doc_id': doc_id,
+                    'sections': embedded_sections,
+                    'count': embedded_count
+                }
+                logger.info(f"✅ Prepared {embedded_count} sections for MongoDB persistence")
             
             logger.info(f"Ingested {embedded_count} sections for doc {doc_name}")
             
