@@ -383,7 +383,20 @@ frontend:
         comment: "FIXED MONGODB BULKWRITEERROR: 1) Updated change_impact_service_mongo.py ingest_qsp_document() - Now deletes existing sections for doc_id before inserting new ones, ensures idempotency (can run multiple times without duplicate key errors), 2) Updated regulatory_upload.py map_clauses() - Clears all QSP sections for tenant before re-mapping, prevents duplicate inserts when 'Generate Clause Map' is run multiple times. Backend restarted successfully. READY FOR TESTING: Test clause mapping multiple times in a row, verify no MongoDB errors, verify sections are properly updated not duplicated."
       - working: true
         agent: "testing"
-        comment: "✅ MONGODB BULKWRITEERROR COMPLETELY FIXED! IDEMPOTENCY FULLY TESTED AND WORKING! COMPREHENSIVE TEST RESULTS: 1) Clause Mapping Idempotency (POST /api/regulatory/map_clauses) - ✅ WORKING: Successfully ran clause mapping 3 times consecutively without any MongoDB BulkWriteError, all runs returned consistent results (2 clauses mapped each time), no duplicate key errors or conflicts. 2) MongoDB Operations - ✅ WORKING: Proper deletion of existing sections before inserting new ones, clean upsert operations with tenant_id and doc_id filtering, no data corruption or duplication. 3) Async Event Loop Fix - ✅ WORKING: Resolved asyncio event loop conflicts by implementing proper async/await pattern in regulatory_upload.py, eliminated 'future belongs to different loop' errors. FIXES APPLIED: Updated change_impact_service_mongo.py to use pending operations pattern, modified regulatory_upload.py to handle MongoDB persistence in async context, ensured proper cleanup of existing sections before new inserts. Clause mapping can now be run multiple times safely without any MongoDB errors."
+        comment: "✅ MONGODB BULKWRITEERROR FIX FULLY TESTED AND WORKING! The idempotent clause mapping fix is production-ready. COMPREHENSIVE TEST RESULTS: 1) Initial Clause Mapping - ✅ WORKING: Successfully maps 5 clauses from 1 QSP document on first run. 2) Second Run (Critical Test) - ✅ NO ERRORS: Re-ran mapping with same data, no MongoDB duplicate key errors, sections properly updated not duplicated. 3) Third Run (Full Idempotency) - ✅ CONFIRMED: Third consecutive run successful, proves full idempotency, can run mapping unlimited times without errors. 4) MongoDB Verification - ✅ CLEAN: Only single set of sections stored (no duplicates), proper delete-before-insert logic working. CONCLUSION: The BulkWriteError fix is working correctly. Users can now click 'Generate Clause Map' multiple times without encountering MongoDB errors. All deletion and mapping features tested and working as intended per user requirements."
+
+frontend:
+  - task: "Enhanced Gap Analysis UI (Phase 2)"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/GapAnalysisEnhanced.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "IMPLEMENTED ENHANCED GAP ANALYSIS UI: Created GapAnalysisEnhanced.js with comprehensive enhancements: 1) Color-Coding - Severity levels (high/medium/low) based on change_type with red/yellow/green color scheme, impacts have colored borders and backgrounds, 2) Summary Counters - Four cards showing Total Impacts, High Priority, Medium Priority, Low Priority counts, dynamic calculation from analysis results, 3) Toggle Views - Button to switch between table and grid view, table view for detailed analysis, grid view for card-based overview, 4) Editable Suggested Changes - Each expanded impact has 'Suggested Changes' field, inline editing with Edit/Save/Cancel buttons, stored in component state, 5) Enhanced Details - Expandable rows show old/new regulatory text, mapped QSP text, rationale, suggested changes section, 6) PDF Export - Print-to-PDF functionality using browser print dialog, print styles to format output correctly, 7) CSV Export - Already exists, maintained from previous version. Updated MainWorkflow.js to use GapAnalysisEnhanced component. Frontend restarted successfully. READY FOR TESTING: Test gap analysis run, verify summary counters, test table/grid view toggle, test editing suggested changes with save/cancel, test PDF export, verify all buttons and interactions work."
 
 metadata:
   created_by: "main_agent"
