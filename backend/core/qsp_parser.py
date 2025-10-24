@@ -335,7 +335,7 @@ class QSPParser:
     def _parse_text_into_sections(self, text: str, document_number: str) -> List[Dict[str, Any]]:
         """
         Parse plain text into sections based on heading patterns
-        Used for PDF and TXT files
+        Used for PDF and TXT files with improved clause detection
         """
         clauses = []
         lines = text.split('\n')
@@ -344,57 +344,73 @@ class QSPParser:
         current_clause_number = None
         current_text_parts = []
         
+        # Clause pattern: X.X.X Section Name
+        clause_pattern = r'^[0-9]+(\.[0-9]+)+\s+[A-Z][A-Za-z\s\-]+'
+        
         for line in lines:
             line = line.strip()
             if not line:
                 continue
             
-            # Check if line looks like a heading
-            # Criteria: short line (< 100 chars), starts with number, or all caps
-            is_heading = (
-                len(line) < 100 and (
-                    re.match(r'^\d+\.', line) or
-                    line.isupper()
-                )
-            )
+            # Skip noise
+            if self.is_noise_line(line):
+                continue
+            
+            # Check if line is a heading
+            is_heading = False
+            
+            # Pattern 1: Numbered clause (e.g., "4.2.1 Purpose")
+            if re.match(clause_pattern, line):
+                is_heading = True
+            
+            # Pattern 2: Common uppercase headers
+            elif line.upper() in ['PURPOSE', 'SCOPE', 'RESPONSIBILITIES', 'PROCEDURE', 'RECORDS', 
+                                  'DEFINITIONS', 'REFERENCES', 'ATTACHMENTS', 'FORMS', 'BACKGROUND']:
+                is_heading = True
+            
+            # Pattern 3: Short uppercase line (but not noise)
+            elif len(line) < 80 and line.isupper() and len(line) > 15:
+                is_heading = True
             
             if is_heading:
-                # Save previous section
-                if current_heading:
+                # Save previous section if it has content
+                if current_heading and current_text_parts:
                     section_text = '\n'.join(current_text_parts).strip()
-                    if not section_text:
-                        section_text = "No text found"
                     
-                    clauses.append({
-                        "document_number": document_number,
-                        "clause_number": current_clause_number or "Unknown",
-                        "title": current_heading,
-                        "text": section_text,
-                        "characters": len(section_text)
-                    })
+                    if len(section_text) >= 50:
+                        clauses.append({
+                            "document_number": document_number,
+                            "clause_number": current_clause_number if current_clause_number else f"{document_number}.{len(clauses)+1}",
+                            "title": current_heading,
+                            "text": section_text,
+                            "characters": len(section_text)
+                        })
                 
                 # Start new section
                 current_heading = line
                 current_clause_number = self.extract_clause_number(line)
+                
+                # Semantic naming for common headers without numbers
+                if not current_clause_number and line.upper() in ['PURPOSE', 'SCOPE', 'RESPONSIBILITIES', 'PROCEDURE', 'RECORDS']:
+                    current_clause_number = f"{document_number}.{line.upper()}"
+                
                 current_text_parts = []
             else:
-                # Accumulate text
-                if current_heading:
+                # Accumulate text (filter very short lines)
+                if current_heading and len(line) > 20:
                     current_text_parts.append(line)
         
-        # Save last section
-        if current_heading:
+        # Save last section if it has content
+        if current_heading and current_text_parts:
             section_text = '\n'.join(current_text_parts).strip()
-            if not section_text:
-                section_text = "No text found"
-            
-            clauses.append({
-                "document_number": document_number,
-                "clause_number": current_clause_number or "Unknown",
-                "title": current_heading,
-                "text": section_text,
-                "characters": len(section_text)
-            })
+            if len(section_text) >= 50:
+                clauses.append({
+                    "document_number": document_number,
+                    "clause_number": current_clause_number if current_clause_number else f"{document_number}.{len(clauses)+1}",
+                    "title": current_heading,
+                    "text": section_text,
+                    "characters": len(section_text)
+                })
         
         return clauses
     
