@@ -599,6 +599,41 @@ async def map_clauses(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.delete("/delete/qsp/all")
+async def delete_all_qsp_documents(
+    current_user: dict = Depends(get_current_user)
+):
+    """Delete ALL QSP documents for current tenant"""
+    try:
+        tenant_id = current_user["tenant_id"]
+        tenant_dir = QSP_DOCS_DIR / tenant_id
+        
+        deleted_count = 0
+        
+        if tenant_dir.exists():
+            # Delete all files in the QSP directory
+            for file_path in tenant_dir.glob("*"):
+                if file_path.is_file():
+                    file_path.unlink()
+                    deleted_count += 1
+                    logger.info(f"Deleted QSP document: {file_path.name}")
+        
+        # Clear MongoDB qsp_sections for this tenant
+        if db is not None:
+            result = await db.qsp_sections.delete_many({"tenant_id": tenant_id})
+            logger.info(f"Cleared {result.deleted_count} QSP sections for tenant {tenant_id}")
+        
+        return {
+            'success': True,
+            'deleted_count': deleted_count,
+            'message': f'Successfully deleted {deleted_count} QSP document(s)'
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to delete all QSP documents: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.delete("/delete/qsp/{filename}")
 async def delete_qsp_document(
     filename: str,
@@ -638,40 +673,5 @@ async def delete_qsp_document(
         raise
     except Exception as e:
         logger.error(f"Failed to delete QSP document: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.delete("/delete/qsp/all")
-async def delete_all_qsp_documents(
-    current_user: dict = Depends(get_current_user)
-):
-    """Delete ALL QSP documents for current tenant"""
-    try:
-        tenant_id = current_user["tenant_id"]
-        tenant_dir = QSP_DOCS_DIR / tenant_id
-        
-        deleted_count = 0
-        
-        if tenant_dir.exists():
-            # Delete all files in the QSP directory
-            for file_path in tenant_dir.glob("*"):
-                if file_path.is_file():
-                    file_path.unlink()
-                    deleted_count += 1
-                    logger.info(f"Deleted QSP document: {file_path.name}")
-        
-        # Clear MongoDB qsp_sections for this tenant
-        if db is not None:
-            result = await db.qsp_sections.delete_many({"tenant_id": tenant_id})
-            logger.info(f"Cleared {result.deleted_count} QSP sections for tenant {tenant_id}")
-        
-        return {
-            'success': True,
-            'deleted_count': deleted_count,
-            'message': f'Successfully deleted {deleted_count} QSP document(s)'
-        }
-        
-    except Exception as e:
-        logger.error(f"Failed to delete all QSP documents: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
