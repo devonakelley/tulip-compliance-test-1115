@@ -158,18 +158,65 @@ const QSPUploadClean = () => {
     setViewingClause(clause);
   };
 
-  const handleDeleteQSP = async (docId) => {
-    if (!window.confirm('Are you sure you want to delete this QSP document?')) {
+  const handleDeleteQSP = async (document) => {
+    if (!window.confirm(`Are you sure you want to delete "${document.filename}"? This will remove all its clauses.`)) {
       return;
     }
 
-    // TODO: Implement delete functionality when backend endpoint is ready
-    toast.info('Delete functionality coming soon');
+    try {
+      // Since QSPs are stored per-parsed document, we need to delete by using the document structure
+      // The QSP upload endpoint returns documents with their full structure
+      // We'll need to implement a proper delete endpoint or use the document ID
+      
+      toast.loading('Deleting document...', { id: 'delete-doc' });
+      
+      // Try to delete using the document structure (filename-based or ID-based)
+      const response = await axios.delete(
+        `${API}/api/regulatory/delete/qsp/${encodeURIComponent(document.filename || document.document_number)}`,
+        { headers: getAuthHeaders() }
+      );
+
+      if (response.data && response.data.success) {
+        toast.success('Document deleted successfully', { id: 'delete-doc' });
+        fetchQSPDocuments();
+        setMappingComplete(false); // Reset mapping status since documents changed
+        localStorage.removeItem('clause_map');
+      }
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      const errorMsg = error.response?.data?.detail || 'Failed to delete document';
+      toast.error(errorMsg, { id: 'delete-doc' });
+    }
   };
 
   const handleDeleteAllQSPs = async () => {
-    // TODO: Implement delete all functionality when backend endpoint is ready
-    toast.info('Delete all functionality coming soon');
+    if (!window.confirm('⚠️ WARNING: This will delete ALL QSP documents and their clause mappings. Are you sure?')) {
+      return;
+    }
+
+    if (!window.confirm('This action cannot be undone. Click OK to proceed with deletion.')) {
+      return;
+    }
+
+    try {
+      toast.loading('Deleting all documents...', { id: 'delete-all' });
+      
+      const response = await axios.delete(
+        `${API}/api/regulatory/delete/qsp/all`,
+        { headers: getAuthHeaders() }
+      );
+
+      if (response.data && response.data.success) {
+        toast.success(`Deleted ${response.data.deleted_count} document(s)`, { id: 'delete-all' });
+        setQspDocuments([]);
+        setMappingComplete(false);
+        localStorage.removeItem('clause_map');
+      }
+    } catch (error) {
+      console.error('Error deleting all documents:', error);
+      const errorMsg = error.response?.data?.detail || 'Failed to delete documents';
+      toast.error(errorMsg, { id: 'delete-all' });
+    }
   };
 
   return (
