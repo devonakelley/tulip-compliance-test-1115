@@ -3513,9 +3513,6 @@ Enhanced post-market surveillance requirements including systematic collection a
                 print("   - Tenant isolation may not be properly enforced")
         
         return passed_tests == total_tests
-        else:
-            print("\n4️⃣ Skipping ISO Diff Processing - PDF uploads failed")
-            diff_success = False
         
         # 5. Verify file storage in tenant directory
         print("\n5️⃣ Verifying File Storage in Tenant Directory")
