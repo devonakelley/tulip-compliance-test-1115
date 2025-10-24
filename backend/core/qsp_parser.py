@@ -67,21 +67,30 @@ class QSPParser:
             return "Unknown"
     
     def is_heading_paragraph(self, paragraph) -> bool:
-        """Check if a paragraph is a heading"""
+        """Check if a paragraph is a heading using proper clause pattern"""
         if not paragraph.text.strip():
             return False
         
-        # Check style name
-        if paragraph.style and paragraph.style.name in self.heading_styles:
+        text = paragraph.text.strip()
+        
+        # Primary pattern: X.X.X Section Name (e.g., "4.2.1 Purpose")
+        clause_pattern = r'^[0-9]+(\.[0-9]+)+\s+[A-Z][A-Za-z\s\-]+'
+        if re.match(clause_pattern, text):
             return True
         
-        # Check if text looks like a heading (short, may have numbering)
-        text = paragraph.text.strip()
-        if len(text) < 100 and (
-            re.match(r'^\d+\.', text) or  # Starts with number
-            re.match(r'^[A-Z][^.!?]*$', text) or  # All caps or title case, no sentence ending
-            text.isupper()  # All uppercase
-        ):
+        # Secondary pattern: Common QSP section headers (uppercase)
+        common_headers = ['PURPOSE', 'SCOPE', 'RESPONSIBILITIES', 'PROCEDURE', 'RECORDS', 
+                         'DEFINITIONS', 'REFERENCES', 'ATTACHMENTS', 'FORMS', 'BACKGROUND']
+        if text.upper() in common_headers:
+            return True
+        
+        # Check if styled as heading
+        if paragraph.style and paragraph.style.name in self.heading_styles:
+            # But filter out noise
+            noise_patterns = ['TULIP', 'MEDICAL', 'DATE', 'SIGNATURE', 'APPROVAL', 
+                            'COORDINATOR', 'MANAGER', 'FORM', 'PAGE', 'REV', 'DOCUMENT']
+            if any(noise.lower() in text.lower() for noise in noise_patterns):
+                return False
             return True
         
         return False
@@ -96,7 +105,7 @@ class QSPParser:
         """
         try:
             # Pattern for X.X.X or X.X format at start of heading
-            pattern = r'^(\d+(?:\.\d+)*)'
+            pattern = r'^(?:Section\s+)?(\d+(?:\.\d+)+)'
             match = re.search(pattern, heading_text.strip())
             if match:
                 return match.group(1)
@@ -104,6 +113,33 @@ class QSPParser:
         except Exception as e:
             logger.error(f"Failed to extract clause number from '{heading_text}': {e}")
             return None
+    
+    def is_noise_line(self, text: str) -> bool:
+        """Filter out noise lines that aren't real sections"""
+        if not text or len(text.strip()) < 3:
+            return True
+        
+        text_upper = text.upper().strip()
+        
+        # Common noise patterns
+        noise_keywords = [
+            'TULIP MEDICAL', 'TULIP', 'MEDICAL', 
+            'SIGNATURE', 'DATE', 'APPROVAL', 'APPROVED BY',
+            'REGULATORY AFFAIRS', 'QUALITY ASSURANCE',
+            'FORM', 'PAGE', 'REV', 'REVISION',
+            'DOCUMENT CONTROL', 'TITLE:', 'NUMBER:',
+            'EFFECTIVE DATE', 'PREPARED BY', 'REVIEWED BY'
+        ]
+        
+        for noise in noise_keywords:
+            if noise in text_upper:
+                return True
+        
+        # Filter very short lines (likely not real content)
+        if len(text.strip()) < 15 and not re.match(r'^\d+(\.\d+)+', text):
+            return True
+        
+        return False
     
     def parse_docx(self, file_content: bytes, filename: str) -> Dict[str, Any]:
         """
