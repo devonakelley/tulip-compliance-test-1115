@@ -82,7 +82,7 @@ class ChangeImpactServiceMongo:
     ) -> Dict[str, Any]:
         """
         Ingest QSP document sections and generate embeddings
-        Stores in memory for demo (can be extended to MongoDB)
+        Stores in MongoDB for persistence (with in-memory cache for performance)
         """
         try:
             embedded_count = 0
@@ -90,11 +90,13 @@ class ChangeImpactServiceMongo:
             if tenant_id not in self.qsp_sections:
                 self.qsp_sections[tenant_id] = []
             
+            embedded_sections = []
+            
             for section in sections:
                 full_text = f"{section['heading']}: {section['text']}"
                 embedding = self._get_embedding(full_text)
                 
-                self.qsp_sections[tenant_id].append({
+                section_data = {
                     'section_id': str(uuid.uuid4()),
                     'doc_id': doc_id,
                     'doc_name': doc_name,
@@ -102,10 +104,35 @@ class ChangeImpactServiceMongo:
                     'heading': section['heading'],
                     'text': section['text'],
                     'version': section.get('version', 'unknown'),
-                    'embedding': embedding
-                })
+                    'embedding': embedding,
+                    'tenant_id': tenant_id,
+                    'created_at': datetime.utcnow()
+                }
                 
+                # Add to in-memory cache
+                self.qsp_sections[tenant_id].append(section_data)
+                embedded_sections.append(section_data)
                 embedded_count += 1
+            
+            # Persist to MongoDB if available
+            if self.db is not None:
+                # Use run_sync for async operation in sync context
+                import asyncio
+                try:
+                    # Store in MongoDB collection
+                    asyncio.get_event_loop().run_until_complete(
+                        self.db.qsp_sections.insert_many(embedded_sections)
+                    )
+                    logger.info(f"✅ Persisted {embedded_count} sections to MongoDB")
+                except RuntimeError:
+                    # If no event loop, create one
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    loop.run_until_complete(
+                        self.db.qsp_sections.insert_many(embedded_sections)
+                    )
+                    loop.close()
+                    logger.info(f"✅ Persisted {embedded_count} sections to MongoDB (new loop)")
             
             logger.info(f"Ingested {embedded_count} sections for doc {doc_name}")
             
