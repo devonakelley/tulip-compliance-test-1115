@@ -1,7 +1,6 @@
 """
 Change Impact Detection Service - MongoDB Version
-Simplified version that works without Postgres/pgvector
-Uses in-memory vectors for demo or can be extended to MongoDB
+Stores QSP sections in MongoDB for persistence
 """
 import logging
 from typing import List, Dict, Any, Optional
@@ -11,18 +10,19 @@ from datetime import datetime
 import uuid
 import numpy as np
 import re
+from motor.motor_asyncio import AsyncIOMotorClient
 
 logger = logging.getLogger(__name__)
 
 
 class ChangeImpactServiceMongo:
     """
-    Change impact detection using MongoDB and in-memory vectors
-    Compatible with Emergent deployment (no Postgres/ML dependencies)
+    Change impact detection using MongoDB for persistent storage
+    Compatible with Emergent deployment
     """
     
     def __init__(self):
-        """Initialize service with OpenAI client"""
+        """Initialize service with OpenAI client and MongoDB"""
         openai_key = os.getenv("OPENAI_API_KEY")
         if not openai_key:
             raise ValueError("OPENAI_API_KEY environment variable not set")
@@ -32,7 +32,20 @@ class ChangeImpactServiceMongo:
         self.embedding_dimensions = 1536
         self.impact_threshold = 0.55
         
-        # In-memory storage for demo
+        # MongoDB connection for persistent storage
+        mongo_url = os.environ.get('MONGO_URL')
+        db_name = os.environ.get('DB_NAME', 'compliance_checker')
+        
+        if mongo_url:
+            self.mongo_client = AsyncIOMotorClient(mongo_url)
+            self.db = self.mongo_client[db_name]
+            logger.info("✅ Change Impact Service connected to MongoDB for persistent storage")
+        else:
+            self.mongo_client = None
+            self.db = None
+            logger.warning("⚠️ MongoDB not configured, using in-memory storage (not persistent)")
+        
+        # In-memory cache (for backwards compatibility and performance)
         self.qsp_sections = {}  # tenant_id -> list of sections with embeddings
     
     def _get_embedding(self, text: str) -> List[float]:
