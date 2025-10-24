@@ -39,6 +39,10 @@ const GapAnalysisClean = () => {
       const response = await axios.post(`${API}/api/impact/analyze`, {
         deltas: deltas.deltas || [],
         top_k: 10
+      }, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
       });
 
       if (response.data.success) {
@@ -48,6 +52,8 @@ const GapAnalysisClean = () => {
           `✅ Analysis complete: ${response.data.total_impacts_found} impacts found`,
           { id: 'analysis' }
         );
+      } else if (response.data.error) {
+        toast.error(response.data.error, { id: 'analysis' });
       }
     } catch (error) {
       console.error('Error running analysis:', error);
