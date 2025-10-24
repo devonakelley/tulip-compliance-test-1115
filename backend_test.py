@@ -3439,7 +3439,7 @@ Enhanced post-market surveillance requirements including systematic collection a
         # Upload third document for batch deletion testing
         upload3_success, filename3 = self.test_qsp_document_upload_for_deletion()
         
-        if not (upload1_success and upload2_success):
+        if not (upload1_success and upload2_success and upload3_success):
             print("❌ Failed to upload test documents. Cannot continue with deletion tests.")
             return False
         
