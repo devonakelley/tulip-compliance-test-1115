@@ -355,6 +355,30 @@ frontend:
         agent: "testing"
         comment: "QSP PARSER VALIDATION TESTING COMPLETED SUCCESSFULLY! ✅ REWRITTEN QSP PARSER FULLY VALIDATED (100% PASS RATE - 4/4 TESTS PASSED). CRITICAL VALIDATION RESULTS: 1) Upload QSP with Parser Validation - ✅ WORKING (Document: 7.3-3 R9, Clauses: 5 in target range 5-15, proper document number extraction, revision extraction working, all clause numbers extracted correctly), 2) Noise Filtering Verification - ✅ WORKING (Total clauses: 5, Clean clauses: 5/5, Zero noise patterns detected, no 'Tulip Medical', 'Signature', 'Date', 'Approval', 'Form', 'Page', 'Rev' entries found in clause titles), 3) Text Aggregation Check - ✅ WORKING (Multi-sentence clauses: 1/5, Substantial content 100+ chars: 5/5, proper text aggregation confirmed, sample clause shows 164 characters with meaningful content), 4) Clause Number Extraction - ✅ WORKING (Proper clause numbers: 5/5, Unknown clause numbers: 0, 100% extraction success rate, examples: 3.2, 4.1, 4.2, 4.2.2, 4.3). ACCEPTANCE CRITERIA VALIDATION: ✅ Each QSP produces 5-15 clauses (PASS), ✅ All clause numbers extracted no 'Unknown' (PASS), ✅ Each clause has 100+ characters (PASS), ✅ No noise entries company name/signatures (PASS). CONCLUSION: Rewritten QSP parser is working correctly, noise filtering implemented properly, text aggregation functioning as expected, clause number extraction working. The parser fix has resolved the noisy output issues."
 
+  - task: "QSP document deletion functionality (single and batch)"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/QSPUploadClean.js, /app/backend/api/regulatory_upload.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "IMPLEMENTED QSP DOCUMENT DELETION: 1) Frontend (QSPUploadClean.js) - Connected delete buttons with proper confirmation dialogs, loading states, success/error handling, clears localStorage clause_map on deletion, 2) Backend (regulatory_upload.py) - Created DELETE /api/regulatory/delete/qsp/{filename} for single document deletion, DELETE /api/regulatory/delete/qsp/all for batch deletion, both endpoints clear MongoDB qsp_sections to force re-mapping after deletion. Backend restarted successfully. READY FOR TESTING: Test single document deletion with confirmation, test delete all with double confirmation, verify MongoDB sections cleared, verify frontend updates document list after deletion."
+
+  - task: "MongoDB BulkWriteError fix for clause mapping"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/core/change_impact_service_mongo.py, /app/backend/api/regulatory_upload.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "FIXED MONGODB BULKWRITEERROR: 1) Updated change_impact_service_mongo.py ingest_qsp_document() - Now deletes existing sections for doc_id before inserting new ones, ensures idempotency (can run multiple times without duplicate key errors), 2) Updated regulatory_upload.py map_clauses() - Clears all QSP sections for tenant before re-mapping, prevents duplicate inserts when 'Generate Clause Map' is run multiple times. Backend restarted successfully. READY FOR TESTING: Test clause mapping multiple times in a row, verify no MongoDB errors, verify sections are properly updated not duplicated."
+
 metadata:
   created_by: "main_agent"
   version: "1.1"
