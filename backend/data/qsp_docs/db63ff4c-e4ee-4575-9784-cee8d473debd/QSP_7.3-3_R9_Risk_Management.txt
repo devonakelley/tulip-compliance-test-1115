@@ -1,0 +1,53 @@
+QSP 7.3-3 R9 Risk Management
+
+TULIP MEDICAL CORPORATION
+Quality System Procedure
+Document Control Number: QSP 7.3-3
+Revision: R9
+Effective Date: 2024-01-15
+Prepared by: Quality Manager
+Approved by: Regulatory Affairs Coordinator
+
+1. PURPOSE
+This procedure establishes the requirements for risk management activities throughout the product lifecycle to ensure patient safety and regulatory compliance with ISO 14971 and FDA guidance.
+
+2. SCOPE
+This procedure applies to all medical devices developed, manufactured, and distributed by Tulip Medical Corporation, including software as medical devices (SaMD) and combination products.
+
+3. RESPONSIBILITIES
+
+3.1 Risk Management Team
+The risk management team shall be responsible for conducting comprehensive risk analysis, implementing risk control measures, and maintaining risk management files for all medical devices.
+
+3.2 Design and Development Team
+The design team shall integrate risk management activities into the design and development process, ensuring that risk controls are implemented at the design level.
+
+4. PROCEDURE
+
+4.1 Risk Management Planning
+Risk management planning shall be initiated during the early stages of product development and shall include identification of intended use, reasonably foreseeable misuse, and applicable standards.
+
+4.2 Risk Analysis
+Risk analysis shall be conducted using systematic methods to identify hazards, estimate risks, and evaluate risk acceptability according to established criteria.
+
+4.2.1 Hazard Identification
+All potential hazards associated with the medical device shall be identified through systematic analysis including failure mode analysis, use error analysis, and clinical risk assessment.
+
+4.2.2 Risk Estimation
+For each identified hazard, the probability of occurrence and severity of harm shall be estimated using quantitative or qualitative methods as appropriate for the device complexity.
+
+4.3 Risk Evaluation
+Risk evaluation shall determine whether identified risks are acceptable based on established risk acceptability criteria and regulatory requirements.
+
+5. RECORDS
+Risk management activities shall be documented in the risk management file, including risk analysis reports, risk control implementation records, and post-market surveillance data.
+
+SIGNATURE BLOCK
+Document Control Coordinator: _________________ Date: _________
+Quality Manager: _________________ Date: _________
+Regulatory Affairs Manager: _________________ Date: _________
+
+Form 7.3-3-1: Risk Management Plan Template
+Form 7.3-3-2: Risk Analysis Worksheet
+Page 1 of 15
+Rev 9
