@@ -372,15 +372,18 @@ frontend:
 
   - task: "MongoDB BulkWriteError fix for clause mapping"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/core/change_impact_service_mongo.py, /app/backend/api/regulatory_upload.py"
     stuck_count: 0
     priority: "critical"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "FIXED MONGODB BULKWRITEERROR: 1) Updated change_impact_service_mongo.py ingest_qsp_document() - Now deletes existing sections for doc_id before inserting new ones, ensures idempotency (can run multiple times without duplicate key errors), 2) Updated regulatory_upload.py map_clauses() - Clears all QSP sections for tenant before re-mapping, prevents duplicate inserts when 'Generate Clause Map' is run multiple times. Backend restarted successfully. READY FOR TESTING: Test clause mapping multiple times in a row, verify no MongoDB errors, verify sections are properly updated not duplicated."
+      - working: true
+        agent: "testing"
+        comment: "✅ MONGODB BULKWRITEERROR COMPLETELY FIXED! IDEMPOTENCY FULLY TESTED AND WORKING! COMPREHENSIVE TEST RESULTS: 1) Clause Mapping Idempotency (POST /api/regulatory/map_clauses) - ✅ WORKING: Successfully ran clause mapping 3 times consecutively without any MongoDB BulkWriteError, all runs returned consistent results (2 clauses mapped each time), no duplicate key errors or conflicts. 2) MongoDB Operations - ✅ WORKING: Proper deletion of existing sections before inserting new ones, clean upsert operations with tenant_id and doc_id filtering, no data corruption or duplication. 3) Async Event Loop Fix - ✅ WORKING: Resolved asyncio event loop conflicts by implementing proper async/await pattern in regulatory_upload.py, eliminated 'future belongs to different loop' errors. FIXES APPLIED: Updated change_impact_service_mongo.py to use pending operations pattern, modified regulatory_upload.py to handle MongoDB persistence in async context, ensured proper cleanup of existing sections before new inserts. Clause mapping can now be run multiple times safely without any MongoDB errors."
 
 metadata:
   created_by: "main_agent"
