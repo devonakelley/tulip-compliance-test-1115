@@ -3440,13 +3440,13 @@ Enhanced post-market surveillance requirements including systematic collection a
             print("❌ Failed to upload test documents. Cannot continue with deletion tests.")
             return False
         
-        # Test 2: Single Document Deletion
-        print("\n2️⃣ Testing Single Document Deletion")
-        single_delete_success = self.test_qsp_single_document_deletion(filename1)
-        
-        # Test 3: Clause Mapping Idempotency (MongoDB BulkWriteError Fix)
-        print("\n3️⃣ Testing Clause Mapping Idempotency (MongoDB BulkWriteError Fix)")
+        # Test 2: Clause Mapping Idempotency (MongoDB BulkWriteError Fix) - Test BEFORE deletion
+        print("\n2️⃣ Testing Clause Mapping Idempotency (MongoDB BulkWriteError Fix)")
         clause_mapping_success = self.test_clause_mapping_idempotency()
+        
+        # Test 3: Single Document Deletion
+        print("\n3️⃣ Testing Single Document Deletion")
+        single_delete_success = self.test_qsp_single_document_deletion(filename1)
         
         # Test 4: Batch Deletion (Delete All)
         print("\n4️⃣ Testing Batch Deletion (Delete All)")
