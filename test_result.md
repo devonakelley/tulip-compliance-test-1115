@@ -343,6 +343,18 @@ frontend:
         agent: "testing"
         comment: "ISO DIFF PROCESSING WITH MONGODB STORAGE FULLY OPERATIONAL! ✅ Tested POST /api/regulatory/preprocess/iso_diff endpoint. VALIDATION RESULTS: MongoDB storage ✅ WORKING (diff_id: 89b63fe7-0441-4df8-a0d8-4ae27150d65c), PDF file processing ✅ WORKING, Diff results stored in MongoDB ✅ WORKING. Process: 1) Accepts old/new PDF file paths, 2) Uses PyMuPDF for text extraction, 3) Generates deltas JSON, 4) Stores complete diff document in MongoDB with diff_id, tenant_id, file paths, deltas array, summary statistics. Diff results now available for Gap Analysis reference and frontend display."
 
+  - task: "QSP parser validation for noise filtering"
+    implemented: true
+    working: true
+    file: "/app/backend/core/qsp_parser.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "QSP PARSER VALIDATION TESTING COMPLETED SUCCESSFULLY! ✅ REWRITTEN QSP PARSER FULLY VALIDATED (100% PASS RATE - 4/4 TESTS PASSED). CRITICAL VALIDATION RESULTS: 1) Upload QSP with Parser Validation - ✅ WORKING (Document: 7.3-3 R9, Clauses: 5 in target range 5-15, proper document number extraction, revision extraction working, all clause numbers extracted correctly), 2) Noise Filtering Verification - ✅ WORKING (Total clauses: 5, Clean clauses: 5/5, Zero noise patterns detected, no 'Tulip Medical', 'Signature', 'Date', 'Approval', 'Form', 'Page', 'Rev' entries found in clause titles), 3) Text Aggregation Check - ✅ WORKING (Multi-sentence clauses: 1/5, Substantial content 100+ chars: 5/5, proper text aggregation confirmed, sample clause shows 164 characters with meaningful content), 4) Clause Number Extraction - ✅ WORKING (Proper clause numbers: 5/5, Unknown clause numbers: 0, 100% extraction success rate, examples: 3.2, 4.1, 4.2, 4.2.2, 4.3). ACCEPTANCE CRITERIA VALIDATION: ✅ Each QSP produces 5-15 clauses (PASS), ✅ All clause numbers extracted no 'Unknown' (PASS), ✅ Each clause has 100+ characters (PASS), ✅ No noise entries company name/signatures (PASS). CONCLUSION: Rewritten QSP parser is working correctly, noise filtering implemented properly, text aggregation functioning as expected, clause number extraction working. The parser fix has resolved the noisy output issues."
+
 metadata:
   created_by: "main_agent"
   version: "1.1"
