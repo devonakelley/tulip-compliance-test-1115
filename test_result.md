@@ -405,7 +405,8 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Enhanced Gap Analysis UI (Phase 2)"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
