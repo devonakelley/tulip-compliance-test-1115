@@ -155,27 +155,50 @@ class ChangeImpactServiceMongo:
     ) -> Dict[str, Any]:
         """
         Detect which QSP sections are impacted by regulatory changes
-        Uses in-memory vector search
+        Uses MongoDB for persistent storage with in-memory cache
         """
         try:
             run_id = str(uuid.uuid4())
             timestamp = datetime.utcnow()
             all_impacts = []
             
-            # Get QSP sections for this tenant
+            # Get QSP sections for this tenant (try in-memory first, then MongoDB)
             qsp_sections = self.qsp_sections.get(tenant_id, [])
+            
+            # If not in cache and MongoDB available, load from DB
+            if not qsp_sections and self.db is not None:
+                logger.info(f"Loading QSP sections from MongoDB for tenant {tenant_id}")
+                import asyncio
+                try:
+                    cursor = self.db.qsp_sections.find({'tenant_id': tenant_id})
+                    qsp_sections = asyncio.get_event_loop().run_until_complete(
+                        cursor.to_list(length=None)
+                    )
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    cursor = self.db.qsp_sections.find({'tenant_id': tenant_id})
+                    qsp_sections = loop.run_until_complete(cursor.to_list(length=None))
+                    loop.close()
+                
+                # Cache for future use
+                if qsp_sections:
+                    self.qsp_sections[tenant_id] = qsp_sections
+                    logger.info(f"✅ Loaded {len(qsp_sections)} QSP sections from MongoDB")
             
             if not qsp_sections:
                 logger.warning(f"No QSP sections found for tenant {tenant_id}")
                 return {
-                    'success': True,
+                    'success': False,
                     'run_id': run_id,
                     'total_changes_analyzed': len(deltas),
                     'total_impacts_found': 0,
                     'threshold': self.impact_threshold,
                     'impacts': [],
-                    'warning': 'No QSP sections ingested. Please upload QSP sections first.'
+                    'error': 'No QSP sections found. Please upload and map QSP documents in Tab 2 first.'
                 }
+            
+            logger.info(f"Using {len(qsp_sections)} QSP sections for impact analysis")
             
             # Process each delta
             for delta in deltas:
