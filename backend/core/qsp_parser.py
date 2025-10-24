@@ -143,7 +143,7 @@ class QSPParser:
     
     def parse_docx(self, file_content: bytes, filename: str) -> Dict[str, Any]:
         """
-        Parse DOCX file into structured clause-level data
+        Parse DOCX file into structured clause-level data with proper text aggregation
         
         Returns:
         {
@@ -177,43 +177,58 @@ class QSPParser:
                 if not text:
                     continue
                 
+                # Check if this is a noise line (skip it)
+                if self.is_noise_line(text):
+                    continue
+                
+                # Check if this is a heading
                 if self.is_heading_paragraph(paragraph):
-                    # Save previous section if exists
-                    if current_heading:
+                    # Save previous section if it has content
+                    if current_heading and current_text_parts:
                         section_text = '\n'.join(current_text_parts).strip()
-                        if not section_text:
-                            section_text = "No text found"
                         
-                        clauses.append({
-                            "document_number": document_number,
-                            "clause_number": current_clause_number or "Unknown",
-                            "title": current_heading,
-                            "text": section_text,
-                            "characters": len(section_text)
-                        })
+                        # Only save if we have substantial text (not just a header)
+                        if len(section_text) >= 50:
+                            clauses.append({
+                                "document_number": document_number,
+                                "clause_number": current_clause_number if current_clause_number else f"{document_number}.{len(clauses)+1}",
+                                "title": current_heading,
+                                "text": section_text,
+                                "characters": len(section_text)
+                            })
                     
                     # Start new section
                     current_heading = text
                     current_clause_number = self.extract_clause_number(text)
+                    
+                    # If no clause number found but it's a common header, use semantic naming
+                    if not current_clause_number:
+                        common_headers = ['PURPOSE', 'SCOPE', 'RESPONSIBILITIES', 'PROCEDURE', 'RECORDS']
+                        if text.upper() in common_headers:
+                            current_clause_number = f"{document_number}.{text.upper()}"
+                    
                     current_text_parts = []
                 else:
-                    # Accumulate paragraph text
-                    if current_heading:
+                    # This is content - add to current section
+                    if current_heading and len(text) > 20:  # Filter out very short lines
                         current_text_parts.append(text)
             
-            # Save last section
-            if current_heading:
+            # Save last section if it has content
+            if current_heading and current_text_parts:
                 section_text = '\n'.join(current_text_parts).strip()
-                if not section_text:
-                    section_text = "No text found"
-                
-                clauses.append({
-                    "document_number": document_number,
-                    "clause_number": current_clause_number or "Unknown",
-                    "title": current_heading,
-                    "text": section_text,
-                    "characters": len(section_text)
-                })
+                if len(section_text) >= 50:
+                    clauses.append({
+                        "document_number": document_number,
+                        "clause_number": current_clause_number if current_clause_number else f"{document_number}.{len(clauses)+1}",
+                        "title": current_heading,
+                        "text": section_text,
+                        "characters": len(section_text)
+                    })
+            
+            # Fallback: if no clauses found, try alternative parsing
+            if len(clauses) == 0:
+                logger.warning(f"No clauses found with primary method, trying fallback for {filename}")
+                clauses = self._fallback_parsing(doc, document_number)
             
             logger.info(f"✅ Parsed {filename}: {len(clauses)} clauses extracted")
             
@@ -228,6 +243,33 @@ class QSPParser:
         except Exception as e:
             logger.error(f"Failed to parse DOCX file {filename}: {e}")
             raise
+    
+    def _fallback_parsing(self, doc, document_number: str) -> List[Dict[str, Any]]:
+        """
+        Fallback parsing when primary method fails
+        Looks for any structured content and creates minimal sections
+        """
+        clauses = []
+        all_text = []
+        
+        for paragraph in doc.paragraphs:
+            text = paragraph.text.strip()
+            if text and not self.is_noise_line(text):
+                all_text.append(text)
+        
+        # If we have substantial content, create a single catch-all section
+        if all_text:
+            full_text = '\n'.join(all_text)
+            if len(full_text) >= 100:
+                clauses.append({
+                    "document_number": document_number,
+                    "clause_number": f"{document_number}.1",
+                    "title": "Document Content",
+                    "text": full_text[:2000],  # Limit to 2000 chars
+                    "characters": min(len(full_text), 2000)
+                })
+        
+        return clauses
     
     def parse_pdf(self, file_content: bytes, filename: str) -> Dict[str, Any]:
         """
