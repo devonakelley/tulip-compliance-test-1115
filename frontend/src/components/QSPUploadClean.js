@@ -263,6 +263,7 @@ const QSPUploadClean = () => {
                     <th className="px-4 py-3 text-left font-semibold">Title</th>
                     <th className="px-4 py-3 text-left font-semibold">Characters</th>
                     <th className="px-4 py-3 text-left font-semibold">View Text</th>
+                    <th className="px-4 py-3 text-left font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
