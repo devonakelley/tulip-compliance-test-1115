@@ -505,6 +505,12 @@ async def map_clauses(
                 detail="No QSP documents found. Please upload QSP documents first."
             )
         
+        # Clear existing QSP sections for this tenant to avoid duplicates
+        # This ensures idempotency - can run clause mapping multiple times
+        if db is not None:
+            result = await db.qsp_sections.delete_many({"tenant_id": tenant_id})
+            logger.info(f"Cleared {result.deleted_count} existing QSP sections for tenant {tenant_id}")
+        
         parser = get_qsp_parser()
         impact_service = get_change_impact_service()
         
