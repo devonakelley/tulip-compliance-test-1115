@@ -206,7 +206,6 @@ class ChangeImpactServiceMongo:
     ) -> Dict[str, Any]:
         """Core impact detection logic"""
         run_id = str(uuid.uuid4())
-        timestamp = datetime.utcnow()
         all_impacts = []
         
         if not qsp_sections:
