@@ -205,8 +205,8 @@ class ChangeImpactServiceMongo:
         run_id = str(uuid.uuid4())
         timestamp = datetime.utcnow()
         all_impacts = []
-            
-            if not qsp_sections:
+        
+        if not qsp_sections:
                 logger.warning(f"No QSP sections found for tenant {tenant_id}")
                 return {
                     'success': False,
