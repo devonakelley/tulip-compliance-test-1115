@@ -207,18 +207,18 @@ class ChangeImpactServiceMongo:
         all_impacts = []
         
         if not qsp_sections:
-                logger.warning(f"No QSP sections found for tenant {tenant_id}")
-                return {
-                    'success': False,
-                    'run_id': run_id,
-                    'total_changes_analyzed': len(deltas),
-                    'total_impacts_found': 0,
-                    'threshold': self.impact_threshold,
-                    'impacts': [],
-                    'error': 'No QSP sections found. Please upload and map QSP documents in Tab 2 first.'
-                }
-            
-            logger.info(f"Using {len(qsp_sections)} QSP sections for impact analysis")
+            logger.warning(f"No QSP sections found for tenant {tenant_id}")
+            return {
+                'success': False,
+                'run_id': run_id,
+                'total_changes_analyzed': len(deltas),
+                'total_impacts_found': 0,
+                'threshold': self.impact_threshold,
+                'impacts': [],
+                'error': 'No QSP sections found. Please upload and map QSP documents in Tab 2 first.'
+            }
+        
+        logger.info(f"Using {len(qsp_sections)} QSP sections for impact analysis")
             
             # Process each delta
             for delta in deltas:
