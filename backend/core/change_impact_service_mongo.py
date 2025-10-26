@@ -247,37 +247,37 @@ class ChangeImpactServiceMongo:
             
             # Generate impacts with new unified structure
             for match in top_matches:
-                    section = match['section']
-                    confidence = match['confidence']
-                    
-                    # Extract document number from doc_name (e.g., "7.3-3 QSP 7.3-3 R9..." -> "7.3-3")
-                    doc_name = section['doc_name']
-                    doc_number_match = re.match(r'^(\d+\.\d+-\d+|\d+\.\d+)', doc_name)
-                    qsp_doc = doc_number_match.group(1) if doc_number_match else doc_name.split()[0]
-                    
-                    # Generate rationale without confidence score
-                    if confidence > 0.75:
-                        strength = "Strong"
-                    elif confidence > 0.65:
-                        strength = "Moderate"
-                    else:
-                        strength = "Potential"
-                    
-                    # Create human-readable rationale
-                    if change_type.lower() == 'added' or change_type.lower() == 'new':
-                        rationale = (
-                            f"{strength} match: New regulatory requirement introduced in clause {clause_id}. "
-                            f"Review QSP section '{section['heading']}' to ensure alignment with new requirements."
-                        )
-                    elif change_type.lower() == 'modified':
-                        rationale = (
-                            f"{strength} match: Regulatory clause {clause_id} has been modified. "
-                            f"QSP section '{section['heading']}' may require updates to maintain compliance."
-                        )
-                    elif change_type.lower() == 'deleted':
-                        rationale = (
-                            f"{strength} match: Regulatory clause {clause_id} has been removed. "
-                            f"Review QSP section '{section['heading']}' for potential simplification or removal."
+                section = match['section']
+                confidence = match['confidence']
+                
+                # Extract document number from doc_name (e.g., "7.3-3 QSP 7.3-3 R9..." -> "7.3-3")
+                doc_name = section['doc_name']
+                doc_number_match = re.match(r'^(\d+\.\d+-\d+|\d+\.\d+)', doc_name)
+                qsp_doc = doc_number_match.group(1) if doc_number_match else doc_name.split()[0]
+                
+                # Generate rationale without confidence score
+                if confidence > 0.75:
+                    strength = "Strong"
+                elif confidence > 0.65:
+                    strength = "Moderate"
+                else:
+                    strength = "Potential"
+                
+                # Create human-readable rationale
+                if change_type.lower() == 'added' or change_type.lower() == 'new':
+                    rationale = (
+                        f"{strength} match: New regulatory requirement introduced in clause {clause_id}. "
+                        f"Review QSP section '{section['heading']}' to ensure alignment with new requirements."
+                    )
+                elif change_type.lower() == 'modified':
+                    rationale = (
+                        f"{strength} match: Regulatory clause {clause_id} has been modified. "
+                        f"QSP section '{section['heading']}' may require updates to maintain compliance."
+                    )
+                elif change_type.lower() == 'deleted':
+                    rationale = (
+                        f"{strength} match: Regulatory clause {clause_id} has been removed. "
+                        f"Review QSP section '{section['heading']}' for potential simplification or removal."
                         )
                     else:
                         rationale = (
