@@ -166,6 +166,13 @@ class ChangeImpactServiceMongo:
                 if qsp_sections:
                     self.qsp_sections[tenant_id] = qsp_sections
                     logger.info(f"✅ Loaded {len(qsp_sections)} QSP sections from MongoDB")
+            
+            # Call the core detection logic
+            return await self._detect_impacts_core(tenant_id, deltas, qsp_sections, top_k)
+            
+        except Exception as e:
+            logger.error(f"Async impact detection failed: {e}")
+            raise
     
     def detect_impacts(
         self,
