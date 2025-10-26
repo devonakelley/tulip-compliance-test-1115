@@ -138,7 +138,7 @@ async def analyze_change_impact(
         # Convert Pydantic models to dicts
         deltas = [d.dict() for d in request.deltas]
         
-        result = service.detect_impacts(
+        result = await service.detect_impacts_async(
             tenant_id=tenant_id,
             deltas=deltas,
             top_k=request.top_k
