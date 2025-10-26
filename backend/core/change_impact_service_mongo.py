@@ -149,10 +149,6 @@ class ChangeImpactServiceMongo:
         Uses MongoDB for persistent storage with in-memory cache
         """
         try:
-            run_id = str(uuid.uuid4())
-            timestamp = datetime.utcnow()
-            all_impacts = []
-            
             # Get QSP sections for this tenant (try in-memory first, then MongoDB)
             qsp_sections = self.qsp_sections.get(tenant_id, [])
             
