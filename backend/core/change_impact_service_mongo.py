@@ -278,40 +278,36 @@ class ChangeImpactServiceMongo:
                     rationale = (
                         f"{strength} match: Regulatory clause {clause_id} has been removed. "
                         f"Review QSP section '{section['heading']}' for potential simplification or removal."
-                        )
-                    else:
-                        rationale = (
-                            f"{strength} match: Change to regulatory clause {clause_id}. "
-                            f"Review QSP section '{section['heading']}' for consistency."
-                        )
-                    
-                    # New unified structure (without confidence)
-                    all_impacts.append({
-                        'reg_clause': clause_id,
-                        'change_type': change_type.capitalize(),
-                        'qsp_doc': qsp_doc,
-                        'qsp_clause': section['section_path'] if section['section_path'] else 'Unknown',
-                        'qsp_text': section['text'][:200] if len(section['text']) > 200 else section['text'],  # Preview (first 200 chars)
-                        'qsp_text_full': section['text'],  # Full text for modal/expansion
-                        'rationale': rationale
-                    })
+                    )
+                else:
+                    rationale = (
+                        f"{strength} match: Change to regulatory clause {clause_id}. "
+                        f"Review QSP section '{section['heading']}' for consistency."
+                    )
                 
-                logger.info(f"Found {len(top_matches)} impacts for {clause_id}")
+                # New unified structure (without confidence)
+                all_impacts.append({
+                    'reg_clause': clause_id,
+                    'change_type': change_type.capitalize(),
+                    'qsp_doc': qsp_doc,
+                    'qsp_clause': section['section_path'] if section['section_path'] else 'Unknown',
+                    'qsp_text': section['text'][:200] if len(section['text']) > 200 else section['text'],  # Preview (first 200 chars)
+                    'qsp_text_full': section['text'],  # Full text for modal/expansion
+                    'rationale': rationale
+                })
             
-            logger.info(f"✅ Impact analysis complete: run_id={run_id}, {len(all_impacts)} impacts")
-            
-            return {
-                'success': True,
-                'run_id': run_id,
-                'total_changes_analyzed': len(deltas),
-                'total_impacts_found': len(all_impacts),
-                'threshold': self.impact_threshold,
-                'impacts': all_impacts
-            }
-            
-        except Exception as e:
-            logger.error(f"Impact detection failed: {e}")
-            raise
+            logger.info(f"Found {len(top_matches)} impacts for {clause_id}")
+        
+        logger.info(f"✅ Impact analysis complete: run_id={run_id}, {len(all_impacts)} impacts")
+        
+        return {
+            'success': True,
+            'run_id': run_id,
+            'total_changes_analyzed': len(deltas),
+            'total_impacts_found': len(all_impacts),
+            'threshold': self.impact_threshold,
+            'impacts': all_impacts
+        }
     
     def get_report(
         self,
