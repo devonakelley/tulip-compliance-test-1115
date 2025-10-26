@@ -219,34 +219,34 @@ class ChangeImpactServiceMongo:
             }
         
         logger.info(f"Using {len(qsp_sections)} QSP sections for impact analysis")
+        
+        # Process each delta
+        for delta in deltas:
+            clause_id = delta['clause_id']
+            change_text = delta['change_text']
+            change_type = delta.get('change_type', 'modified')
             
-            # Process each delta
-            for delta in deltas:
-                clause_id = delta['clause_id']
-                change_text = delta['change_text']
-                change_type = delta.get('change_type', 'modified')
-                
-                logger.info(f"Analyzing impact for {clause_id}")
-                
-                # Generate embedding for change
-                change_embedding = self._get_embedding(change_text)
-                
-                # Calculate similarity with all QSP sections
-                similarities = []
-                for qsp in qsp_sections:
-                    similarity = self._cosine_similarity(change_embedding, qsp['embedding'])
-                    if similarity > self.impact_threshold:
-                        similarities.append({
-                            'section': qsp,
-                            'confidence': similarity
-                        })
-                
-                # Sort by confidence and take top-k
-                similarities.sort(key=lambda x: x['confidence'], reverse=True)
-                top_matches = similarities[:top_k]
-                
-                # Generate impacts with new unified structure
-                for match in top_matches:
+            logger.info(f"Analyzing impact for {clause_id}")
+            
+            # Generate embedding for change
+            change_embedding = self._get_embedding(change_text)
+            
+            # Calculate similarity with all QSP sections
+            similarities = []
+            for qsp in qsp_sections:
+                similarity = self._cosine_similarity(change_embedding, qsp['embedding'])
+                if similarity > self.impact_threshold:
+                    similarities.append({
+                        'section': qsp,
+                        'confidence': similarity
+                    })
+            
+            # Sort by confidence and take top-k
+            similarities.sort(key=lambda x: x['confidence'], reverse=True)
+            top_matches = similarities[:top_k]
+            
+            # Generate impacts with new unified structure
+            for match in top_matches:
                     section = match['section']
                     confidence = match['confidence']
                     
