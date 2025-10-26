@@ -138,14 +138,14 @@ class ChangeImpactServiceMongo:
             logger.error(f"Failed to ingest QSP document: {e}")
             raise
     
-    def detect_impacts(
+    async def detect_impacts_async(
         self,
         tenant_id: str,
         deltas: List[Dict[str, Any]],
         top_k: int = 5
     ) -> Dict[str, Any]:
         """
-        Detect which QSP sections are impacted by regulatory changes
+        Async version: Detect which QSP sections are impacted by regulatory changes
         Uses MongoDB for persistent storage with in-memory cache
         """
         try:
@@ -159,23 +159,52 @@ class ChangeImpactServiceMongo:
             # If not in cache and MongoDB available, load from DB
             if not qsp_sections and self.db is not None:
                 logger.info(f"Loading QSP sections from MongoDB for tenant {tenant_id}")
-                import asyncio
-                try:
-                    cursor = self.db.qsp_sections.find({'tenant_id': tenant_id})
-                    qsp_sections = asyncio.get_event_loop().run_until_complete(
-                        cursor.to_list(length=None)
-                    )
-                except RuntimeError:
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-                    cursor = self.db.qsp_sections.find({'tenant_id': tenant_id})
-                    qsp_sections = loop.run_until_complete(cursor.to_list(length=None))
-                    loop.close()
+                cursor = self.db.qsp_sections.find({'tenant_id': tenant_id})
+                qsp_sections = await cursor.to_list(length=None)
                 
                 # Cache for future use
                 if qsp_sections:
                     self.qsp_sections[tenant_id] = qsp_sections
                     logger.info(f"✅ Loaded {len(qsp_sections)} QSP sections from MongoDB")
+    
+    def detect_impacts(
+        self,
+        tenant_id: str,
+        deltas: List[Dict[str, Any]],
+        top_k: int = 5
+    ) -> Dict[str, Any]:
+        """
+        Synchronous wrapper for detect_impacts_async
+        """
+        import asyncio
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # If we're already in an async context, we can't use run_until_complete
+                # Return an error and let the caller use the async version
+                raise RuntimeError("Cannot call synchronous detect_impacts from async context. Use detect_impacts_async instead.")
+            return loop.run_until_complete(self.detect_impacts_async(tenant_id, deltas, top_k))
+        except RuntimeError:
+            # Create new event loop if needed
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                result = loop.run_until_complete(self.detect_impacts_async(tenant_id, deltas, top_k))
+                return result
+            finally:
+                loop.close()
+                
+    async def _detect_impacts_core(
+        self,
+        tenant_id: str,
+        deltas: List[Dict[str, Any]],
+        qsp_sections: List[Dict[str, Any]],
+        top_k: int = 5
+    ) -> Dict[str, Any]:
+        """Core impact detection logic"""
+        run_id = str(uuid.uuid4())
+        timestamp = datetime.utcnow()
+        all_impacts = []
             
             if not qsp_sections:
                 logger.warning(f"No QSP sections found for tenant {tenant_id}")
