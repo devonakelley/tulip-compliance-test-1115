@@ -67,30 +67,16 @@ class QSPParser:
             return "Unknown"
     
     def is_heading_paragraph(self, paragraph) -> bool:
-        """Check if a paragraph is a heading using proper clause pattern"""
+        """Check if a paragraph is a heading using the exact specified pattern"""
         if not paragraph.text.strip():
             return False
         
         text = paragraph.text.strip()
         
-        # Primary pattern: X.X.X Section Name (e.g., "4.2.1 Purpose")
-        clause_pattern = r'^[0-9]+(\.[0-9]+)+\s+[A-Z][A-Za-z\s\-]+'
+        # Primary pattern from requirements: ^\d+(\.\d+)+\s+[A-Z][A-Za-z\s-]+
+        # This matches: "4.2.1 Purpose", "7.3.5 Risk Analysis", etc.
+        clause_pattern = r'^\d+(\.\d+)+\s+[A-Z][A-Za-z\s\-]+'
         if re.match(clause_pattern, text):
-            return True
-        
-        # Secondary pattern: Common QSP section headers (uppercase)
-        common_headers = ['PURPOSE', 'SCOPE', 'RESPONSIBILITIES', 'PROCEDURE', 'RECORDS', 
-                         'DEFINITIONS', 'REFERENCES', 'ATTACHMENTS', 'FORMS', 'BACKGROUND']
-        if text.upper() in common_headers:
-            return True
-        
-        # Check if styled as heading
-        if paragraph.style and paragraph.style.name in self.heading_styles:
-            # But filter out noise
-            noise_patterns = ['TULIP', 'MEDICAL', 'DATE', 'SIGNATURE', 'APPROVAL', 
-                            'COORDINATOR', 'MANAGER', 'FORM', 'PAGE', 'REV', 'DOCUMENT']
-            if any(noise.lower() in text.lower() for noise in noise_patterns):
-                return False
             return True
         
         return False
