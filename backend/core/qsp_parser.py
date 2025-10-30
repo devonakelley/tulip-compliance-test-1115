@@ -101,29 +101,30 @@ class QSPParser:
             return None
     
     def is_noise_line(self, text: str) -> bool:
-        """Filter out noise lines that aren't real sections"""
-        if not text or len(text.strip()) < 3:
+        """
+        Filter out noise lines per requirements:
+        - Lines shorter than 50 characters
+        - Lines containing: Date, Signature, Tulip Medical, Approvals
+        """
+        if not text:
             return True
         
-        text_upper = text.upper().strip()
+        text_stripped = text.strip()
         
-        # Common noise patterns
+        # Skip lines shorter than 50 characters
+        if len(text_stripped) < 50:
+            return True
+        
+        # Skip lines with noise keywords (case-insensitive)
         noise_keywords = [
-            'TULIP MEDICAL', 'TULIP', 'MEDICAL', 
-            'SIGNATURE', 'DATE', 'APPROVAL', 'APPROVED BY',
-            'REGULATORY AFFAIRS', 'QUALITY ASSURANCE',
-            'FORM', 'PAGE', 'REV', 'REVISION',
-            'DOCUMENT CONTROL', 'TITLE:', 'NUMBER:',
-            'EFFECTIVE DATE', 'PREPARED BY', 'REVIEWED BY'
+            'Date', 'Signature', 'Tulip Medical', 'Approvals',
+            'Approval', 'Approved By', 'Reviewed By', 'Prepared By'
         ]
         
+        text_lower = text_stripped.lower()
         for noise in noise_keywords:
-            if noise in text_upper:
+            if noise.lower() in text_lower:
                 return True
-        
-        # Filter very short lines (likely not real content)
-        if len(text.strip()) < 15 and not re.match(r'^\d+(\.\d+)+', text):
-            return True
         
         return False
     
