@@ -207,10 +207,11 @@ class QSPParser:
                 if len(section_text) >= 50:
                     clauses.append({
                         "document_number": document_number,
-                        "clause_number": current_clause_number if current_clause_number else f"{document_number}.{len(clauses)+1}",
+                        "revision": revision,
+                        "clause": current_clause_number if current_clause_number else "Unknown",
                         "title": current_heading,
-                        "text": section_text,
-                        "characters": len(section_text)
+                        "characters": len(section_text),
+                        "text": section_text
                     })
             
             # Fallback: if no clauses found, try alternative parsing
