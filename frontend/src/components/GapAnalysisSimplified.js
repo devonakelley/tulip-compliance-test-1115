@@ -112,6 +112,19 @@ const GapAnalysisSimplified = () => {
     }));
   };
 
+  const getImpactBadge = (level) => {
+    switch (level?.toLowerCase()) {
+      case 'high':
+        return <Badge className="bg-red-100 text-red-800 border-red-300">🔴 High</Badge>;
+      case 'medium':
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">🟡 Medium</Badge>;
+      case 'low':
+        return <Badge className="bg-green-100 text-green-800 border-green-300">🟢 Low</Badge>;
+      default:
+        return <Badge className="bg-gray-100 text-gray-800">Unknown</Badge>;
+    }
+  };
+
   const getChangeTypeBadge = (type) => {
     switch (type?.toLowerCase()) {
       case 'added':
