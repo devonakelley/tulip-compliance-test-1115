@@ -149,7 +149,7 @@ const GapAnalysisSimplified = () => {
 
   const getTextPreview = (text) => {
     if (!text) return 'No text available';
-    return text.length > 150 ? text.substring(0, 150) + '...' : text;
+    return text.length > 250 ? text.substring(0, 250) + '...' : text;
   };
 
   return (
