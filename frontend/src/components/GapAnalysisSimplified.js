@@ -343,6 +343,11 @@ const GapAnalysisSimplified = () => {
                                 <div className="text-xs font-semibold text-gray-700 mb-1">AI RATIONALE:</div>
                                 <div className="text-sm text-blue-900 bg-blue-50 p-3 rounded">
                                   {impact.rationale || 'Model flagged this section for review based on semantic similarity to regulatory change.'}
+                                  {impact.similarity_score && (
+                                    <div className="mt-2 text-xs text-blue-700">
+                                      Semantic Similarity Score: <strong>{(impact.similarity_score * 100).toFixed(1)}%</strong>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                               <div>
