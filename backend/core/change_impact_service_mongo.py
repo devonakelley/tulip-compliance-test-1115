@@ -228,6 +228,20 @@ class ChangeImpactServiceMongo:
             change_text = delta['change_text']
             change_type = delta.get('change_type', 'modified')
             
+            # Extract regulatory text fields from delta
+            old_text = delta.get('old_text', '')[:400] if delta.get('old_text') else 'N/A'
+            new_text = delta.get('new_text', '')[:400] if delta.get('new_text') else 'N/A'
+            regulatory_doc = delta.get('regulatory_doc', 'ISO 14971:2020')  # Default if not provided
+            reg_title = delta.get('reg_title', '')
+            
+            # Determine impact level based on change type
+            if change_type.lower() in ['added', 'new']:
+                impact_level = 'High'
+            elif change_type.lower() == 'modified':
+                impact_level = 'Medium'
+            else:
+                impact_level = 'Low'
+            
             logger.info(f"Analyzing impact for {clause_id}")
             
             # Generate embedding for change
