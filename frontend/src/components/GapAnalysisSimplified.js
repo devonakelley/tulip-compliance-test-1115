@@ -319,7 +319,7 @@ const GapAnalysisSimplified = () => {
                       </tr>
                       {expandedRows[idx] && (
                         <tr className="bg-blue-50 border-b">
-                          <td colSpan={8} className="px-4 py-4">
+                          <td colSpan={9} className="px-4 py-4">
                             <div className="space-y-3">
                               <div>
                                 <div className="text-xs font-semibold text-gray-700 mb-1">OLD REGULATORY TEXT:</div>
@@ -340,10 +340,23 @@ const GapAnalysisSimplified = () => {
                                 </div>
                               </div>
                               <div>
-                                <div className="text-xs font-semibold text-gray-700 mb-1">RATIONALE:</div>
+                                <div className="text-xs font-semibold text-gray-700 mb-1">AI RATIONALE:</div>
                                 <div className="text-sm text-blue-900 bg-blue-50 p-3 rounded">
                                   {impact.rationale || 'Model flagged this section for review based on semantic similarity to regulatory change.'}
                                 </div>
+                              </div>
+                              <div>
+                                <div className="text-xs font-semibold text-gray-700 mb-2">CUSTOM RATIONALE / NOTES:</div>
+                                <textarea
+                                  className="w-full text-sm p-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  rows="3"
+                                  placeholder="Add custom rationale, justification, or notes for audit trail..."
+                                  value={customRationales[idx] || ''}
+                                  onChange={(e) => handleRationaleChange(idx, e.target.value)}
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                  This field will be included in CSV export
+                                </p>
                               </div>
                             </div>
                           </td>
