@@ -272,12 +272,16 @@ const GapAnalysisSimplified = () => {
                           />
                         </td>
                         <td className="px-4 py-3">
-                          <span className="font-mono font-bold text-blue-700">
-                            {impact.reg_clause || impact.clause_id || 'N/A'}
+                          <span className="font-mono text-sm font-bold text-blue-700">
+                            {impact.regulatory_clause || 
+                             `${impact.regulatory_doc || 'ISO 14971:2020'} | Clause ${impact.reg_clause || impact.clause_id || 'N/A'}${impact.reg_title ? ` — ${impact.reg_title}` : ''}`}
                           </span>
                         </td>
                         <td className="px-4 py-3">
                           {getChangeTypeBadge(impact.change_type)}
+                        </td>
+                        <td className="px-4 py-3">
+                          {getImpactBadge(impact.impact_level)}
                         </td>
                         <td className="px-4 py-3">
                           <span className="font-mono text-sm font-semibold">
