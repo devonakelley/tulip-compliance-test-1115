@@ -95,35 +95,24 @@ async def ingest_qsp_document(
 @router.post("/analyze")
 async def analyze_change_impact(
     request: AnalyzeRequest,
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
+    db = Depends(lambda: None)  # Will be injected
 ):
     """
     Analyze which QSP sections are impacted by regulatory changes
+    Fetches full diff_results from MongoDB to get old/new regulatory text
     
     Request body:
     {
         "deltas": [
             {
                 "clause_id": "4.2.4",
-                "change_text": "Organizations must now maintain electronic records with 21 CFR Part 11 compliance...",
+                "change_text": "Organizations must now maintain electronic records...",
                 "change_type": "modified"
-            },
-            {
-                "clause_id": "7.5.1.1",
-                "change_text": "New requirement for risk-based validation of production processes...",
-                "change_type": "new"
             }
         ],
-        "top_k": 5
-    }
-    
-    Returns:
-    {
-        "success": true,
-        "run_id": "uuid",
-        "total_changes_analyzed": 2,
-        "total_impacts_found": 8,
-        "impacts": [...]
+        "top_k": 5,
+        "diff_id": "uuid-of-diff-result"  # Optional - if provided, will fetch from MongoDB
     }
     """
     try:
@@ -137,6 +126,38 @@ async def analyze_change_impact(
         
         # Convert Pydantic models to dicts
         deltas = [d.dict() for d in request.deltas]
+        
+        # Try to enrich deltas with full diff data from MongoDB
+        # Look for the most recent diff_result for this tenant
+        from motor.motor_asyncio import AsyncIOMotorClient
+        import os
+        mongo_url = os.environ.get('MONGO_URL')
+        db_name = os.environ.get('DB_NAME', 'compliance_checker')
+        mongo_client = AsyncIOMotorClient(mongo_url)
+        db = mongo_client[db_name]
+        
+        # Find most recent diff_result for this tenant
+        diff_result = await db.diff_results.find_one(
+            {'tenant_id': tenant_id},
+            sort=[('created_at', -1)]
+        )
+        
+        if diff_result and diff_result.get('deltas'):
+            logger.info(f"Found diff_result with {len(diff_result['deltas'])} deltas, enriching analysis data")
+            
+            # Create a lookup dict by clause_id
+            diff_lookup = {d['clause_id']: d for d in diff_result['deltas']}
+            
+            # Enrich each delta with old/new text and other metadata
+            for delta in deltas:
+                clause_id = delta.get('clause_id')
+                if clause_id in diff_lookup:
+                    diff_data = diff_lookup[clause_id]
+                    # Add old/new text (limit to 1000 chars)
+                    delta['old_text'] = diff_data.get('old_text', '')[:1000] if diff_data.get('old_text') else ''
+                    delta['new_text'] = diff_data.get('new_text', '')[:1000] if diff_data.get('new_text') else ''
+                    delta['regulatory_doc'] = diff_data.get('regulatory_doc', 'ISO 14971:2020')
+                    delta['reg_title'] = diff_data.get('reg_title', diff_data.get('title', ''))
         
         result = await service.detect_impacts_async(
             tenant_id=tenant_id,
