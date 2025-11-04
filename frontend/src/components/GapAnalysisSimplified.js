@@ -15,6 +15,14 @@ const GapAnalysisSimplified = () => {
   const [exportingCSV, setExportingCSV] = useState(false);
   const [expandedRows, setExpandedRows] = useState({});
   const [reviewedItems, setReviewedItems] = useState({});
+  const [customRationales, setCustomRationales] = useState({});
+
+  const handleRationaleChange = (idx, value) => {
+    setCustomRationales(prev => ({
+      ...prev,
+      [idx]: value
+    }));
+  };
 
   const handleRunAnalysis = async () => {
     try {
