@@ -250,6 +250,7 @@ const GapAnalysisSimplified = () => {
                     </th>
                     <th className="px-4 py-3 text-left font-semibold">Regulatory Clause</th>
                     <th className="px-4 py-3 text-left font-semibold">Change Type</th>
+                    <th className="px-4 py-3 text-left font-semibold">Impact</th>
                     <th className="px-4 py-3 text-left font-semibold">QSP Doc</th>
                     <th className="px-4 py-3 text-left font-semibold">QSP Clause</th>
                     <th className="px-4 py-3 text-left font-semibold">QSP Text (Preview)</th>
