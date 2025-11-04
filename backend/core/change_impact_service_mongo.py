@@ -309,11 +309,12 @@ class ChangeImpactServiceMongo:
                     'reg_title': reg_title,
                     'change_type': change_type.capitalize(),
                     'impact_level': impact_level,
+                    'similarity_score': round(confidence, 3),  # Include similarity score
                     'qsp_doc': qsp_doc,
                     'qsp_clause': section['section_path'] if section['section_path'] else 'Unknown',
                     'old_text': old_text,
                     'new_text': new_text,
-                    'qsp_text': section['text'][:200] if len(section['text']) > 200 else section['text'],  # Preview (first 200 chars)
+                    'qsp_text': section['text'][:300] if len(section['text']) > 300 else section['text'],  # Preview (first 300 chars)
                     'qsp_text_full': section['text'],  # Full text for modal/expansion
                     'rationale': rationale
                 })
