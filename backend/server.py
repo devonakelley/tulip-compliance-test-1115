@@ -1944,6 +1944,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.on_event("startup")
+async def startup_db_seed():
+    """Seed default admin user and tenant on startup if database is empty"""
+    from seed_admin import seed_default_admin
+    try:
+        await seed_default_admin()
+    except Exception as e:
+        logger.error(f"Failed to seed admin user: {e}")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
