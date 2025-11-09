@@ -24,6 +24,7 @@ from api import regulatory as regulatory_router_module
 from api import rag as rag_router_module
 from api import change_impact as change_impact_router_module
 from api import regulatory_upload as regulatory_upload_router_module
+from api import auth_api as auth_api_module  # New auth API
 from core.auth import get_current_user, get_current_user_optional
 from core.storage_service import storage_service
 from core.report_service import ReportService
@@ -55,6 +56,7 @@ logger = logging.getLogger(__name__)
 
 # Setup routers with database
 auth_router_module.set_database(db)
+auth_api_module.set_db(db)  # New auth API
 reports_router_module.set_database(db)
 regulatory_router_module.set_database(db)
 rag_router_module.set_database(db)
@@ -63,6 +65,7 @@ audit_logger.set_database(db)
 
 # Register routers
 api_router.include_router(auth_router_module.router)
+api_router.include_router(auth_api_module.router)  # New auth API
 api_router.include_router(reports_router_module.router)
 api_router.include_router(regulatory_router_module.router)
 api_router.include_router(rag_router_module.router)
