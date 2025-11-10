@@ -118,17 +118,6 @@ const Login = () => {
               )}
             </Button>
           </form>
-          
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Demo Credentials:
-            </p>
-            <div className="mt-2 text-xs text-gray-500 space-y-1">
-              <p>Tenant 1: admin@tulipmedical.com</p>
-              <p>Tenant 2: admin@medtechsolutions.com</p>
-              <p className="font-semibold">Password: password123</p>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>
