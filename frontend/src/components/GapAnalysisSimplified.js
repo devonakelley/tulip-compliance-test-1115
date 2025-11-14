@@ -456,9 +456,11 @@ const GapAnalysisSimplified = () => {
                                   placeholder="Add custom rationale, justification, or notes for audit trail..."
                                   value={customRationales[idx] || ''}
                                   onChange={(e) => handleRationaleChange(idx, e.target.value)}
+                                  onBlur={() => handleRationaleBlur(idx)}
+                                  disabled={savingReview[idx]}
                                 />
                                 <p className="text-xs text-gray-500 mt-1">
-                                  This field will be included in CSV export
+                                  {savingReview[idx] ? 'Saving...' : 'Auto-saves when you click away'}
                                 </p>
                               </div>
                             </div>
