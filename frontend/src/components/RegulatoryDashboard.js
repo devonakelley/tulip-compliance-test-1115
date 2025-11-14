@@ -345,8 +345,35 @@ const RegulatoryDashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Step 2: Diff Results */}
-      {deltas && (
+      {/* Loading State */}
+      {processingDiff && (
+        <Card>
+          <CardContent>
+            <LoaderSpinner message="Processing differences..." size="lg" />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Empty State */}
+      {!diffData && !processingDiff && (
+        <Card className="bg-gray-50">
+          <CardContent className="py-12 text-center">
+            <GitCompare className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">No Diff Generated Yet</h3>
+            <p className="text-gray-600">
+              Upload two regulatory documents to begin your analysis.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Diff Viewer */}
+      {diffData && !processingDiff && (
+        <RegulatoryDiffViewer diffData={diffData} />
+      )}
+
+      {/* Step 2: Diff Results (Legacy - can be removed later) */}
+      {deltas && false && (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
