@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { TrendingUp, Download, AlertCircle, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import LoaderSpinner from './LoaderSpinner';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -16,6 +17,92 @@ const GapAnalysisSimplified = () => {
   const [expandedRows, setExpandedRows] = useState({});
   const [reviewedItems, setReviewedItems] = useState({});
   const [customRationales, setCustomRationales] = useState({});
+  const [loadingResults, setLoadingResults] = useState(false);
+  const [savingReview, setSavingReview] = useState({});
+
+  // Load saved results on mount if runId exists in localStorage
+  useEffect(() => {
+    const savedRunId = localStorage.getItem('gap_analysis_run_id');
+    if (savedRunId) {
+      loadSavedResults(savedRunId);
+    }
+  }, []);
+
+  const loadSavedResults = async (savedRunId) => {
+    try {
+      setLoadingResults(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/api/impact/results/${savedRunId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.data && response.data.success) {
+        setAnalysisResults(response.data);
+        setRunId(savedRunId);
+        
+        // Restore review states and rationales
+        const reviewed = {};
+        const rationales = {};
+        response.data.impacts?.forEach((impact, idx) => {
+          reviewed[idx] = impact.is_reviewed || false;
+          rationales[idx] = impact.custom_rationale || '';
+        });
+        setReviewedItems(reviewed);
+        setCustomRationales(rationales);
+      }
+    } catch (error) {
+      console.error('Error loading saved results:', error);
+      // Don't show error toast - just means no saved results exist
+    } finally {
+      setLoadingResults(false);
+    }
+  };
+
+  const updateGapResult = async (resultId, updates) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API}/api/impact/update_result/${resultId}`,
+        updates,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+    } catch (error) {
+      console.error('Error updating gap result:', error);
+      toast.error('Failed to save changes');
+    }
+  };
+
+  const handleReviewToggle = async (idx) => {
+    const newValue = !reviewedItems[idx];
+    setReviewedItems(prev => ({
+      ...prev,
+      [idx]: newValue
+    }));
+
+    // Save to backend
+    const impact = analysisResults?.impacts?.[idx];
+    if (impact && impact.id) {
+      setSavingReview(prev => ({ ...prev, [idx]: true }));
+      await updateGapResult(impact.id, { is_reviewed: newValue });
+      setSavingReview(prev => ({ ...prev, [idx]: false }));
+    }
+  };
+
+  const handleRationaleBlur = async (idx) => {
+    const impact = analysisResults?.impacts?.[idx];
+    if (impact && impact.id) {
+      setSavingReview(prev => ({ ...prev, [idx]: true }));
+      await updateGapResult(impact.id, { custom_rationale: customRationales[idx] || '' });
+      setSavingReview(prev => ({ ...prev, [idx]: false }));
+      toast.success('Rationale saved', { duration: 1000 });
+    }
+  };
 
   const handleRationaleChange = (idx, value) => {
     setCustomRationales(prev => ({
