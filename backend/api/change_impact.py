@@ -101,6 +101,7 @@ async def analyze_change_impact(
     """
     Analyze which QSP sections are impacted by regulatory changes
     Fetches full diff_results from MongoDB to get old/new regulatory text
+    Saves results to gap_results collection for persistence
     
     Request body:
     {
@@ -164,6 +165,52 @@ async def analyze_change_impact(
             deltas=deltas,
             top_k=request.top_k
         )
+        
+        # Save results to gap_results collection for persistence
+        if result.get('success') and result.get('impacts'):
+            import uuid
+            from datetime import datetime, timezone
+            
+            run_id = result.get('run_id')
+            
+            # Save each impact as a separate document for easy updates
+            for idx, impact in enumerate(result['impacts']):
+                gap_result = {
+                    'id': str(uuid.uuid4()),
+                    'run_id': run_id,
+                    'tenant_id': tenant_id,
+                    'user_id': current_user['id'],
+                    'impact_index': idx,
+                    'regulatory_clause': impact.get('regulatory_clause'),
+                    'reg_clause': impact.get('reg_clause'),
+                    'change_type': impact.get('change_type'),
+                    'impact_level': impact.get('impact_level'),
+                    'qsp_doc': impact.get('qsp_doc'),
+                    'qsp_clause': impact.get('qsp_clause'),
+                    'qsp_text': impact.get('qsp_text'),
+                    'qsp_text_full': impact.get('qsp_text_full'),
+                    'old_text': impact.get('old_text'),
+                    'new_text': impact.get('new_text'),
+                    'rationale': impact.get('rationale'),
+                    'similarity_score': impact.get('similarity_score'),
+                    'is_reviewed': False,  # Default to not reviewed
+                    'custom_rationale': '',  # Empty by default
+                    'created_at': datetime.now(timezone.utc).isoformat(),
+                    'updated_at': datetime.now(timezone.utc).isoformat()
+                }
+                
+                # Upsert to avoid duplicates on re-run
+                await db.gap_results.update_one(
+                    {
+                        'tenant_id': tenant_id,
+                        'run_id': run_id,
+                        'impact_index': idx
+                    },
+                    {'$set': gap_result},
+                    upsert=True
+                )
+            
+            logger.info(f"Saved {len(result['impacts'])} gap results to database")
         
         return result
         
