@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import RegulatoryDiffViewer from './RegulatoryDiffViewer';
+import LoaderSpinner from './LoaderSpinner';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -16,6 +18,7 @@ const RegulatoryDashboard = () => {
   const [uploadingNew, setUploadingNew] = useState(false);
   const [processingDiff, setProcessingDiff] = useState(false);
   const [deltas, setDeltas] = useState(null);
+  const [diffData, setDiffData] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [impactResults, setImpactResults] = useState(null);
   const [internalDocs, setInternalDocs] = useState([]);
