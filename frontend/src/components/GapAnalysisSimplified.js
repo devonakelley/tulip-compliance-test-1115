@@ -280,7 +280,7 @@ const GapAnalysisSimplified = () => {
         <CardContent className="pt-6">
           <Button
             onClick={handleRunAnalysis}
-            disabled={analyzing}
+            disabled={analyzing || loadingResults}
             size="lg"
             className="w-full h-14 text-lg"
           >
@@ -299,8 +299,30 @@ const GapAnalysisSimplified = () => {
         </CardContent>
       </Card>
 
+      {/* Loading State */}
+      {(analyzing || loadingResults) && (
+        <Card>
+          <CardContent>
+            <LoaderSpinner message={analyzing ? "Analyzing compliance gaps..." : "Loading saved results..."} size="lg" />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Empty State */}
+      {!analysisResults && !analyzing && !loadingResults && (
+        <Card className="bg-gray-50">
+          <CardContent className="py-12 text-center">
+            <AlertCircle className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">No Analysis Results</h3>
+            <p className="text-gray-600">
+              Run a gap analysis to view compliance impacts.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Results Table */}
-      {analysisResults && analysisResults.impacts && analysisResults.impacts.length > 0 ? (
+      {analysisResults && analysisResults.impacts && analysisResults.impacts.length > 0 && !analyzing && !loadingResults ? (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
