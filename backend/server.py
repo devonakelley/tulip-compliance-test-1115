@@ -58,6 +58,7 @@ logger = logging.getLogger(__name__)
 # Setup routers with database
 auth_router_module.set_database(db)
 auth_api_module.set_db(db)  # New auth API
+dashboard_module.set_database(db)  # Dashboard API
 reports_router_module.set_database(db)
 regulatory_router_module.set_database(db)
 rag_router_module.set_database(db)
@@ -67,6 +68,7 @@ audit_logger.set_database(db)
 # Register routers
 api_router.include_router(auth_router_module.router)
 api_router.include_router(auth_api_module.router)  # New auth API
+api_router.include_router(dashboard_module.router)  # Dashboard API
 api_router.include_router(reports_router_module.router)
 api_router.include_router(regulatory_router_module.router)
 api_router.include_router(rag_router_module.router)
