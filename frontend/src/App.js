@@ -31,8 +31,15 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await axios.get(`${API}/dashboard`);
-      setDashboardData(response.data);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/dashboard/metrics`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.data && response.data.success) {
+        setDashboardData(response.data);
+      }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       toast.error('Failed to load dashboard data');
