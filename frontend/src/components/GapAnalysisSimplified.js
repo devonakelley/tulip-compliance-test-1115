@@ -214,11 +214,8 @@ const GapAnalysisSimplified = () => {
     }));
   };
 
-  const toggleReviewed = (idx) => {
-    setReviewedItems(prev => ({
-      ...prev,
-      [idx]: !prev[idx]
-    }));
+  const toggleReviewed = async (idx) => {
+    await handleReviewToggle(idx);
   };
 
   const getImpactBadge = (level) => {
