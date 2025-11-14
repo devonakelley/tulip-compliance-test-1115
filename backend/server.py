@@ -25,6 +25,7 @@ from api import rag as rag_router_module
 from api import change_impact as change_impact_router_module
 from api import regulatory_upload as regulatory_upload_router_module
 from api import auth_api as auth_api_module  # New auth API
+from api import dashboard as dashboard_module  # Dashboard metrics API
 from core.auth import get_current_user, get_current_user_optional
 from core.storage_service import storage_service
 from core.report_service import ReportService
