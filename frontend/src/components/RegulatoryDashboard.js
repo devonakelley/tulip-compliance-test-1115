@@ -158,9 +158,15 @@ const RegulatoryDashboard = () => {
       formData.append('old_file_path', oldPdf.file_path);
       formData.append('new_file_path', newPdf.file_path);
       
-      const response = await axios.post(`${API}/api/regulatory/preprocess/iso_diff`, formData);
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/api/regulatory/preprocess/iso_diff`, formData, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       
       setDeltas(response.data);
+      setDiffData(response.data); // Store for diff viewer
       
       // Save diff results to localStorage for Gap Analysis tab
       localStorage.setItem('regulatory_diff', JSON.stringify(response.data));
