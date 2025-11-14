@@ -139,3 +139,4 @@ boto3==1.40.41
 passlib==1.7.4
 chromadb==0.4.22
 PyMuPDF==1.26.5
+reportlab==4.0.7
