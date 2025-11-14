@@ -144,6 +144,20 @@ const GapAnalysisSimplified = () => {
       if (response.data.success) {
         setAnalysisResults(response.data);
         setRunId(response.data.run_id);
+        
+        // Save runId for persistence across sessions
+        localStorage.setItem('gap_analysis_run_id', response.data.run_id);
+        
+        // Initialize review states from saved data
+        const reviewed = {};
+        const rationales = {};
+        response.data.impacts?.forEach((impact, idx) => {
+          reviewed[idx] = impact.is_reviewed || false;
+          rationales[idx] = impact.custom_rationale || '';
+        });
+        setReviewedItems(reviewed);
+        setCustomRationales(rationales);
+        
         toast.success(
           `✅ Analysis complete: ${response.data.total_impacts_found} impacts found`,
           { id: 'analysis' }
