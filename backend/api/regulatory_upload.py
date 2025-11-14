@@ -675,3 +675,158 @@ async def delete_qsp_document(
         logger.error(f"Failed to delete QSP document: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
+
+
+
+@router.post("/export_diff_pdf")
+async def export_diff_pdf(
+    diff_id: str = Form(None),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Generate PDF export of regulatory diff
+    Uses reportlab for server-side PDF generation
+    """
+    try:
+        from reportlab.lib.pagesizes import letter, A4
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+        from reportlab.lib import colors
+        from reportlab.lib.enums import TA_LEFT, TA_CENTER
+        import io
+        from fastapi.responses import StreamingResponse
+        
+        tenant_id = current_user["tenant_id"]
+        
+        # Fetch most recent diff for tenant
+        diff_result = await db.diff_results.find_one(
+            {'tenant_id': tenant_id},
+            sort=[('created_at', -1)]
+        )
+        
+        if not diff_result:
+            raise HTTPException(status_code=404, detail="No diff results found")
+        
+        # Create PDF buffer
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        story = []
+        styles = getSampleStyleSheet()
+        
+        # Custom styles
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=24,
+            textColor=colors.HexColor('#1e40af'),
+            spaceAfter=30,
+            alignment=TA_CENTER
+        )
+        
+        heading_style = ParagraphStyle(
+            'CustomHeading',
+            parent=styles['Heading2'],
+            fontSize=14,
+            textColor=colors.HexColor('#1e40af'),
+            spaceAfter=12,
+            spaceBefore=12
+        )
+        
+        # Title
+        company_name = current_user.get('company_name', 'Company')
+        story.append(Paragraph("Regulatory Diff Report", title_style))
+        story.append(Paragraph(f"<b>Company:</b> {company_name}", styles['Normal']))
+        story.append(Paragraph(f"<b>Generated:</b> {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}", styles['Normal']))
+        story.append(Spacer(1, 0.5*inch))
+        
+        # Summary
+        deltas = diff_result.get('deltas', [])
+        added_count = sum(1 for d in deltas if d.get('change_type', '').lower() in ['added', 'new'])
+        modified_count = sum(1 for d in deltas if d.get('change_type', '').lower() == 'modified')
+        deleted_count = sum(1 for d in deltas if d.get('change_type', '').lower() == 'deleted')
+        
+        story.append(Paragraph("Summary", heading_style))
+        summary_data = [
+            ['Total Changes', str(len(deltas))],
+            ['Added', str(added_count)],
+            ['Modified', str(modified_count)],
+            ['Deleted', str(deleted_count)]
+        ]
+        summary_table = Table(summary_data, colWidths=[2*inch, 1*inch])
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f3f4f6')),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey)
+        ]))
+        story.append(summary_table)
+        story.append(Spacer(1, 0.3*inch))
+        
+        # Detailed Changes
+        story.append(Paragraph("Detailed Changes", heading_style))
+        
+        for idx, delta in enumerate(deltas[:50]):  # Limit to 50 for PDF size
+            clause_id = delta.get('clause_id', 'Unknown')
+            change_type = delta.get('change_type', 'Unknown')
+            old_text = delta.get('old_text', 'N/A')[:500]  # Limit text length
+            new_text = delta.get('new_text', 'N/A')[:500]
+            
+            # Clause header
+            story.append(Paragraph(f"<b>Clause {clause_id}</b> - {change_type.upper()}", styles['Heading3']))
+            
+            # Create comparison table
+            data = [
+                ['Old Version', 'New Version'],
+                [old_text, new_text]
+            ]
+            
+            change_table = Table(data, colWidths=[3*inch, 3*inch])
+            
+            # Color code based on change type
+            if change_type.lower() in ['added', 'new']:
+                bg_color = colors.HexColor('#dcfce7')
+            elif change_type.lower() == 'modified':
+                bg_color = colors.HexColor('#fef3c7')
+            else:
+                bg_color = colors.HexColor('#fee2e2')
+            
+            change_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e5e7eb')),
+                ('BACKGROUND', (0, 1), (-1, 1), bg_color),
+                ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP')
+            ]))
+            story.append(change_table)
+            story.append(Spacer(1, 0.2*inch))
+            
+            # Page break every 5 clauses
+            if (idx + 1) % 5 == 0 and idx < len(deltas) - 1:
+                story.append(PageBreak())
+        
+        # Build PDF
+        doc.build(story)
+        buffer.seek(0)
+        
+        # Return as streaming response
+        return StreamingResponse(
+            buffer,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=regulatory_diff_{datetime.utcnow().strftime('%Y%m%d')}.pdf"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to generate PDF: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to generate PDF: {str(e)}")
+
