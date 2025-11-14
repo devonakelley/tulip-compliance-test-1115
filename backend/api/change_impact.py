@@ -344,3 +344,113 @@ async def list_analysis_runs(
     except Exception as e:
         logger.error(f"Failed to list runs: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+@router.put("/update_result/{result_id}")
+async def update_gap_result(
+    result_id: str,
+    is_reviewed: bool = None,
+    custom_rationale: str = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Update gap analysis result review status and custom rationale
+    Used for persisting user's review work
+    """
+    try:
+        from motor.motor_asyncio import AsyncIOMotorClient
+        import os
+        
+        tenant_id = current_user["tenant_id"]
+        
+        mongo_url = os.environ.get('MONGO_URL')
+        db_name = os.environ.get('DB_NAME', 'compliance_checker')
+        mongo_client = AsyncIOMotorClient(mongo_url)
+        db = mongo_client[db_name]
+        
+        # Build update dict
+        update_data = {}
+        if is_reviewed is not None:
+            update_data['is_reviewed'] = is_reviewed
+        if custom_rationale is not None:
+            update_data['custom_rationale'] = custom_rationale
+        
+        if not update_data:
+            raise HTTPException(status_code=400, detail="No update data provided")
+        
+        # Add updated timestamp
+        from datetime import datetime, timezone
+        update_data['updated_at'] = datetime.now(timezone.utc).isoformat()
+        
+        # Update in database
+        result = await db.gap_results.update_one(
+            {
+                'id': result_id,
+                'tenant_id': tenant_id  # Ensure tenant isolation
+            },
+            {'$set': update_data}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Gap result not found")
+        
+        logger.info(f"Updated gap result {result_id} for tenant {tenant_id}")
+        
+        return {
+            'success': True,
+            'result_id': result_id,
+            'updated_fields': list(update_data.keys())
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to update gap result: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/results/{run_id}")
+async def get_gap_results(
+    run_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get saved gap analysis results for a specific run
+    Includes review status and custom rationales
+    """
+    try:
+        from motor.motor_asyncio import AsyncIOMotorClient
+        import os
+        
+        tenant_id = current_user["tenant_id"]
+        
+        mongo_url = os.environ.get('MONGO_URL')
+        db_name = os.environ.get('DB_NAME', 'compliance_checker')
+        mongo_client = AsyncIOMotorClient(mongo_url)
+        db = mongo_client[db_name]
+        
+        # Fetch all results for this run
+        results = await db.gap_results.find({
+            'run_id': run_id,
+            'tenant_id': tenant_id
+        }).sort('impact_index', 1).to_list(length=None)
+        
+        if not results:
+            raise HTTPException(status_code=404, detail="No results found for this run")
+        
+        logger.info(f"Retrieved {len(results)} gap results for run {run_id}")
+        
+        return {
+            'success': True,
+            'run_id': run_id,
+            'total_impacts_found': len(results),
+            'impacts': results
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get gap results: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
