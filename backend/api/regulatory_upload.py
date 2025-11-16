@@ -540,12 +540,12 @@ async def map_clauses(
                     # Convert clauses to sections format expected by impact service
                     sections = [
                         {
-                            'section_path': clause['clause_number'],
-                            'heading': clause['title'],
-                            'text': clause['text'],
-                            'version': parsed_data['revision']
+                            'section_path': clause.get('clause', 'Unknown'),  # Fixed: was clause_number
+                            'heading': clause.get('title', ''),
+                            'text': clause.get('text', ''),
+                            'version': parsed_data.get('revision', '')
                         }
-                        for clause in parsed_data['clauses']
+                        for clause in parsed_data.get('clauses', [])
                     ]
                     
                     result = impact_service.ingest_qsp_document(
