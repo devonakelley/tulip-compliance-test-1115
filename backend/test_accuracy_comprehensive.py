@@ -114,21 +114,22 @@ async def test_complete_pipeline():
     total_expected = 3
     
     for impact in analysis_result['impacts']:
-        clause_id = impact['clause_id']
+        clause_id = impact['reg_clause']
         qsp_doc = impact['qsp_doc']
-        confidence = impact['confidence_score']
+        qsp_clause = impact['qsp_clause']
+        confidence = impact['similarity_score']
         rationale = impact.get('rationale', 'No rationale provided')
         
         print(f"\n🔸 Regulatory Change: {clause_id}")
-        print(f"   → Matched QSP: {qsp_doc}")
+        print(f"   → Matched QSP: {qsp_doc} (Section {qsp_clause})")
         print(f"   → Confidence: {confidence:.1%}")
         print(f"   → Rationale: {rationale[:150]}...")
         
         # Check if this is an expected critical match
         if clause_id in expected_matches:
             for expected_qsp in expected_matches[clause_id]:
-                if expected_qsp in qsp_doc:
-                    matches_found[clause_id].append(qsp_doc)
+                if expected_qsp in qsp_clause or expected_qsp in str(qsp_doc):
+                    matches_found[clause_id].append(f"{qsp_doc}-{qsp_clause}")
                     print(f"   ✅ CRITICAL MATCH VERIFIED")
                     break
     
