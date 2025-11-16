@@ -105,6 +105,18 @@
 user_problem_statement: Build a Regulatory Change Dashboard (PRD-05) that allows users to upload old/new regulatory PDFs, automatically generates unified diffs with color-coded changes, and maps those changes to internal QSP documents. System should display clause-level impacts with clear reasoning (WHY flagged) and regulatory source text (WHAT triggered it). Frontend UI integrated into App.js at /regulatory route.
 
 backend:
+  - task: "Critical Data Truncation Bug Fixes (3 fixes)"
+    implemented: true
+    working: true
+    file: "/app/backend/core/iso_diff_processor.py, /app/backend/core/qsp_parser.py, /app/backend/core/change_impact_service_mongo.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "FIXED 3 CRITICAL DATA TRUNCATION BUGS: 1) iso_diff_processor.py - Removed 500-character truncation on lines 120, 130, 143 (regulatory deltas now preserve full text), 2) qsp_parser.py - Removed 2000-character truncation on line 257 (QSP documents now preserve full content), 3) change_impact_service_mongo.py - Increased embedding limit from 8000 to 16000 characters on line 55 (doubled capacity for longer documents). VERIFICATION: All tests passed - regulatory text length verified at 1020+ chars (full preservation), no [:500] or [:2000] truncation found in code, embedding limit confirmed at 16000. IMPACT: System now captures complete regulatory requirements, preserves full QSP documents, and can generate embeddings for longer documents without data loss. Backend restarted successfully and running without errors. These fixes are critical for accurate gap detection."
+
   - task: "Enterprise QSP system foundation setup"
     implemented: true
     working: true
