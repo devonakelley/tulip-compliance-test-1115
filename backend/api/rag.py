@@ -64,7 +64,7 @@ async def upload_regulatory_document(
     """
     try:
         tenant_id = current_user["tenant_id"]
-        user_id = current_user["user_id"]
+        user_id = current_user["id"]
         
         # Validate framework
         try:
@@ -181,7 +181,7 @@ async def check_compliance(
         # Log audit
         await audit_logger.log_action(
             tenant_id=tenant_id,
-            user_id=current_user["user_id"],
+            user_id=current_user["id"],
             action="check_compliance_rag",
             target=qsp_doc_id,
             metadata={
@@ -236,7 +236,7 @@ async def delete_all_regulatory_documents(
     """
     try:
         tenant_id = current_user["tenant_id"]
-        user_id = current_user["user_id"]
+        user_id = current_user["id"]
         
         # Get all regulatory documents for this tenant
         docs = rag_service.list_regulatory_documents(tenant_id)
@@ -292,7 +292,7 @@ async def delete_regulatory_document(
     """
     try:
         tenant_id = current_user["tenant_id"]
-        user_id = current_user["user_id"]
+        user_id = current_user["id"]
         
         # Delete from RAG
         success = rag_service.delete_document(tenant_id, doc_id)
@@ -331,7 +331,7 @@ async def batch_delete_regulatory_documents(
     """
     try:
         tenant_id = current_user["tenant_id"]
-        user_id = current_user["user_id"]
+        user_id = current_user["id"]
         
         if not doc_ids:
             raise HTTPException(status_code=400, detail="No document IDs provided")
@@ -429,7 +429,7 @@ async def reprocess_regulatory_document(
     """
     try:
         tenant_id = current_user["tenant_id"]
-        user_id = current_user["user_id"]
+        user_id = current_user["id"]
         
         # Get document metadata from MongoDB
         reg_doc = await db.regulatory_documents.find_one({

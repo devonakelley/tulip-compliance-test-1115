@@ -44,7 +44,7 @@ async def list_reports(
         # Log audit event
         await audit_logger.log_action(
             tenant_id=tenant_id,
-            user_id=current_user["user_id"],
+            user_id=current_user["id"],
             action="view_reports",
             target="reports_list",
             metadata={"count": len(reports)}

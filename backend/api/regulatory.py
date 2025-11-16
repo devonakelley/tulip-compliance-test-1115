@@ -80,7 +80,7 @@ async def extract_document_references(
     """
     try:
         tenant_id = current_user["tenant_id"]
-        user_id = current_user["user_id"]
+        user_id = current_user["id"]
         
         # Read file content
         content = await file.read()
@@ -129,7 +129,7 @@ async def process_document_for_traceability(
     """
     try:
         tenant_id = current_user["tenant_id"]
-        user_id = current_user["user_id"]
+        user_id = current_user["id"]
         
         # Determine document type
         if not document_type:
