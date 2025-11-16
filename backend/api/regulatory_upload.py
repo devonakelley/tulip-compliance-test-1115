@@ -3,6 +3,7 @@ Regulatory Document Upload and Diff API
 Handles upload of old/new regulatory PDFs and diff processing
 """
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional
 import logging
 import os
@@ -10,7 +11,7 @@ from pathlib import Path
 import shutil
 from datetime import datetime
 from core.iso_diff_processor import get_iso_diff_processor
-from core.auth import get_current_user
+from core.auth_utils import get_current_user_from_token
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 logger = logging.getLogger(__name__)
