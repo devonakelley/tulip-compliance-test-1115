@@ -13,6 +13,19 @@ from core.auth_utils import get_current_user_from_token
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/impact", tags=["change_impact"])
+security = HTTPBearer()
+
+# Database will be injected
+db = None
+
+def set_database(database):
+    """Set database instance"""
+    global db
+    db = database
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get current user using shared auth function"""
+    return await get_current_user_from_token(credentials, db)
 
 
 # Pydantic models
