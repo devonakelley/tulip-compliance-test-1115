@@ -276,7 +276,8 @@ class ISODiffProcessor:
         output_path: str = None
     ) -> List[Dict[str, Any]]:
         """
-        Process old and new regulatory PDFs to generate deltas
+        Process old and new regulatory PDFs to generate deltas.
+        Now includes standard identification to prevent incorrect diffing.
         
         Args:
             old_pdf_path: Path to old version PDF
@@ -285,27 +286,20 @@ class ISODiffProcessor:
             
         Returns:
             List of delta objects
+            
+        Raises:
+            ValueError: If documents are incompatible (e.g., different parts of same series)
         """
         try:
-            logger.info("Starting ISO diff processing...")
+            logger.info("Starting ISO diff processing with standard identification...")
             
-            # Extract text from both PDFs
-            logger.info("Extracting text from old PDF...")
-            old_text = self.extract_text_from_pdf(old_pdf_path)
+            # Use new analyze_documents method which includes standard identification
+            analysis_result = self.analyze_documents(old_pdf_path, new_pdf_path)
             
-            logger.info("Extracting text from new PDF...")
-            new_text = self.extract_text_from_pdf(new_pdf_path)
-            
-            # Extract clauses
-            logger.info("Extracting clauses from old version...")
-            old_clauses = self.extract_clauses(old_text)
-            
-            logger.info("Extracting clauses from new version...")
-            new_clauses = self.extract_clauses(new_text)
-            
-            # Compute diff
-            logger.info("Computing differences...")
-            deltas = self.compute_diff(old_clauses, new_clauses)
+            # Check analysis type
+            if analysis_result.get('analysis_type') == 'VERSION_DIFF':
+                # Extract deltas from successful version diff
+                deltas = analysis_result.get('deltas', [])
             
             # Save to file if path provided
             if output_path:
