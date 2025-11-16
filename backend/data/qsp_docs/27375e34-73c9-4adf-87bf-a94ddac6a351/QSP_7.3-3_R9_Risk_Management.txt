@@ -1,0 +1,27 @@
+QSP 7.3-3 R9 Risk Management
+
+1. PURPOSE
+This procedure establishes requirements for risk management activities.
+
+2. SCOPE  
+This procedure applies to all medical device development projects.
+
+3.2 Risk Analysis
+The organization shall conduct risk analysis for all medical devices.
+Risk analysis shall identify potential hazards and estimate risks.
+
+4.1 Risk Evaluation
+Risk evaluation shall determine if risk reduction is necessary.
+The organization shall establish risk acceptability criteria.
+
+4.2 Risk Control
+Risk control measures shall be implemented to reduce risks.
+The effectiveness of risk control measures shall be verified.
+
+4.2.2 Risk Control Verification
+Verification activities shall confirm risk control effectiveness.
+Documentation shall demonstrate risk control implementation.
+
+4.3 Risk Management Report
+A risk management report shall be prepared for each medical device.
+The report shall summarize all risk management activities.
