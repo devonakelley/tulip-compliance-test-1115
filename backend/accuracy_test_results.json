@@ -1,0 +1,18 @@
+{
+  "verdict": "PRODUCTION_READY",
+  "critical_matches": 3,
+  "total_expected": 3,
+  "false_positives": 0,
+  "total_impacts_found": 6,
+  "matches_detail": {
+    "4.2.4": [
+      "Accuracy-4.2.4"
+    ],
+    "7.5.1.1": [
+      "Accuracy-7.5.1"
+    ],
+    "8.2.6": [
+      "Accuracy-8.2.2"
+    ]
+  }
+}
