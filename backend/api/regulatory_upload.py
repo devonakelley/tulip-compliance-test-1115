@@ -555,24 +555,33 @@ async def map_clauses(
                         sections=sections
                     )
                     
+                    logger.info(f"Ingest result: {result}")
+                    logger.info(f"Has pending operations: {hasattr(impact_service, '_pending_mongo_operations')}")
+                    
                     # Handle MongoDB persistence if there are pending operations
                     if hasattr(impact_service, '_pending_mongo_operations'):
                         pending = impact_service._pending_mongo_operations
                         
+                        logger.info(f"About to persist {pending['count']} sections to MongoDB")
+                        
                         # Clear existing sections for this doc first (idempotency)
-                        await db.qsp_sections.delete_many({
+                        delete_result = await db.qsp_sections.delete_many({
                             'tenant_id': pending['tenant_id'],
                             'doc_id': pending['doc_id']
                         })
+                        logger.info(f"Deleted {delete_result.deleted_count} existing sections")
                         
                         # Insert new sections
                         if pending['sections']:
-                            await db.qsp_sections.insert_many(pending['sections'])
+                            insert_result = await db.qsp_sections.insert_many(pending['sections'])
+                            logger.info(f"Inserted {len(insert_result.inserted_ids)} sections to MongoDB")
                         
                         logger.info(f"✅ Persisted {pending['count']} sections to MongoDB for {file_path.name}")
                         
                         # Clear pending operations
                         delattr(impact_service, '_pending_mongo_operations')
+                    else:
+                        logger.warning(f"No pending operations found for {file_path.name}")
                     
                     total_documents += 1
                     total_clauses += result['sections_embedded']
