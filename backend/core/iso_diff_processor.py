@@ -28,6 +28,102 @@ class ISODiffProcessor:
         """Initialize processor"""
         self.clause_pattern = re.compile(r'(\d+(?:\.\d+)*)\s+([A-Z][^.\n]+)')
     
+    def analyze_documents(
+        self, 
+        doc1_path: str, 
+        doc2_path: str
+    ) -> Dict[str, Any]:
+        """
+        Main entry point for document analysis. Routes to appropriate handler based on standard identification.
+        
+        Args:
+            doc1_path: Path to first PDF document
+            doc2_path: Path to second PDF document
+            
+        Returns:
+            dict with analysis results or error message
+            
+        Raises:
+            ValueError: If documents are incompatible for comparison
+        """
+        
+        # Extract text from both documents
+        doc1_text = self.extract_text_from_pdf(doc1_path)
+        doc2_text = self.extract_text_from_pdf(doc2_path)
+        
+        # Identify both documents
+        doc1_id = identify_standard(doc1_text)
+        doc2_id = identify_standard(doc2_text)
+        
+        # Determine analysis mode
+        analysis_mode = should_diff_or_map(doc1_id, doc2_id)
+        
+        # Route to appropriate handler
+        if analysis_mode == 'VERSION_DIFF':
+            logger.info(f"✅ Running version diff: {doc1_id['full_id']} vs {doc2_id['full_id']}")
+            return self.run_version_diff(doc1_text, doc2_text, doc1_id, doc2_id)
+        
+        elif analysis_mode == 'CROSS_REFERENCE':
+            logger.warning(f"⚠️ Different standards detected: {doc1_id['full_id']} and {doc2_id['full_id']}")
+            logger.info(f"   Part {doc1_id['part']} and Part {doc2_id['part']} are companion standards.")
+            logger.info(f"   Generating cross-reference response instead of diff.")
+            return create_cross_reference_response(doc1_id, doc2_id)
+        
+        elif analysis_mode == 'INCOMPATIBLE':
+            error_response = create_incompatibility_error(doc1_id, doc2_id)
+            logger.error(f"❌ {error_response['message']}: {error_response['reason']}")
+            
+            # Raise exception with clear user-facing message
+            raise ValueError(
+                f"Cannot compare {error_response['doc1']} with {error_response['doc2']}.\n\n"
+                f"Reason: {error_response['reason']}\n\n"
+                f"To diff standards:\n"
+                f"  ✅ Upload: ISO 10993-18:2005 and ISO 10993-18:2020\n"
+                f"  ❌ Avoid: ISO 10993-18:2020 and ISO 10993-17:2023\n\n"
+                f"Part 18 and Part 17 are companion standards, not versions."
+            )
+        
+        # Should never reach here
+        return {'error': True, 'message': 'Unknown analysis mode'}
+    
+    def run_version_diff(
+        self,
+        doc1_text: str,
+        doc2_text: str,
+        doc1_id: Dict[str, str],
+        doc2_id: Dict[str, str]
+    ) -> Dict[str, Any]:
+        """
+        Perform clause-by-clause diff for two versions of the same standard.
+        This is the original diff logic for version comparison.
+        
+        Args:
+            doc1_text: Full text of old version
+            doc2_text: Full text of new version
+            doc1_id: Standard identification dict for old version
+            doc2_id: Standard identification dict for new version
+            
+        Returns:
+            dict with diff results including deltas
+        """
+        # Extract clauses from both documents
+        old_clauses = self.extract_clauses(doc1_text)
+        new_clauses = self.extract_clauses(doc2_text)
+        
+        # Compute diff
+        deltas = self.compute_diff(old_clauses, new_clauses)
+        
+        return {
+            'success': True,
+            'analysis_type': 'VERSION_DIFF',
+            'old_standard': doc1_id['full_id'],
+            'new_standard': doc2_id['full_id'],
+            'old_year': doc1_id['year'],
+            'new_year': doc2_id['year'],
+            'total_changes': len(deltas),
+            'deltas': deltas
+        }
+    
     def extract_text_from_pdf(self, pdf_path: str) -> str:
         """
         Extract text from PDF file
