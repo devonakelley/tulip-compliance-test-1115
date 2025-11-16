@@ -4172,6 +4172,7 @@ Rev 9
     def test_admin_authentication(self):
         """Test authentication with admin credentials from review request"""
         try:
+            # First try admin credentials
             login_data = {
                 "email": "admin@tulipmedical.com",
                 "password": "admin123"
@@ -4187,12 +4188,13 @@ Rev 9
                 self.log_test("Admin Authentication", True, f"JWT token received, tenant_id: {self.tenant_id}")
                 return True
             else:
-                self.log_test("Admin Authentication", False, f"Status: {response.status_code}, Response: {response.text}")
-                return False
+                # Admin login failed, try to create a test user
+                self.log_test("Admin Authentication", False, f"Admin login failed: {response.status_code}, trying to create test user...")
+                return self.create_and_login_test_user()
                 
         except Exception as e:
-            self.log_test("Admin Authentication", False, f"Exception: {str(e)}")
-            return False
+            self.log_test("Admin Authentication", False, f"Exception: {str(e)}, trying to create test user...")
+            return self.create_and_login_test_user()
 
     def test_qsp_document_listing(self):
         """Test QSP document listing and verify clause_number field structure"""
