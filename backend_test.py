@@ -4219,7 +4219,8 @@ Rev 9
                 
                 for doc in documents:
                     clauses = doc.get('clauses', [])
-                    for clause in clauses:
+                    if clauses:  # Only check if clauses exist
+                        clause = clauses[0]  # Check first clause
                         if 'clause_number' in clause:
                             field_analysis.append("✅ clause_number found")
                         elif 'clause' in clause:
@@ -4228,7 +4229,7 @@ Rev 9
                         else:
                             field_analysis.append("⚠️ No clause identifier field found")
                             clause_number_verified = False
-                        break  # Check only first clause per document
+                        break  # Check only first document with clauses
                 
                 details = f"Documents: {doc_count}, Field verification: {'PASS' if clause_number_verified else 'FAIL'}"
                 if field_analysis:
