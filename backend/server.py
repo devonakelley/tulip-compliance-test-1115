@@ -59,6 +59,7 @@ logger = logging.getLogger(__name__)
 auth_router_module.set_database(db)
 auth_api_module.set_db(db)  # New auth API
 dashboard_module.set_database(db)  # Dashboard API
+change_impact_router_module.set_database(db)  # Change impact API
 reports_router_module.set_database(db)
 regulatory_router_module.set_database(db)
 rag_router_module.set_database(db)
