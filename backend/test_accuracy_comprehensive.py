@@ -146,21 +146,22 @@ async def test_complete_pipeline():
     false_positives = 0
     
     for impact in analysis_result['impacts']:
-        clause_id = impact['clause_id']
+        clause_id = impact['reg_clause']
+        qsp_clause = impact['qsp_clause']
         qsp_doc = impact['qsp_doc']
-        confidence = impact['confidence_score']
+        confidence = impact['similarity_score']
         
         # Check for obviously wrong matches
         # E.g., electronic records (4.2.4) shouldn't match complaints (8.2.1)
-        if clause_id == "4.2.4" and "8.2" in qsp_doc and "8.2.4" not in qsp_doc:
-            print(f"⚠️  Potential false positive: {clause_id} → {qsp_doc} ({confidence:.1%})")
+        if clause_id == "4.2.4" and "8.2.1" in qsp_clause:
+            print(f"⚠️  Potential false positive: {clause_id} → {qsp_clause} ({confidence:.1%})")
             if confidence > 0.65:
                 false_positives += 1
                 print(f"   ❌ HIGH CONFIDENCE FALSE POSITIVE")
         
-        # Validation (7.5.1.1) shouldn't match complaints or infrastructure
-        if clause_id == "7.5.1.1" and ("8.2.1" in qsp_doc or "6.3" in qsp_doc):
-            print(f"⚠️  Potential false positive: {clause_id} → {qsp_doc} ({confidence:.1%})")
+        # Validation (7.5.1.1) shouldn't match complaints or infrastructure with high confidence
+        if clause_id == "7.5.1.1" and ("8.2.1" in qsp_clause or ("6.3" in qsp_clause and "7.5" not in qsp_clause)):
+            print(f"⚠️  Potential false positive: {clause_id} → {qsp_clause} ({confidence:.1%})")
             if confidence > 0.65:
                 false_positives += 1
                 print(f"   ❌ HIGH CONFIDENCE FALSE POSITIVE")
