@@ -16,6 +16,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/regulatory", tags=["regulatory_docs"])
+security = HTTPBearer()
 
 # Database will be injected
 db: AsyncIOMotorDatabase = None
