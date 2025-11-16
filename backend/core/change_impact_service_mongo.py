@@ -52,8 +52,8 @@ class ChangeImpactServiceMongo:
         """Generate embedding using OpenAI"""
         try:
             text = ' '.join(text.split())
-            if len(text) > 8000:
-                text = text[:8000]
+            if len(text) > 16000:  # Increased limit to handle longer documents
+                text = text[:16000]
             
             response = self.openai_client.embeddings.create(
                 input=text,
