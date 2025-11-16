@@ -4221,5 +4221,406 @@ def main():
             print(f"\n💥 Unexpected error: {str(e)}")
             return 1
 
+    def run_qsp_workflow_testing(self):
+        """Run comprehensive QSP document workflow testing as requested in review"""
+        print("🚀 COMPREHENSIVE QSP DOCUMENT WORKFLOW TESTING")
+        print(f"📍 Testing against: {self.base_url}")
+        print("🎯 Focus: QSP Documents Display Fix (Field Name Mismatch)")
+        print("=" * 60)
+        
+        # 1. Authentication Test with admin credentials
+        print("🔐 1. Authentication Test...")
+        auth_success = self.test_admin_authentication()
+        
+        if not auth_success:
+            print("❌ Admin authentication failed. Cannot proceed with QSP workflow testing.")
+            return False
+        
+        print(f"✅ Authenticated successfully with admin@tulipmedical.com")
+        
+        # 2. QSP Document Listing Test (CRITICAL - check clause_number field)
+        print("\n📋 2. QSP Document Listing Test (CRITICAL)...")
+        qsp_list_success, qsp_list_data = self.test_qsp_document_listing()
+        
+        # 3. QSP Document Upload Test (if no documents exist)
+        print("\n📄 3. QSP Document Upload Test...")
+        qsp_upload_success, qsp_upload_data = self.test_qsp_document_upload_with_validation()
+        
+        # 4. QSP Clause Mapping Test
+        print("\n🔗 4. QSP Clause Mapping Test...")
+        clause_mapping_success, clause_mapping_data = self.test_qsp_clause_mapping()
+        
+        # 5. MongoDB Verification
+        print("\n🗄️ 5. MongoDB Verification...")
+        mongodb_success = self.test_mongodb_qsp_sections()
+        
+        # 6. Gap Analysis Prerequisites
+        print("\n🔍 6. Gap Analysis Prerequisites Test...")
+        gap_analysis_success = self.test_gap_analysis_prerequisites()
+        
+        # Generate QSP workflow summary
+        return self.generate_qsp_workflow_summary(
+            auth_success, qsp_list_success, qsp_upload_success, 
+            clause_mapping_success, mongodb_success, gap_analysis_success,
+            qsp_list_data, qsp_upload_data, clause_mapping_data
+        )
+
+    def test_admin_authentication(self):
+        """Test authentication with admin credentials from review request"""
+        try:
+            login_data = {
+                "email": "admin@tulipmedical.com",
+                "password": "admin123"
+            }
+            
+            response = requests.post(f"{self.api_url}/auth/login", json=login_data, timeout=10)
+            
+            if response.status_code == 200:
+                token_data = response.json()
+                self.auth_token = token_data["access_token"]
+                self.tenant_id = token_data["tenant_id"]
+                self.user_id = token_data["user_id"]
+                self.log_test("Admin Authentication", True, f"JWT token received, tenant_id: {self.tenant_id}")
+                return True
+            else:
+                self.log_test("Admin Authentication", False, f"Status: {response.status_code}, Response: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Admin Authentication", False, f"Exception: {str(e)}")
+            return False
+
+    def test_qsp_document_listing(self):
+        """Test QSP document listing and verify clause_number field structure"""
+        try:
+            if not self.auth_token:
+                self.log_test("QSP Document Listing", False, "No authentication token")
+                return False, {}
+            
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            response = requests.get(f"{self.api_url}/regulatory/list/qsp", headers=headers, timeout=10)
+            
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                documents = data.get('documents', [])
+                doc_count = len(documents)
+                
+                # CRITICAL: Verify clause_number field exists (not 'clause')
+                clause_number_verified = True
+                field_analysis = []
+                
+                for doc in documents:
+                    clauses = doc.get('clauses', [])
+                    for clause in clauses:
+                        if 'clause_number' in clause:
+                            field_analysis.append("✅ clause_number found")
+                        elif 'clause' in clause:
+                            field_analysis.append("❌ 'clause' field found (should be 'clause_number')")
+                            clause_number_verified = False
+                        else:
+                            field_analysis.append("⚠️ No clause identifier field found")
+                            clause_number_verified = False
+                        break  # Check only first clause per document
+                
+                details = f"Documents: {doc_count}, Field verification: {'PASS' if clause_number_verified else 'FAIL'}"
+                if field_analysis:
+                    details += f", Field analysis: {field_analysis[0]}"
+                
+                self.log_test("QSP Document Listing", success and clause_number_verified, details, {
+                    "document_count": doc_count,
+                    "clause_number_field_correct": clause_number_verified,
+                    "sample_document": documents[0] if documents else None
+                })
+                return success and clause_number_verified, data
+            else:
+                details = f"Status: {response.status_code}"
+                self.log_test("QSP Document Listing", False, details, response.text)
+                return False, {}
+                
+        except Exception as e:
+            self.log_test("QSP Document Listing", False, f"Exception: {str(e)}")
+            return False, {}
+
+    def test_qsp_document_upload_with_validation(self):
+        """Test QSP document upload and validate response structure"""
+        test_file = None
+        try:
+            if not self.auth_token:
+                self.log_test("QSP Document Upload with Validation", False, "No authentication token")
+                return False, {}
+            
+            # Create test QSP document with proper structure
+            test_file = self.create_test_qsp_with_clauses()
+            
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            
+            with open(test_file, 'rb') as f:
+                files = {'file': ('QSP_7.3-3_R9_Risk_Management.txt', f, 'text/plain')}
+                response = requests.post(f"{self.api_url}/regulatory/upload/qsp", files=files, headers=headers, timeout=30)
+            
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                
+                # Validate response structure
+                required_fields = ['document_number', 'revision', 'filename', 'total_clauses', 'clauses']
+                validation_results = []
+                
+                for field in required_fields:
+                    if field in data:
+                        validation_results.append(f"✅ {field}")
+                    else:
+                        validation_results.append(f"❌ {field} missing")
+                        success = False
+                
+                # Validate clauses structure
+                clauses = data.get('clauses', [])
+                if clauses:
+                    first_clause = clauses[0]
+                    if 'clause_number' in first_clause:
+                        validation_results.append("✅ clause_number field in clauses")
+                    else:
+                        validation_results.append("❌ clause_number field missing in clauses")
+                        success = False
+                
+                details = f"Document: {data.get('document_number', 'N/A')}, Clauses: {data.get('total_clauses', 0)}, Validation: {', '.join(validation_results[:3])}"
+                
+                self.log_test("QSP Document Upload with Validation", success, details, data)
+                return success, data
+            else:
+                details = f"Status: {response.status_code}"
+                self.log_test("QSP Document Upload with Validation", False, details, response.text)
+                return False, {}
+                
+        except Exception as e:
+            self.log_test("QSP Document Upload with Validation", False, f"Exception: {str(e)}")
+            return False, {}
+        finally:
+            if test_file and os.path.exists(test_file):
+                os.unlink(test_file)
+
+    def create_test_qsp_with_clauses(self):
+        """Create a test QSP document with proper clause structure"""
+        content = """QSP 7.3-3 R9 Risk Management
+
+1. PURPOSE
+This procedure establishes requirements for risk management activities.
+
+2. SCOPE  
+This procedure applies to all medical device development projects.
+
+3.2 Risk Analysis
+The organization shall conduct risk analysis for all medical devices.
+Risk analysis shall identify potential hazards and estimate risks.
+
+4.1 Risk Evaluation
+Risk evaluation shall determine if risk reduction is necessary.
+The organization shall establish risk acceptability criteria.
+
+4.2 Risk Control
+Risk control measures shall be implemented to reduce risks.
+The effectiveness of risk control measures shall be verified.
+
+4.2.2 Risk Control Verification
+Verification activities shall confirm risk control effectiveness.
+Documentation shall demonstrate risk control implementation.
+
+4.3 Risk Management Report
+A risk management report shall be prepared for each medical device.
+The report shall summarize all risk management activities.
+"""
+        
+        # Create temporary file
+        temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False)
+        temp_file.write(content)
+        temp_file.close()
+        return temp_file.name
+
+    def test_qsp_clause_mapping(self):
+        """Test QSP clause mapping generation"""
+        try:
+            if not self.auth_token:
+                self.log_test("QSP Clause Mapping", False, "No authentication token")
+                return False, {}
+            
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            response = requests.post(f"{self.api_url}/regulatory/map_clauses", headers=headers, timeout=30)
+            
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                total_docs = data.get('total_qsp_documents', 0)
+                total_clauses = data.get('total_clauses_mapped', 0)
+                
+                details = f"QSP Documents: {total_docs}, Clauses Mapped: {total_clauses}"
+                
+                # Verify mapping was successful
+                if total_docs > 0 and total_clauses > 0:
+                    details += " ✅ Mapping successful"
+                else:
+                    details += " ⚠️ No documents or clauses mapped"
+                    success = False
+                
+                self.log_test("QSP Clause Mapping", success, details, data)
+                return success, data
+            else:
+                details = f"Status: {response.status_code}"
+                self.log_test("QSP Clause Mapping", False, details, response.text)
+                return False, {}
+                
+        except Exception as e:
+            self.log_test("QSP Clause Mapping", False, f"Exception: {str(e)}")
+            return False, {}
+
+    def test_mongodb_qsp_sections(self):
+        """Test MongoDB qsp_sections collection verification"""
+        try:
+            # This test verifies that clauses are persisted after mapping
+            # We'll do this by checking if we can retrieve mapped clauses
+            if not self.auth_token:
+                self.log_test("MongoDB QSP Sections Verification", False, "No authentication token")
+                return False
+            
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            
+            # Try to get dashboard data which should show mapped clauses
+            response = requests.get(f"{self.api_url}/dashboard", headers=headers, timeout=10)
+            
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                total_mappings = data.get('total_mappings', 0)
+                
+                if total_mappings > 0:
+                    details = f"MongoDB verification successful - {total_mappings} mappings found in database"
+                    self.log_test("MongoDB QSP Sections Verification", True, details)
+                    return True
+                else:
+                    details = "No mappings found in MongoDB - clauses may not be persisted"
+                    self.log_test("MongoDB QSP Sections Verification", False, details)
+                    return False
+            else:
+                details = f"Cannot verify MongoDB - Dashboard access failed: {response.status_code}"
+                self.log_test("MongoDB QSP Sections Verification", False, details)
+                return False
+                
+        except Exception as e:
+            self.log_test("MongoDB QSP Sections Verification", False, f"Exception: {str(e)}")
+            return False
+
+    def test_gap_analysis_prerequisites(self):
+        """Test that gap analysis can retrieve mapped clauses"""
+        try:
+            if not self.auth_token:
+                self.log_test("Gap Analysis Prerequisites", False, "No authentication token")
+                return False
+            
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            
+            # Test if we can get clause mappings (prerequisite for gap analysis)
+            response = requests.get(f"{self.api_url}/mappings", headers=headers, timeout=10)
+            
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                mappings_count = len(data) if isinstance(data, list) else 0
+                
+                if mappings_count > 0:
+                    details = f"Gap analysis prerequisites met - {mappings_count} clause mappings available"
+                    self.log_test("Gap Analysis Prerequisites", True, details)
+                    return True
+                else:
+                    details = "No clause mappings available - gap analysis will fail with 'No QSP sections found'"
+                    self.log_test("Gap Analysis Prerequisites", False, details)
+                    return False
+            else:
+                details = f"Cannot retrieve mappings - Status: {response.status_code}"
+                self.log_test("Gap Analysis Prerequisites", False, details)
+                return False
+                
+        except Exception as e:
+            self.log_test("Gap Analysis Prerequisites", False, f"Exception: {str(e)}")
+            return False
+
+    def generate_qsp_workflow_summary(self, auth_success, qsp_list_success, qsp_upload_success, 
+                                    clause_mapping_success, mongodb_success, gap_analysis_success,
+                                    qsp_list_data, qsp_upload_data, clause_mapping_data):
+        """Generate comprehensive QSP workflow testing summary"""
+        
+        print("\n" + "=" * 60)
+        print("📊 QSP WORKFLOW TESTING SUMMARY")
+        print("=" * 60)
+        
+        # Test Results Overview
+        total_tests = 6
+        passed_tests = sum([auth_success, qsp_list_success, qsp_upload_success, 
+                           clause_mapping_success, mongodb_success, gap_analysis_success])
+        
+        print(f"📈 Overall Results: {passed_tests}/{total_tests} tests passed ({(passed_tests/total_tests)*100:.1f}%)")
+        print()
+        
+        # Detailed Results
+        print("🔍 DETAILED TEST RESULTS:")
+        print(f"1. Admin Authentication: {'✅ PASS' if auth_success else '❌ FAIL'}")
+        print(f"2. QSP Document Listing: {'✅ PASS' if qsp_list_success else '❌ FAIL'}")
+        print(f"3. QSP Document Upload: {'✅ PASS' if qsp_upload_success else '❌ FAIL'}")
+        print(f"4. QSP Clause Mapping: {'✅ PASS' if clause_mapping_success else '❌ FAIL'}")
+        print(f"5. MongoDB Verification: {'✅ PASS' if mongodb_success else '❌ FAIL'}")
+        print(f"6. Gap Analysis Prerequisites: {'✅ PASS' if gap_analysis_success else '❌ FAIL'}")
+        print()
+        
+        # Critical Field Verification
+        print("🎯 CRITICAL FIELD VERIFICATION:")
+        if qsp_list_data and qsp_list_data.get('documents'):
+            doc = qsp_list_data['documents'][0]
+            clauses = doc.get('clauses', [])
+            if clauses and 'clause_number' in clauses[0]:
+                print("✅ API returns 'clause_number' field (frontend fix is correct)")
+            else:
+                print("❌ API does not return 'clause_number' field (frontend fix may not work)")
+        else:
+            print("⚠️ No QSP documents found to verify field structure")
+        print()
+        
+        # Data Summary
+        print("📋 DATA SUMMARY:")
+        if qsp_list_data:
+            doc_count = len(qsp_list_data.get('documents', []))
+            print(f"• QSP Documents in system: {doc_count}")
+        
+        if qsp_upload_data:
+            print(f"• Test document uploaded: {qsp_upload_data.get('document_number', 'N/A')}")
+            print(f"• Clauses parsed: {qsp_upload_data.get('total_clauses', 0)}")
+        
+        if clause_mapping_data:
+            print(f"• Documents mapped: {clause_mapping_data.get('total_qsp_documents', 0)}")
+            print(f"• Total clauses mapped: {clause_mapping_data.get('total_clauses_mapped', 0)}")
+        print()
+        
+        # Recommendations
+        print("💡 RECOMMENDATIONS:")
+        if not auth_success:
+            print("❌ Fix admin authentication - check credentials admin@tulipmedical.com / admin123")
+        
+        if not qsp_list_success:
+            print("❌ Fix QSP document listing API - ensure clause_number field is returned")
+        
+        if qsp_list_success and qsp_upload_success and clause_mapping_success and mongodb_success:
+            print("✅ QSP workflow is functional - frontend should display documents correctly")
+            print("✅ 'Generate Clause Map' button should be visible and functional")
+            print("✅ Gap analysis should work without 'No QSP sections found' error")
+        else:
+            print("⚠️ QSP workflow has issues - some features may not work properly")
+        
+        print("\n" + "=" * 60)
+        
+        return passed_tests == total_tests
+
 if __name__ == "__main__":
     sys.exit(main())
