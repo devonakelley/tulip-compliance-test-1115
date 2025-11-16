@@ -66,7 +66,7 @@ regulatory_upload_router_module.set_database(db)
 audit_logger.set_database(db)
 
 # Register routers
-api_router.include_router(auth_router_module.router)
+# api_router.include_router(auth_router_module.router)  # OLD AUTH - DISABLED
 api_router.include_router(auth_api_module.router)  # New auth API
 api_router.include_router(dashboard_module.router)  # Dashboard API
 api_router.include_router(reports_router_module.router)
