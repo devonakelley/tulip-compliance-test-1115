@@ -254,8 +254,8 @@ class QSPParser:
                     "document_number": document_number,
                     "clause_number": f"{document_number}.1",
                     "title": "Document Content",
-                    "text": full_text[:2000],  # Limit to 2000 chars
-                    "characters": min(len(full_text), 2000)
+                    "text": full_text,  # No truncation
+                    "characters": len(full_text)
                 })
         
         return clauses
