@@ -158,13 +158,23 @@ async def login(credentials: UserLogin):
         # Find user by email
         user = await db.users.find_one({"email": credentials.email})
         if not user:
+            logger.warning(f"Login attempt for non-existent user: {credentials.email}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid email or password",
             )
         
+        # Check for hashed_password field
+        if "hashed_password" not in user:
+            logger.error(f"User {credentials.email} missing hashed_password field")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="User account configuration error",
+            )
+        
         # Verify password
         if not verify_password(credentials.password, user["hashed_password"]):
+            logger.warning(f"Failed login attempt for user: {credentials.email}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid email or password",
