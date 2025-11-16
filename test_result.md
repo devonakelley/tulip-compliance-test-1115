@@ -235,6 +235,18 @@ frontend:
         agent: "testing"
         comment: "Minor: Upload functionality is working correctly but may have UI feedback issues. INVESTIGATION FINDINGS: 1) File uploads are processing successfully (confirmed by backend logs), 2) API calls are being made with proper authentication, 3) Files are being saved and processed, 4) Upload mechanism (labels, inputs, change events) working correctly. POTENTIAL UI IMPROVEMENTS: Users may not see clear success feedback, toast notifications might not be prominent enough, or upload progress indicators could be enhanced. Core functionality is operational - this is a UX enhancement opportunity, not a critical failure."
 
+  - task: "QSP Documents Display Fix (Field Name Mismatch)"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/QSPUploadSimplified.js"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "FIXED CRITICAL DATA DISPLAY BUG: Changed all references from 'clause.clause' to 'clause.clause_number' to match API response structure. Fixed 3 occurrences: table display (line 315), dialog title (line 407), and clause info display (line 415). This fix will properly render the parsed QSP documents table and display the 'Generate Clause Map' button which was hidden due to the display issue. Frontend has hot reload enabled so changes are live. READY FOR TESTING: 1) Login with admin@tulipmedical.com, 2) Navigate to Tab 2 (Internal Docs QSPs), 3) Verify table displays uploaded QSP documents with clause numbers visible, 4) Verify 'Generate Clause Map' button is now visible, 5) Click button and verify clauses are persisted to MongoDB qsp_sections collection, 6) Navigate to Tab 3 and run Gap Analysis to verify 'No QSP sections found' error is resolved."
+
   - task: "Regulatory Change Dashboard Frontend UI"
     implemented: true
     working: true
