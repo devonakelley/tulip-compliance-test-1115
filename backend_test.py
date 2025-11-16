@@ -4208,11 +4208,34 @@ def main():
             except Exception as e:
                 print(f"\n💥 Unexpected error during QSP deletion tests: {str(e)}")
                 return 1
+        elif sys.argv[1] == "--qsp-workflow":
+            tester = QSPComplianceAPITester()
+            try:
+                success = tester.run_qsp_workflow_testing()
+                return 0 if success else 1
+            except KeyboardInterrupt:
+                print("\n⏹️  QSP workflow tests interrupted by user")
+                return 1
+            except Exception as e:
+                print(f"\n💥 Unexpected error during QSP workflow tests: {str(e)}")
+                return 1
+        else:
+            print(f"Unknown test option: {sys.argv[1]}")
+            print("Available options:")
+            print("  --upload-investigation")
+            print("  --rag-chunking")
+            print("  --regulatory-dashboard")
+            print("  --regulatory-upload")
+            print("  --qsp-parser")
+            print("  --qsp-validation")
+            print("  --qsp-deletion")
+            print("  --qsp-workflow")
+            return 1
     else:
-        # Run QSP Deletion and Clause Mapping Tests by default (as requested in review)
+        # Run QSP Workflow Testing by default (as requested in review)
         tester = QSPComplianceAPITester()
         try:
-            success = tester.run_qsp_deletion_and_clause_mapping_tests()
+            success = tester.run_qsp_workflow_testing()
             return 0 if success else 1
         except KeyboardInterrupt:
             print("\n⏹️  Tests interrupted by user")
