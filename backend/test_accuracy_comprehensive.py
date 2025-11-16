@@ -64,8 +64,8 @@ async def test_complete_pipeline():
             doc_name="Accuracy Test QSP Set",
             sections=qsp_sections
         )
-        print(f"   ✅ Ingested {ingest_result['sections_processed']} QSP sections")
-        print(f"   ✅ Generated {ingest_result['embeddings_created']} embeddings")
+        print(f"   ✅ Ingested {ingest_result['sections_embedded']} QSP sections")
+        print(f"   ✅ Generated {ingest_result['sections_embedded']} embeddings")
         
     except Exception as e:
         print(f"   ❌ ERROR during ingestion: {e}")
