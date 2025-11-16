@@ -3,11 +3,13 @@ Dashboard Metrics API
 Provides real-time metrics from MongoDB for dashboard display
 """
 from fastapi import APIRouter, Depends, HTTPException
-from core.auth import get_current_user
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from core.auth_utils import get_current_user_from_token
 import logging
 from datetime import datetime
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
+security = HTTPBearer()
 logger = logging.getLogger(__name__)
 
 # Database will be injected
@@ -17,6 +19,10 @@ def set_database(database):
     """Set database instance"""
     global db
     db = database
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get current user using shared auth function"""
+    return await get_current_user_from_token(credentials, db)
 
 
 @router.get("/metrics")
