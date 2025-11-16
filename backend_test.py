@@ -4647,7 +4647,6 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-        """Run comprehensive QSP document workflow testing as requested in review"""
         print("🚀 COMPREHENSIVE QSP DOCUMENT WORKFLOW TESTING")
         print(f"📍 Testing against: {self.base_url}")
         print("🎯 Focus: QSP Documents Display Fix (Field Name Mismatch)")
