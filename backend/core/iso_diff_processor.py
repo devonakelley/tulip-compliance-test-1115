@@ -117,7 +117,7 @@ class ISODiffProcessor:
                     'change_type': 'added',
                     'old_text': '',
                     'new_text': new_text,
-                    'change_text': f"New requirement: {new_text[:500]}..."
+                    'change_text': new_text
                 })
                 
             elif old_text and not new_text:
