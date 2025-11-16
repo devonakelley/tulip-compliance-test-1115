@@ -166,7 +166,7 @@ async def process_iso_diff(
     """
     try:
         tenant_id = current_user["tenant_id"]
-        user_id = current_user["user_id"]
+        user_id = current_user["id"]  # Fixed: was "user_id", should be "id"
         
         # Validate files exist
         if not os.path.exists(old_file_path):
