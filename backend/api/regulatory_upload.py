@@ -25,6 +25,10 @@ def set_database(database):
     global db
     db = database
 
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get current user using shared auth function"""
+    return await get_current_user_from_token(credentials, db)
+
 # Storage paths
 UPLOAD_DIR = Path("/app/backend/data")
 INTERNAL_DOCS_DIR = UPLOAD_DIR / "internal_docs"
