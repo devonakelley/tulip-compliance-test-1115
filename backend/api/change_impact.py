@@ -3,12 +3,13 @@ Change Impact Detection API
 FastAPI router for regulatory change impact analysis
 """
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
 import logging
 import json
 from core.change_impact_service_mongo import get_change_impact_service
-from core.auth import get_current_user
+from core.auth_utils import get_current_user_from_token
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/impact", tags=["change_impact"])
