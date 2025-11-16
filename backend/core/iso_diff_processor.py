@@ -6,8 +6,14 @@ import fitz  # PyMuPDF
 import difflib
 import re
 import logging
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 import json
+from .standard_identifier import (
+    identify_standard,
+    should_diff_or_map,
+    create_cross_reference_response,
+    create_incompatibility_error
+)
 
 logger = logging.getLogger(__name__)
 
