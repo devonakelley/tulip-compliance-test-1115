@@ -140,7 +140,7 @@ class ISODiffProcessor:
                     'change_type': 'modified',
                     'old_text': old_text,
                     'new_text': new_text,
-                    'change_text': f"Modified requirement: {new_text[:500]}...",
+                    'change_text': new_text,
                     'diff_html': diff
                 })
         
