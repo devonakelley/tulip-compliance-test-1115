@@ -300,6 +300,15 @@ class ISODiffProcessor:
             if analysis_result.get('analysis_type') == 'VERSION_DIFF':
                 # Extract deltas from successful version diff
                 deltas = analysis_result.get('deltas', [])
+            elif analysis_result.get('analysis_type') == 'CROSS_REFERENCE':
+                # Different parts of same series - return error
+                raise ValueError(
+                    f"Cannot diff {analysis_result['doc1']} and {analysis_result['doc2']}. "
+                    f"{analysis_result['message']} {analysis_result['recommendation']}"
+                )
+            else:
+                # Unknown error
+                raise ValueError(f"Unknown analysis result: {analysis_result}")
             
             # Save to file if path provided
             if output_path:
