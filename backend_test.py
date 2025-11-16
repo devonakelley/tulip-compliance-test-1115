@@ -4175,7 +4175,7 @@ Rev 9
             # First try admin credentials
             login_data = {
                 "email": "admin@tulipmedical.com",
-                "password": "admin123"
+                "password": "Tulip123!"
             }
             
             response = requests.post(f"{self.api_url}/auth/login", json=login_data, timeout=10)
