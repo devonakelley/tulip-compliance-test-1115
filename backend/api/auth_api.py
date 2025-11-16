@@ -155,8 +155,15 @@ async def login(credentials: UserLogin):
     Authenticate user and return JWT token
     """
     try:
+        logger.info(f"Login attempt for: {credentials.email}")
+        logger.info(f"DB object: {db}")
+        
         # Find user by email
         user = await db.users.find_one({"email": credentials.email})
+        logger.info(f"User found: {user is not None}")
+        if user:
+            logger.info(f"User fields: {list(user.keys())}")
+        
         if not user:
             logger.warning(f"Login attempt for non-existent user: {credentials.email}")
             raise HTTPException(
