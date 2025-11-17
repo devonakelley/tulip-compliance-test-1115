@@ -174,8 +174,7 @@ class ISODiffProcessor:
         output_path: str = None
     ) -> List[Dict[str, Any]]:
         """
-        Process old and new regulatory PDFs to generate deltas.
-        Now includes standard identification to prevent incorrect diffing.
+        Process old and new regulatory PDFs to generate deltas
         
         Args:
             old_pdf_path: Path to old version PDF
@@ -184,29 +183,27 @@ class ISODiffProcessor:
             
         Returns:
             List of delta objects
-            
-        Raises:
-            ValueError: If documents are incompatible (e.g., different parts of same series)
         """
         try:
-            logger.info("Starting ISO diff processing with standard identification...")
+            logger.info("Starting ISO diff processing...")
             
-            # Use new analyze_documents method which includes standard identification
-            analysis_result = self.analyze_documents(old_pdf_path, new_pdf_path)
+            # Extract text from both PDFs
+            logger.info("Extracting text from old PDF...")
+            old_text = self.extract_text_from_pdf(old_pdf_path)
             
-            # Check analysis type
-            if analysis_result.get('analysis_type') == 'VERSION_DIFF':
-                # Extract deltas from successful version diff
-                deltas = analysis_result.get('deltas', [])
-            elif analysis_result.get('analysis_type') == 'CROSS_REFERENCE':
-                # Different parts of same series - return error
-                raise ValueError(
-                    f"Cannot diff {analysis_result['doc1']} and {analysis_result['doc2']}. "
-                    f"{analysis_result['message']} {analysis_result['recommendation']}"
-                )
-            else:
-                # Unknown error
-                raise ValueError(f"Unknown analysis result: {analysis_result}")
+            logger.info("Extracting text from new PDF...")
+            new_text = self.extract_text_from_pdf(new_pdf_path)
+            
+            # Extract clauses
+            logger.info("Extracting clauses from old version...")
+            old_clauses = self.extract_clauses(old_text)
+            
+            logger.info("Extracting clauses from new version...")
+            new_clauses = self.extract_clauses(new_text)
+            
+            # Compute diff
+            logger.info("Computing differences...")
+            deltas = self.compute_diff(old_clauses, new_clauses)
             
             # Save to file if path provided
             if output_path:
