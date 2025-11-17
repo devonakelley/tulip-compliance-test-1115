@@ -239,30 +239,9 @@ async def process_iso_diff(
         
     except HTTPException:
         raise
-    except ValueError as ve:
-        # ValueError is raised for incompatible documents (different parts, series, etc.)
-        error_msg = str(ve)
-        logger.warning(f"Document compatibility issue: {error_msg}")
-        
-        # Return 400 Bad Request with detailed error message
-        raise HTTPException(
-            status_code=400,
-            detail={
-                'error': 'INCOMPATIBLE_DOCUMENTS',
-                'message': error_msg,
-                'hint': 'Please ensure you are uploading two different versions (years) of the same ISO standard part.',
-                'examples': [
-                    '✅ Valid: ISO 10993-18:2005 and ISO 10993-18:2020',
-                    '❌ Invalid: ISO 10993-18:2020 and ISO 10993-17:2023 (different parts)',
-                    '❌ Invalid: ISO 10993-18:2020 and ISO 14971:2019 (different series)'
-                ]
-            }
-        )
     except Exception as e:
         logger.error(f"Failed to process ISO diff: {e}")
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Internal error processing diff: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/list/internal")
