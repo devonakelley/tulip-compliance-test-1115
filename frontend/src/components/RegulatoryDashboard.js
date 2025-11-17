@@ -173,35 +173,8 @@ const RegulatoryDashboard = () => {
       
       toast.success(`Found ${response.data.total_changes} changes`, { id: 'diff' });
     } catch (error) {
-      console.error('Diff processing error:', error);
-      
-      // Extract detailed error message from API response
-      let errorMessage = 'Failed to process differences';
-      
-      if (error.response?.data) {
-        const errorData = error.response.data;
-        
-        // Check if this is a detailed error object
-        if (typeof errorData === 'object' && errorData.detail) {
-          if (typeof errorData.detail === 'object') {
-            // Structured error with message and examples
-            errorMessage = errorData.detail.message || errorMessage;
-            
-            // Show hint if available
-            if (errorData.detail.hint) {
-              toast.error(errorMessage, { id: 'diff', duration: 6000 });
-              setTimeout(() => {
-                toast.info(errorData.detail.hint, { duration: 8000 });
-              }, 500);
-            }
-          } else {
-            // Simple error string
-            errorMessage = errorData.detail;
-          }
-        }
-      }
-      
-      toast.error(errorMessage, { id: 'diff', duration: 6000 });
+      console.error(error);
+      toast.error('Failed to process differences', { id: 'diff' });
     } finally {
       setProcessingDiff(false);
     }
