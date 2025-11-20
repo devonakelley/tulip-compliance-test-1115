@@ -412,7 +412,7 @@ const QSPUploadSimplified = () => {
                 {viewingClause.text || 'No text available'}
               </div>
               <div className="mt-4 text-xs text-gray-500 flex justify-between">
-                <span>Clause: <strong>{viewingClause.clause_number}</strong></span>
+                <span>Clause: <strong>{viewingClause.clause}</strong></span>
                 <span>Characters: <strong>{viewingClause.characters || 0}</strong></span>
               </div>
             </div>
