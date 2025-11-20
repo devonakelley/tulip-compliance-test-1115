@@ -404,7 +404,7 @@ const QSPUploadSimplified = () => {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5 text-blue-600" />
-                {viewingClause.document_number} - Clause {viewingClause.clause_number}: {viewingClause.title}
+                {viewingClause.document_number} - Clause {viewingClause.clause}: {viewingClause.title}
               </DialogTitle>
             </DialogHeader>
             <div className="overflow-auto max-h-[60vh] mt-4">
