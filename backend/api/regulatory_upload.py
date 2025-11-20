@@ -538,15 +538,20 @@ async def map_clauses(
                     doc_id = str(uuid.uuid4())
                     
                     # Convert clauses to sections format expected by impact service
-                    sections = [
-                        {
-                            'section_path': clause.get('clause', 'Unknown'),  # Fixed: was clause_number
+                    sections = []
+                    for clause in parsed_data.get('clauses', []):
+                        # Use clause number if available, otherwise use document number
+                        clause_id = clause.get('clause')
+                        if not clause_id or clause_id == 'Unknown' or clause_id == 'None' or clause_id is None:
+                            # Fallback to document number (e.g., "7.4-2" from filename)
+                            clause_id = parsed_data.get('document_number', 'Unknown')
+                        
+                        sections.append({
+                            'section_path': clause_id,
                             'heading': clause.get('title', ''),
                             'text': clause.get('text', ''),
                             'version': parsed_data.get('revision', '')
-                        }
-                        for clause in parsed_data.get('clauses', [])
-                    ]
+                        })
                     
                     result = impact_service.ingest_qsp_document(
                         tenant_id=tenant_id,
