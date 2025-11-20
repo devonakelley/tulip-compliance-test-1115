@@ -312,7 +312,7 @@ const QSPUploadSimplified = () => {
                         {clause.revision}
                       </td>
                       <td className="px-4 py-3 font-mono font-bold text-blue-700">
-                        {clause.clause_number}
+                        {clause.clause}
                       </td>
                       <td className="px-4 py-3">{clause.title}</td>
                       <td className="px-4 py-3 text-gray-600">{clause.characters}</td>
