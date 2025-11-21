@@ -111,7 +111,7 @@ async def get_wi_catalog(
 
 @router.get("/summary")
 async def get_catalogs_summary(
-    current_user: dict = Depends(get_current_user_from_token)
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Get summary of all catalogs
