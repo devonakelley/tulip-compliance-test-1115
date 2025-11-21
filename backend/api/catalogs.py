@@ -2,27 +2,32 @@
 Catalogs API - Forms and Work Instructions
 """
 from fastapi import APIRouter, HTTPException, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List, Dict
 import logging
 import os
-from motor.motor_asyncio import AsyncIOMotorClient
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from core.auth_utils import get_current_user_from_token
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/catalogs", tags=["catalogs"])
+security = HTTPBearer()
 
+# Database will be injected
+db: AsyncIOMotorDatabase = None
 
-async def get_db():
-    """Get MongoDB database instance"""
-    mongo_url = os.environ.get('MONGO_URL')
-    db_name = os.environ.get('DB_NAME', 'compliance_checker')
-    client = AsyncIOMotorClient(mongo_url)
-    return client[db_name]
+def set_database(database):
+    global db
+    db = database
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get current user using shared auth function"""
+    return await get_current_user_from_token(credentials, db)
 
 
 @router.get("/forms")
 async def get_forms_catalog(
-    current_user: dict = Depends(get_current_user_from_token)
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Get all forms in the catalog
