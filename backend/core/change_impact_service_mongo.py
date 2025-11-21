@@ -420,7 +420,7 @@ class ChangeImpactServiceMongo:
     
     async def _get_section_by_clause(self, tenant_id: str, qsp_clause: str, qsp_doc: str) -> Optional[Dict]:
         """Retrieve section from MongoDB by clause and doc"""
-        if not self.db:
+        if self.db is None:
             return None
         
         # Try to find by section_path (qsp_clause)
