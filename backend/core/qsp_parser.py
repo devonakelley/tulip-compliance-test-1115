@@ -414,12 +414,17 @@ class QSPParser:
         if current_heading and current_text_parts:
             section_text = '\n'.join(current_text_parts).strip()
             if len(section_text) >= 50:
+                # Extract references from this clause's text
+                ref_extractor = get_reference_extractor()
+                references = ref_extractor.extract_all_references(section_text)
+                
                 clauses.append({
                     "document_number": document_number,
                     "clause_number": current_clause_number if current_clause_number else f"{document_number}.{len(clauses)+1}",
                     "title": current_heading,
                     "text": section_text,
-                    "characters": len(section_text)
+                    "characters": len(section_text),
+                    "references": references  # NEW FIELD
                 })
         
         return clauses
