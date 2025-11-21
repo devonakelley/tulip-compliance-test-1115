@@ -4,11 +4,20 @@ Catalogs API - Forms and Work Instructions
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Dict
 import logging
-from database.mongodb_manager import get_mongodb
+import os
+from motor.motor_asyncio import AsyncIOMotorClient
 from core.auth_utils import get_current_user_from_token
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/catalogs", tags=["catalogs"])
+
+
+async def get_db():
+    """Get MongoDB database instance"""
+    mongo_url = os.environ.get('MONGO_URL')
+    db_name = os.environ.get('DB_NAME', 'compliance_checker')
+    client = AsyncIOMotorClient(mongo_url)
+    return client[db_name]
 
 
 @router.get("/forms")
