@@ -36,7 +36,6 @@ async def get_forms_catalog(
         List of forms with id, name, parent QSP, and referenced sections
     """
     try:
-        db = await get_db()
         tenant_id = current_user.get('tenant_id')
         
         forms = await db.forms_catalog.find(
@@ -78,7 +77,6 @@ async def get_wi_catalog(
         List of WIs with id, name, parent QSP, and referenced sections
     """
     try:
-        db = await get_db()
         tenant_id = current_user.get('tenant_id')
         
         wis = await db.wi_catalog.find(
@@ -120,7 +118,6 @@ async def get_catalogs_summary(
         Summary with counts by parent QSP
     """
     try:
-        db = await get_db()
         tenant_id = current_user.get('tenant_id')
         
         # Get all forms
