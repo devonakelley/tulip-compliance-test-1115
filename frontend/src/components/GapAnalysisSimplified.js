@@ -471,6 +471,23 @@ const GapAnalysisSimplified = () => {
                                   )}
                                 </div>
                               </div>
+                              
+                              {/* DOWNSTREAM IMPACTS: Forms and Work Instructions */}
+                              {impact.downstream_impacts && (
+                                <div>
+                                  <div className="text-xs font-semibold text-gray-700 mb-2">CASCADE IMPACT ANALYSIS:</div>
+                                  <div className="bg-white p-3 rounded border">
+                                    <DownstreamImpacts impacts={impact.downstream_impacts} />
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {!impact.downstream_impacts && (
+                                <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded border-l-4 border-amber-400">
+                                  ⚠️ Cascade analysis not available. Re-generate clause map to enable downstream impact detection.
+                                </div>
+                              )}
+                              
                               <div>
                                 <div className="text-xs font-semibold text-gray-700 mb-2">CUSTOM RATIONALE / NOTES:</div>
                                 <textarea
