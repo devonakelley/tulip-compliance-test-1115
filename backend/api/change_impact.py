@@ -174,21 +174,32 @@ async def analyze_change_impact(
                     delta['regulatory_doc'] = diff_data.get('regulatory_doc', 'ISO 14971:2020')
                     delta['reg_title'] = diff_data.get('reg_title', diff_data.get('title', ''))
         
-        result = await service.detect_impacts_async(
+        # Use analyze_with_cascade to include downstream impacts (Forms/WIs)
+        cascade_result = await service.analyze_with_cascade(
             tenant_id=tenant_id,
             deltas=deltas,
-            top_k=request.top_k
+            include_downstream=True
         )
         
+        # Extract impacts from the nested structure
+        impacts_list = cascade_result.get('impacts', {}).get('qsp_sections', [])
+        run_id = cascade_result.get('run_id')
+        
+        # Create response in the format the frontend expects
+        result = {
+            'success': True,
+            'run_id': run_id,
+            'total_impacts_found': len(impacts_list),
+            'impacts': impacts_list
+        }
+        
         # Save results to gap_results collection for persistence
-        if result.get('success') and result.get('impacts'):
+        if impacts_list:
             import uuid
             from datetime import datetime, timezone
             
-            run_id = result.get('run_id')
-            
             # Save each impact as a separate document for easy updates
-            for idx, impact in enumerate(result['impacts']):
+            for idx, impact in enumerate(impacts_list):
                 gap_result = {
                     'id': str(uuid.uuid4()),
                     'run_id': run_id,
@@ -207,6 +218,7 @@ async def analyze_change_impact(
                     'new_text': impact.get('new_text'),
                     'rationale': impact.get('rationale'),
                     'similarity_score': impact.get('similarity_score'),
+                    'downstream_impacts': impact.get('downstream_impacts', {'forms': [], 'work_instructions': []}),  # NEW: Save cascade data
                     'is_reviewed': False,  # Default to not reviewed
                     'custom_rationale': '',  # Empty by default
                     'created_at': datetime.now(timezone.utc).isoformat(),
@@ -224,7 +236,7 @@ async def analyze_change_impact(
                     upsert=True
                 )
             
-            logger.info(f"Saved {len(result['impacts'])} gap results to database")
+            logger.info(f"Saved {len(impacts_list)} gap results (with downstream impacts) to database")
         
         return result
         
