@@ -9,6 +9,7 @@ from typing import List, Dict, Any, Optional
 from docx import Document
 from pathlib import Path
 import io
+from .reference_extractor import get_reference_extractor
 
 logger = logging.getLogger(__name__)
 
