@@ -225,7 +225,7 @@ async def analyze_change_impact(
                 }
                 
                 # Upsert to avoid duplicates on re-run
-                await db.gap_results.update_one(
+                await mongo_client[db_name].gap_results.update_one(
                     {
                         'tenant_id': tenant_id,
                         'run_id': run_id,
