@@ -110,3 +110,7 @@ def get_reference_extractor() -> ReferenceExtractor:
     if _reference_extractor is None:
         _reference_extractor = ReferenceExtractor()
     return _reference_extractor
+
+
+# Backwards compatibility: export singleton instance
+reference_extractor = get_reference_extractor()
