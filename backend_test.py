@@ -4647,8 +4647,6 @@ def main():
         except Exception as e:
             print(f"\n💥 Unexpected error: {str(e)}")
             return 1
-
-    def run_hierarchical_cascade_mapping_tests(self):
         """
         COMPREHENSIVE HIERARCHICAL CASCADE MAPPING TESTING
         Tests the complete cascade workflow from QSP → WI → Forms
