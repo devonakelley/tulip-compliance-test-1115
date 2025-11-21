@@ -453,8 +453,7 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Hierarchical Cascade Mapping (Forms & Work Instructions)"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
