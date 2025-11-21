@@ -261,12 +261,17 @@ class QSPParser:
         if all_text:
             full_text = '\n'.join(all_text)
             if len(full_text) >= 100:
+                # Extract references from this clause's text
+                ref_extractor = get_reference_extractor()
+                references = ref_extractor.extract_all_references(full_text)
+                
                 clauses.append({
                     "document_number": document_number,
                     "clause_number": f"{document_number}.1",
                     "title": "Document Content",
                     "text": full_text,  # No truncation
-                    "characters": len(full_text)
+                    "characters": len(full_text),
+                    "references": references  # NEW FIELD
                 })
         
         return clauses
