@@ -385,6 +385,18 @@ frontend:
         agent: "testing"
         comment: "QSP PARSER VALIDATION TESTING COMPLETED SUCCESSFULLY! ✅ REWRITTEN QSP PARSER FULLY VALIDATED (100% PASS RATE - 4/4 TESTS PASSED). CRITICAL VALIDATION RESULTS: 1) Upload QSP with Parser Validation - ✅ WORKING (Document: 7.3-3 R9, Clauses: 5 in target range 5-15, proper document number extraction, revision extraction working, all clause numbers extracted correctly), 2) Noise Filtering Verification - ✅ WORKING (Total clauses: 5, Clean clauses: 5/5, Zero noise patterns detected, no 'Tulip Medical', 'Signature', 'Date', 'Approval', 'Form', 'Page', 'Rev' entries found in clause titles), 3) Text Aggregation Check - ✅ WORKING (Multi-sentence clauses: 1/5, Substantial content 100+ chars: 5/5, proper text aggregation confirmed, sample clause shows 164 characters with meaningful content), 4) Clause Number Extraction - ✅ WORKING (Proper clause numbers: 5/5, Unknown clause numbers: 0, 100% extraction success rate, examples: 3.2, 4.1, 4.2, 4.2.2, 4.3). ACCEPTANCE CRITERIA VALIDATION: ✅ Each QSP produces 5-15 clauses (PASS), ✅ All clause numbers extracted no 'Unknown' (PASS), ✅ Each clause has 100+ characters (PASS), ✅ No noise entries company name/signatures (PASS). CONCLUSION: Rewritten QSP parser is working correctly, noise filtering implemented properly, text aggregation functioning as expected, clause number extraction working. The parser fix has resolved the noisy output issues."
 
+  - task: "Hierarchical Cascade Mapping (Forms & Work Instructions)"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/api/change_impact.py, /app/backend/core/change_impact_service_mongo.py, /app/frontend/src/components/GapAnalysisSimplified.js, /app/frontend/src/components/DownstreamImpacts.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "HIERARCHICAL CASCADE MAPPING IMPLEMENTED: Backend - Modified /api/impact/analyze endpoint to call analyze_with_cascade() method, now includes downstream_impacts {forms: [], work_instructions: []} in response, persists cascade data to MongoDB gap_results collection. Frontend - GapAnalysisSimplified.js imports and uses DownstreamImpacts component in expanded view (lines 476-489), displays affected Forms/WIs with proper badges and icons, shows warning when cascade data not available. Backend restarted successfully. READY FOR TESTING: Test complete workflow - upload QSP with Form/WI references, run clause mapping, run gap analysis, verify downstream_impacts field in API response, verify frontend displays cascade impacts correctly. IMPORTANT: Users must re-upload/re-map QSPs to populate 'references' field."
+
   - task: "QSP document deletion functionality (single and batch)"
     implemented: true
     working: true
