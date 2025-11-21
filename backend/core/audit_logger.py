@@ -26,7 +26,7 @@ class AuditLogger:
     
     def __init__(self, db: Optional[AsyncIOMotorDatabase] = None):
         self.db = db
-        self.collection = db["audit_logs"] if db else None
+        self.collection = db["audit_logs"] if db is not None else None
     
     def set_database(self, db: AsyncIOMotorDatabase):
         """Set database connection"""
