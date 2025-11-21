@@ -151,7 +151,7 @@ async def analyze_change_impact(
         db = mongo_client[db_name]
         
         # Find most recent diff_result for this tenant
-        diff_result = await db.diff_results.find_one(
+        diff_result = await mongo_client[db_name].diff_results.find_one(
             {'tenant_id': tenant_id},
             sort=[('created_at', -1)]
         )
