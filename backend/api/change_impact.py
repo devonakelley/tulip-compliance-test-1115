@@ -109,8 +109,7 @@ async def ingest_qsp_document(
 @router.post("/analyze")
 async def analyze_change_impact(
     request: AnalyzeRequest,
-    current_user: dict = Depends(get_current_user),
-    db = Depends(lambda: None)  # Will be injected
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Analyze which QSP sections are impacted by regulatory changes
