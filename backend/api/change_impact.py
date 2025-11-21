@@ -466,6 +466,11 @@ async def get_gap_results(
         
         logger.info(f"Retrieved {len(results)} gap results for run {run_id}")
         
+        # Convert ObjectId to string for JSON serialization
+        for result in results:
+            if '_id' in result:
+                result['_id'] = str(result['_id'])
+        
         return {
             'success': True,
             'run_id': run_id,
