@@ -348,6 +348,156 @@ class ChangeImpactServiceMongo:
             'message': 'Demo mode: Reports are generated on-demand. Run analysis to see results.',
             'note': 'In production, results would be stored in MongoDB and retrieved here.'
         }
+    
+    async def analyze_with_cascade(
+        self,
+        tenant_id: str,
+        deltas: List[Dict],
+        include_downstream: bool = True
+    ) -> Dict[str, Any]:
+        """
+        Analyze regulatory changes and cascade to WIs/Forms
+        
+        Args:
+            tenant_id: Tenant identifier
+            deltas: List of regulatory changes
+            include_downstream: Whether to include Forms/WIs in results
+        
+        Returns:
+            {
+                "run_id": "uuid",
+                "analysis_date": "2024-11-20",
+                "impacts": {
+                    "qsp_sections": [...],
+                    "summary": {...}
+                }
+            }
+        """
+        # Step 1: Run existing vector search
+        qsp_impacts = await self.detect_impacts_async(tenant_id, deltas, top_k=5)
+        
+        # Extract the impacts list from the result
+        impacts_list = qsp_impacts.get('impacts', [])
+        
+        # Step 2: For each QSP section, extract downstream impacts
+        if include_downstream:
+            for impact in impacts_list:
+                qsp_clause = impact.get('qsp_clause', '')
+                qsp_doc = impact.get('qsp_doc', '')
+                
+                # Get the section from DB to access references
+                section = await self._get_section_by_clause(tenant_id, qsp_clause, qsp_doc)
+                
+                if section and 'references' in section:
+                    refs = section['references']
+                    
+                    # Enrich with names from catalogs
+                    forms = await self._enrich_forms(tenant_id, refs.get('forms', []))
+                    wis = await self._enrich_wis(tenant_id, refs.get('work_instructions', []))
+                    
+                    impact['downstream_impacts'] = {
+                        'forms': forms,
+                        'work_instructions': wis
+                    }
+                else:
+                    impact['downstream_impacts'] = {
+                        'forms': [],
+                        'work_instructions': []
+                    }
+        
+        # Step 3: Generate summary
+        summary = self._generate_summary(impacts_list)
+        
+        return {
+            'run_id': qsp_impacts.get('run_id', str(uuid.uuid4())),
+            'analysis_date': datetime.utcnow().isoformat(),
+            'regulatory_changes_count': len(deltas),
+            'impacts': {
+                'qsp_sections': impacts_list,
+                'summary': summary
+            }
+        }
+    
+    async def _get_section_by_clause(self, tenant_id: str, qsp_clause: str, qsp_doc: str) -> Optional[Dict]:
+        """Retrieve section from MongoDB by clause and doc"""
+        if not self.db:
+            return None
+        
+        # Try to find by section_path (qsp_clause)
+        section = await self.db.qsp_sections.find_one({
+            'tenant_id': tenant_id,
+            'section_path': qsp_clause
+        })
+        
+        if not section and qsp_doc:
+            # Fallback: try by doc_id
+            section = await self.db.qsp_sections.find_one({
+                'tenant_id': tenant_id,
+                'doc_id': qsp_doc
+            })
+        
+        return section
+    
+    async def _enrich_forms(self, tenant_id: str, form_ids: List[str]) -> List[Dict]:
+        """Look up form names from catalog"""
+        if not self.db or not form_ids:
+            return []
+        
+        results = []
+        for form_id in form_ids:
+            doc = await self.db.forms_catalog.find_one({
+                'tenant_id': tenant_id,
+                'form_id': form_id
+            })
+            
+            results.append({
+                'id': form_id,
+                'name': doc.get('form_name', 'Unknown') if doc else f'Form {form_id}'
+            })
+        
+        return results
+    
+    async def _enrich_wis(self, tenant_id: str, wi_ids: List[str]) -> List[Dict]:
+        """Look up WI names from catalog"""
+        if not self.db or not wi_ids:
+            return []
+        
+        results = []
+        for wi_id in wi_ids:
+            doc = await self.db.wi_catalog.find_one({
+                'tenant_id': tenant_id,
+                'wi_id': wi_id
+            })
+            
+            results.append({
+                'id': wi_id,
+                'name': doc.get('wi_name', 'Unknown') if doc else wi_id
+            })
+        
+        return results
+    
+    def _generate_summary(self, impacts: List[Dict]) -> Dict:
+        """Generate summary statistics"""
+        total_forms = 0
+        total_wis = 0
+        change_types = {}
+        
+        for impact in impacts:
+            # Count downstream impacts
+            if 'downstream_impacts' in impact:
+                total_forms += len(impact['downstream_impacts'].get('forms', []))
+                total_wis += len(impact['downstream_impacts'].get('work_instructions', []))
+            
+            # Count by change type
+            change_type = impact.get('change_type', 'unknown')
+            change_types[change_type] = change_types.get(change_type, 0) + 1
+        
+        return {
+            'total_qsp_sections': len(impacts),
+            'total_forms': total_forms,
+            'total_wis': total_wis,
+            'by_change_type': change_types
+        }
 
 
 # Singleton instance
