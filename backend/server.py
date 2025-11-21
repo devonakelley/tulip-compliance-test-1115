@@ -65,6 +65,7 @@ reports_router_module.set_database(db)
 regulatory_router_module.set_database(db)
 rag_router_module.set_database(db)
 regulatory_upload_router_module.set_database(db)
+catalogs_module.set_database(db)  # Catalogs API
 audit_logger.set_database(db)
 
 # Register routers
