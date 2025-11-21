@@ -459,7 +459,7 @@ class ChangeImpactServiceMongo:
     
     async def _enrich_wis(self, tenant_id: str, wi_ids: List[str]) -> List[Dict]:
         """Look up WI names from catalog"""
-        if not self.db or not wi_ids:
+        if self.db is None or not wi_ids:
             return []
         
         results = []
