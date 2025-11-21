@@ -1,51 +1,83 @@
 <analysis>
-The AI engineer successfully enhanced the QSP Compliance Checker, integrating OpenAI  for improved RAG semantic matching. Key frontend improvements included fixing upload button interactivity, implementing batch QSP file uploads, and replacing the ISO Summary upload with a robust Regulatory Document Upload connected to the RAG service. The application branding was updated to Certaro, and a marketing landing page was integrated with conditional rendering for authenticated routes. An analysis dashboard was added for system observability. Backend fixes involved correcting framework enum mismatches, updating clause mapping to utilize RAG data, and resolving a critical ChromaDB dimension mismatch by recreating the database. A persistent issue with ISO PDF uploads, initially due to incorrect UTF-8 decoding, was fixed by integrating  into the RAG API. Subsequently, QSP document deletion and a document hierarchy visualization feature were implemented. The latest issue, uploads are now failing, occurred after the analysis dashboard implementation, necessitating a backend log review to diagnose.
+The user's primary language is English. Future responses from the next agent should be in English.
+
+My analysis of the trajectory reveals a fast-paced, iterative development process characterized by rapid feature implementation, bug fixing, and significant user-directed pivots.
+
+The work can be divided into several key sprints:
+1.  **Initial Bug Fixes:** The first task was to resolve a data persistence issue by correcting a field name mismatch ( vs. ) in the frontend (), which unblocked the core user workflow.
+2.  **Critical Data Integrity Fixes:** The user directed an urgent fix for three data truncation bugs in the backend (, , ). These fixes were critical for the accuracy of the AI-driven gap analysis by ensuring full document text was processed.
+3.  **Feature Implementation & Reversal:** A sophisticated feature was built to validate and route ISO document comparisons, distinguishing between version updates and companion standards. This involved creating new modules and modifying API endpoints. However, this was immediately reverted per an urgent user request to restore the simpler diff anything behavior.
+4.  **QSP Clause Unknown Bug:** A bug where the gap analysis table showed Unknown for the QSP clause was investigated. The root cause was that the QSP parser failed on documents without numbered headings. The fix was to use the document number from the filename as the clause identifier.
+5.  **Hierarchical Cascade Mapping (Current):** The largest task involves building a system to map regulatory changes down to QSPs, Work Instructions (WIs), and Forms. This includes creating a , seeding Form/WI catalogs from an external source, enhancing the backend service with cascade logic, and adding new API endpoints.
+
+The current work is focused on Phase 6 of this major feature: implementing the frontend display for these downstream impacts. The backend APIs and data models are largely in place, but the frontend () is being modified to render the new hierarchical data.
 </analysis>
 
 <product_requirements>
-The objective is an Enterprise QSP Compliance Checker for medical device companies, verifying internal QSP documents against evolving regulatory standards like ISO 13485:2024. It requires manual uploads, AI-powered clause mapping, compliance analysis, and a user-friendly UI. The system leverages RAG with ChromaDB and semantic chunking for large datasets. Existing features include multi-tenancy with secure local/S3 uploads, persistent report storage, JWT authentication, and a hybrid regulatory system. Recent work focused on improving RAG semantic matching quality using OpenAI  embeddings for accurate dynamic processing of regulatory documents (ISO, FDA). The system was also updated to include batch QSP uploads, a dedicated Regulatory Document Upload for full standards, QSP document deletion, and a document hierarchy visualization. A marketing landing page and a visual analysis dashboard were integrated for enhanced user experience and system observability.
+The project is the Certaro Compliance Dashboard, a SaaS application for medical device companies to automate regulatory compliance.
+
+**Core Workflow:**
+1.  **Regulatory Diff (Tab 1):** Users upload old and new regulation PDFs. The system generates a visual, side-by-side diff of the changes.
+2.  **Internal Document Mapping (Tab 2):** Users upload internal Quality System Procedure (QSP) DOCX files. The system parses them to extract clauses, which are then mapped and saved to the database.
+3.  **Gap Analysis (Tab 3):** The system compares the regulatory changes against the mapped QSPs, identifies potential compliance gaps, and provides AI-generated rationale.
+
+**New Enhancement (Hierarchical Cascade):**
+The system is being enhanced to provide a complete impact chain. When a regulatory change impacts a QSP, the system should also identify and display which downstream Work Instructions (WIs) and Forms are referenced within that QSP. This gives users a full, hierarchical view of the total impact of a single regulatory update, from the regulation itself down to the specific forms that may need to be revised. This requires parsing references from QSPs and cross-referencing them with a master catalog of all company WIs and Forms.
 </product_requirements>
 
 <key_technical_concepts>
-- **Full-stack Development**: React (frontend), FastAPI (backend), MongoDB (database).
-- **AI/LLM Integration**: OpenAI (text-embedding-3-large for embeddings), RAG (Retrieval Augmented Generation), ChromaDB (vector store), semantic chunking.
-- **Security/Scalability**: JWT-based authentication, multi-tenancy, configurable local/S3 storage.
-- **Compliance Logic**: Regulatory citation extraction, document hierarchy mapping, compliance matrix, gap analysis, PyPDF2 for PDF extraction.
+- **Frameworks**: FastAPI (Python) backend, React frontend.
+- **Database**: MongoDB, using collections for users, QSP sections, diffs, and now  and .
+- **Authentication**: JWT-based with  for hashing.
+- **Document Processing**:  for parsing QSP documents,  for regulatory PDFs, and extensive use of Regular Expressions (regex) for parsing and reference extraction.
+- **Architecture**: Multi-tenant via , asynchronous backend (), and a new singleton pattern for the .
 </key_technical_concepts>
 
 <code_architecture>
-models.py
+The application is a standard monorepo with a  (FastAPI) and  (React) directory.
 
--   ****: This is the core FastAPI application. It integrates multi-tenancy, authentication, storage, report persistence, audit logging, the hybrid regulatory system, and RAG. All API endpoints now require authentication and filter data by .
-    -   **Changes**: Added  for QSP deletion. Added  for hierarchy visualization. Modified  to use RAG data. PDF extraction logic was moved from here to .
--   ****: New Pydantic models (User, Tenant, Regulatory) support multi-tenancy and the regulatory knowledge base.
-    -   **Changes**:  enum values were implicitly crucial for frontend-backend alignment.
--   ****: New services for storage, authentication, reporting, auditing, regulatory reference extraction, knowledge base management, traceability, and RAG processing.
-    -   **Changes in **: Updated OpenAI embedding model to . Critical fix involved re-initializing ChromaDB client on backend restart to address dimension mismatch.
--   ****: New API routers for authentication, regulatory features, and RAG.
-    -   **Changes in **: The  function was updated to handle PDF documents using . The  endpoint expects  as a form field.
--   ****: Wraps the application with  and defines routes.
-    -   **Changes**:
-        -   Routing: Root route () now points to . Authenticated routes (, , , ) are protected. Navigation component is conditionally rendered.
-        -   DocumentUpload Component: Fixed upload buttons by styling labels. Modified  to support batch QSP uploads and dedicated Regulatory Document Upload for full ISO/FDA standards. Added UI for displaying and deleting QSP documents and regulatory documents. Fixed bug in  to correctly process .
-        -   Gaps Component: Added Clause Mappings, Document Hierarchy, and Dashboard tabs for detailed analysis.
-        -   Branding: Updated QSP Compliance to Certaro in navigation and dashboard.
--   ** & **: New components for the marketing landing page, implementing the provided HTML/CSS design.
--   ****: New CSS for restyling the Dashboard page to match the new branding.
--   ****: Provides global authentication state. Axios interceptor handles JWT token.
 
+
+**Key File Changes:**
+
+-   ** (New)**
+    -   **Importance**: This new module contains the core logic for finding references to Forms (e.g., Form 7.3-3-2) and Work Instructions (e.g., WI-003) within document text using regex. It's the foundation of the cascade feature.
+-   ** (Modified)**
+    -   **Importance**: This parser now uses the  to scan every QSP clause it parses.
+    -   **Changes**: It was modified to add a  dictionary () to the data structure for each parsed clause.
+-   ** (New)**
+    -   **Importance**: A one-off script used to populate the new  and  MongoDB collections. It reads from a predefined data structure, creating a master list of all known Forms and WIs.
+-   ** (Modified)**
+    -   **Importance**: The core service for gap analysis.
+    -   **Changes**: A new entry point, , was added. After finding a QSP impact, it now queries the database for that QSP section, retrieves its , looks up the names of the Forms/WIs in the new catalogs, and adds a  field to the final result.
+-   ** (New)**
+    -   **Importance**: Provides API endpoints (, ) for the frontend to query the master lists of Forms and Work Instructions.
+-   ** (New)**
+    -   **Importance**: A reusable React component designed to take a list of affected Forms and WIs and render them in a clean, readable format within the gap analysis results.
+-   ** (Modified)**
+    -   **Importance**: The main UI for displaying gap analysis results.
+    -   **Changes**: It is being modified to render results as expandable cards instead of a static table. When a card is expanded, it will now render the new  component, showing the affected Forms and WIs for that specific QSP impact.
 </code_architecture>
 
 <pending_tasks>
-- Investigate and resolve the low confidence scores (30-40%) in clause mappings by improving the RAG chunking strategy (text cleaning, sentence-aware chunking, larger chunks, filtering non-content).
-- Implement the re-processing of ISO documents with the improved chunking strategy.
-- Provide a before-and-after comparison of embedding quality.
+- **Complete Phase 6**: Finalize the integration of  into  to ensure the UI correctly displays the hierarchical data.
+- **Phase 7 (Testing)**: Create and run a full end-to-end test suite () for the new cascade functionality.
+- **Phase 8 (Deployment Prep)**: Create documentation, ensure database indexes are set, and confirm the data seeding process is reliable for deployment.
+- **User Action Required**: The user needs to re-upload or re-map their QSP documents to populate the  field, which is necessary for the cascade feature to work.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer had just implemented a new Dashboard tab within the Gaps page to provide visual observability of the system's analysis work, including mapping graphs, coverage statistics, and confidence score distribution. After this implementation and a successful frontend recompile, the user reported, My uploads are now failing. The AI engineer's very last action was to check the backend logs to diagnose this new upload failure, indicating that the system is currently in a state where recent changes might have inadvertently broken the upload functionality again. The specific cause of this latest upload failure is unknown and is the immediate focus of the next investigation.
+The AI engineer was in the middle of **Phase 6: Frontend Enhancements** for the hierarchical cascade mapping feature.
+
+**Work Done:**
+1.  **Backend Implemented (Phases 1-5):** The backend logic is largely complete. The  now extracts references, the  calculates downstream impacts, and the  endpoint returns a data structure including a  field containing lists of affected Forms and WIs. New APIs to list the Form/WI catalogs were also created and tested.
+2.  **Frontend Component Created:** The new React component, , has been created to render the lists of affected Forms and WIs.
+3.  **Data Mismatch Identified:** An investigation revealed that the existing QSP documents in the database are missing the new  field. This is because they were parsed and saved before the parser was enhanced. This will prevent the cascade feature from showing results until the user re-maps their QSPs.
+
+**Immediate Task:**
+The engineer was actively modifying . They imported the new  component and added it to the expanded view of a result row. The goal is to replace the static results table with a list of expandable cards, where each card, when opened, shows the detailed rationale and the new downstream impact section. The work involves wiring up the state for expanded rows and ensuring the new component receives the correct  prop.
 </current_work>
 
 <optional_next_step>
-Review backend logs to diagnose the uploads are now failing issue.
+Complete the modifications to . After the code changes, perform a visual verification on the frontend to ensure the expandable cards render correctly and the  component displays the (currently empty) downstream sections.
 </optional_next_step>
