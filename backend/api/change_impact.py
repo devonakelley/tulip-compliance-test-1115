@@ -193,7 +193,7 @@ async def analyze_change_impact(
         }
         
         # Save results to gap_results collection for persistence
-        if impacts_list and db is not None:
+        if impacts_list:
             import uuid
             from datetime import datetime, timezone
             
