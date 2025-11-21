@@ -440,7 +440,7 @@ class ChangeImpactServiceMongo:
     
     async def _enrich_forms(self, tenant_id: str, form_ids: List[str]) -> List[Dict]:
         """Look up form names from catalog"""
-        if not self.db or not form_ids:
+        if self.db is None or not form_ids:
             return []
         
         results = []
