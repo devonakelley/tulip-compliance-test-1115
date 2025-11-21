@@ -527,7 +527,7 @@ software lifecycle processes, and cybersecurity considerations for medical devic
             # First try the admin credentials from review request
             login_data = {
                 "email": "admin@tulipmedical.com",
-                "password": "admin123"  # Updated password from review request
+                "password": "Tulip123!"  # Updated password from review request
             }
             
             response = requests.post(f"{self.api_url}/auth/login", json=login_data, timeout=10)
