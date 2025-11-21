@@ -1249,6 +1249,9 @@ app.include_router(change_impact_router_module.router, prefix="/api")
 # Include Regulatory Upload router
 app.include_router(regulatory_upload_router_module.router, prefix="/api")
 
+# Include catalogs router
+app.include_router(catalogs_module.router, prefix="/api")
+
 # Store active WebSocket connections for MCP
 active_mcp_connections: Dict[str, WebSocket] = {}
 
