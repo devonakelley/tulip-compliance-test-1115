@@ -197,6 +197,82 @@ class ChangeImpactServiceMongo:
                 return result
             finally:
                 loop.close()
+    
+    async def _find_explicit_matches(
+        self,
+        tenant_id: str,
+        regulatory_doc: str,
+        clause_id: str
+    ) -> List[Dict]:
+        """
+        Stage 1: Find QSPs that explicitly reference this regulatory clause
+        Returns matches with 100% confidence
+        
+        Args:
+            tenant_id: Tenant identifier
+            regulatory_doc: e.g., "ISO 14971:2020"
+            clause_id: e.g., "5.1"
+            
+        Returns:
+            List of matches with structure:
+            {
+                'match_type': 'explicit_reference',
+                'confidence': 1.0,
+                'qsp_section': {...full section data...},
+                'reference_context': 'Risk management per ISO 14971...',
+                'reference_line': 67
+            }
+        """
+        if self.db is None:
+            logger.warning("MongoDB not available for explicit matching")
+            return []
+        
+        # Parse regulatory doc to extract standard name
+        # "ISO 14971:2020" → "ISO 14971"
+        standard_name = regulatory_doc.split(':')[0] if ':' in regulatory_doc else regulatory_doc
+        
+        # Query regulatory_references collection
+        try:
+            references = await self.db.regulatory_references.find({
+                'tenant_id': tenant_id,
+                'standard': standard_name,
+                'clause': clause_id,
+                'confidence': {'$gte': 0.7}  # Only high-confidence references
+            }).to_list(length=None)
+            
+            logger.info(f"Found {len(references)} explicit references to {standard_name} Clause {clause_id}")
+            
+            matches = []
+            for ref in references:
+                # Get the full QSP section data
+                qsp_section = await self.db.qsp_sections.find_one({
+                    'tenant_id': tenant_id,
+                    'doc_id': ref['qsp_id'],
+                    'section_path': ref['qsp_section']
+                })
+                
+                # If section not in DB, check in-memory cache
+                if not qsp_section and tenant_id in self.qsp_sections:
+                    for cached_section in self.qsp_sections[tenant_id]:
+                        if (cached_section['doc_id'] == ref['qsp_id'] and 
+                            cached_section['section_path'] == ref['qsp_section']):
+                            qsp_section = cached_section
+                            break
+                
+                if qsp_section:
+                    matches.append({
+                        'match_type': 'explicit_reference',
+                        'confidence': 1.0,  # Explicit references are 100% confident
+                        'qsp_section': qsp_section,
+                        'reference_context': ref.get('context', ''),
+                        'reference_line': ref.get('line_number', 0)
+                    })
+            
+            return matches
+            
+        except Exception as e:
+            logger.error(f"Error finding explicit matches: {e}")
+            return []
                 
     async def _detect_impacts_core(
         self,
