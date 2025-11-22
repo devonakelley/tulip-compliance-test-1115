@@ -580,6 +580,40 @@ async def map_clauses(
                         if pending['sections']:
                             insert_result = await db.qsp_sections.insert_many(pending['sections'])
                             logger.info(f"Inserted {len(insert_result.inserted_ids)} sections to MongoDB")
+                            
+                            # NEW: Extract regulatory references from sections
+                            from core.regulatory_reference_extractor import RegulatoryReferenceExtractor
+                            reference_extractor = RegulatoryReferenceExtractor()
+                            
+                            all_references = []
+                            for section in pending['sections']:
+                                references = reference_extractor.extract_references(
+                                    qsp_text=section['text'],
+                                    qsp_id=section['doc_id'],
+                                    qsp_section=section.get('section_path', '')
+                                )
+                                
+                                # Add tenant_id and doc_name to each reference
+                                for ref in references:
+                                    ref['tenant_id'] = pending['tenant_id']
+                                    ref['doc_name'] = section['doc_name']
+                                
+                                all_references.extend(references)
+                            
+                            # Store references in MongoDB
+                            if all_references:
+                                try:
+                                    # Clear existing references for this doc first
+                                    await db.regulatory_references.delete_many({
+                                        'tenant_id': pending['tenant_id'],
+                                        'qsp_id': pending['doc_id']
+                                    })
+                                    
+                                    # Insert new references
+                                    await db.regulatory_references.insert_many(all_references)
+                                    logger.info(f"✅ Extracted and stored {len(all_references)} regulatory references")
+                                except Exception as e:
+                                    logger.error(f"Failed to store references: {e}")
                         
                         logger.info(f"✅ Persisted {pending['count']} sections to MongoDB for {file_path.name}")
                         
