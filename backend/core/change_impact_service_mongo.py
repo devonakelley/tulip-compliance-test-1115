@@ -11,6 +11,7 @@ import uuid
 import numpy as np
 import re
 from motor.motor_asyncio import AsyncIOMotorClient
+from core.regulatory_reference_extractor import RegulatoryReferenceExtractor
 
 logger = logging.getLogger(__name__)
 
