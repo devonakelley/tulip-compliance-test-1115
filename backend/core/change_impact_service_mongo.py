@@ -202,7 +202,7 @@ class ChangeImpactServiceMongo:
         tenant_id: str,
         deltas: List[Dict[str, Any]],
         qsp_sections: List[Dict[str, Any]],
-        top_k: int = 5
+        top_k: int = 3  # Reduced from 5 to 3 to focus on top matches
     ) -> Dict[str, Any]:
         """Core impact detection logic"""
         run_id = str(uuid.uuid4())
