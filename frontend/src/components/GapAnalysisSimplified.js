@@ -474,15 +474,27 @@ const GapAnalysisSimplified = () => {
                               </div>
                               <div>
                                 <div className="text-xs font-semibold text-gray-700 mb-1">AI RATIONALE:</div>
-                                <div className="text-sm text-blue-900 bg-blue-50 p-3 rounded">
+                                <div className="text-sm text-blue-900 bg-blue-50 p-3 rounded whitespace-pre-wrap">
                                   {impact.rationale || 'Model flagged this section for review based on semantic similarity to regulatory change.'}
-                                  {impact.similarity_score && (
+                                  {impact.similarity_score && !impact.match_type && (
                                     <div className="mt-2 text-xs text-blue-700">
                                       Semantic Similarity Score: <strong>{(impact.similarity_score * 100).toFixed(1)}%</strong>
                                     </div>
                                   )}
                                 </div>
                               </div>
+                              
+                              {/* Show reference context for explicit matches */}
+                              {impact.match_type === 'explicit_reference' && impact.reference_context && (
+                                <div>
+                                  <div className="text-xs font-semibold text-gray-700 mb-1">
+                                    EXPLICIT REFERENCE FOUND:
+                                  </div>
+                                  <div className="text-sm text-green-700 bg-green-50 p-3 rounded border-l-4 border-green-500">
+                                    Line {impact.reference_line}: "{impact.reference_context}"
+                                  </div>
+                                </div>
+                              )}
                               
                               {/* DOWNSTREAM IMPACTS: Forms and Work Instructions */}
                               {impact.downstream_impacts && (
