@@ -373,42 +373,49 @@ class ChangeImpactServiceMongo:
                 else:
                     impact_level = 'Low'
                 
-                # Extract document number from doc_name (e.g., "7.3-3 QSP 7.3-3 R9..." -> "7.3-3")
+                # Extract document number from doc_name
                 doc_name = section['doc_name']
                 doc_number_match = re.match(r'^(\d+\.\d+-\d+|\d+\.\d+)', doc_name)
                 qsp_doc = doc_number_match.group(1) if doc_number_match else doc_name.split()[0]
                 
-                # Generate rationale without confidence score
-                if confidence > 0.75:
-                    strength = "Strong"
-                elif confidence > 0.65:
-                    strength = "Moderate"
-                else:
-                    strength = "Potential"
-                
-                # Create human-readable rationale
-                if change_type.lower() == 'added' or change_type.lower() == 'new':
+                # Generate specific rationale based on match type
+                # Will be implemented in Task 7 - for now use simple rationale
+                if match['match_type'] == 'explicit_reference':
                     rationale = (
-                        f"{strength} match: New regulatory requirement introduced in clause {clause_id}. "
-                        f"Review QSP section '{section['heading']}' to ensure alignment with new requirements."
-                    )
-                elif change_type.lower() == 'modified':
-                    rationale = (
-                        f"{strength} match: Regulatory clause {clause_id} has been modified. "
-                        f"QSP section '{section['heading']}' may require updates to maintain compliance."
-                    )
-                elif change_type.lower() == 'deleted':
-                    rationale = (
-                        f"{strength} match: Regulatory clause {clause_id} has been removed. "
-                        f"Review QSP section '{section['heading']}' for potential simplification or removal."
+                        f"HIGH CONFIDENCE: This QSP explicitly references {regulatory_doc} Clause {clause_id}. "
+                        f"The regulatory requirement has been {change_type}. "
+                        f"Review and update Section '{section['heading']}' to maintain compliance. "
+                        f"\n\n✓ Reference found at line {match.get('reference_line', 'N/A')}: \"{match.get('reference_context', 'N/A')[:150]}...\""
                     )
                 else:
-                    rationale = (
-                        f"{strength} match: Change to regulatory clause {clause_id}. "
-                        f"Review QSP section '{section['heading']}' for consistency."
-                    )
+                    # Semantic similarity rationale
+                    if confidence > 0.80:
+                        strength = "Strong semantic"
+                    elif confidence > 0.75:
+                        strength = "Moderate semantic"
+                    else:
+                        strength = "Potential semantic"
+                    
+                    if change_type.lower() in ['added', 'new']:
+                        rationale = (
+                            f"{strength} match: New regulatory requirement introduced in {regulatory_doc} Clause {clause_id}. "
+                            f"Review QSP section '{section['heading']}' to ensure alignment with new requirements. "
+                            f"\n\n⚠️ MEDIUM CONFIDENCE: Match based on semantic similarity ({confidence*100:.1f}%). Expert review recommended."
+                        )
+                    elif change_type.lower() == 'modified':
+                        rationale = (
+                            f"{strength} match: {regulatory_doc} Clause {clause_id} has been modified. "
+                            f"QSP section '{section['heading']}' may require updates to maintain compliance. "
+                            f"\n\n⚠️ MEDIUM CONFIDENCE: Match based on semantic similarity ({confidence*100:.1f}%). Expert review recommended."
+                        )
+                    else:
+                        rationale = (
+                            f"{strength} match: Change to {regulatory_doc} Clause {clause_id}. "
+                            f"Review QSP section '{section['heading']}' for consistency. "
+                            f"\n\n⚠️ MEDIUM CONFIDENCE: Match based on semantic similarity ({confidence*100:.1f}%). Expert review recommended."
+                        )
                 
-                # New unified structure with regulatory text and impact level
+                # New unified structure with match metadata
                 all_impacts.append({
                     'regulatory_clause': f"{regulatory_doc} | Clause {clause_id}" + (f" — {reg_title}" if reg_title else ""),
                     'reg_clause': clause_id,
@@ -416,14 +423,18 @@ class ChangeImpactServiceMongo:
                     'reg_title': reg_title,
                     'change_type': change_type.capitalize(),
                     'impact_level': impact_level,
-                    'similarity_score': round(confidence, 3),  # Include similarity score
+                    'match_type': match['match_type'],  # NEW
+                    'confidence': round(confidence, 3),  # NEW
+                    'similarity_score': round(match.get('similarity_score', confidence), 3),
                     'qsp_doc': qsp_doc,
                     'qsp_clause': section['section_path'] if section['section_path'] else 'Unknown',
                     'old_text': old_text,
                     'new_text': new_text,
-                    'qsp_text': section['text'][:300] if len(section['text']) > 300 else section['text'],  # Preview (first 300 chars)
-                    'qsp_text_full': section['text'],  # Full text for modal/expansion
-                    'rationale': rationale
+                    'qsp_text': section['text'][:300] if len(section['text']) > 300 else section['text'],
+                    'qsp_text_full': section['text'],
+                    'rationale': rationale,
+                    'reference_context': match.get('reference_context', ''),  # NEW - for explicit matches
+                    'reference_line': match.get('reference_line', 0)  # NEW - for explicit matches
                 })
             
             logger.info(f"Found {len(top_matches)} impacts for {clause_id}")
