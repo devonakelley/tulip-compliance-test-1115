@@ -299,7 +299,7 @@ class ChangeImpactServiceMongo:
         
         logger.info(f"Using {len(qsp_sections)} QSP sections for impact analysis")
         
-        # Process each delta
+        # Process each delta with multi-stage matching
         for delta in deltas:
             clause_id = delta['clause_id']
             change_text = delta['change_text']
@@ -311,37 +311,67 @@ class ChangeImpactServiceMongo:
             regulatory_doc = delta.get('regulatory_doc', 'ISO 14971:2020')  # Default if not provided
             reg_title = delta.get('reg_title', '')
             
-            # Determine impact level based on change type
-            if change_type.lower() in ['added', 'new']:
-                impact_level = 'High'
-            elif change_type.lower() == 'modified':
-                impact_level = 'Medium'
+            logger.info(f"Analyzing delta: {regulatory_doc} Clause {clause_id}")
+            
+            # STAGE 1: Check for explicit references FIRST
+            explicit_matches = await self._find_explicit_matches(
+                tenant_id,
+                regulatory_doc,
+                clause_id
+            )
+            
+            # If we found explicit matches, prioritize those
+            if explicit_matches:
+                logger.info(f"✓ Stage 1: Found {len(explicit_matches)} explicit reference(s) for {clause_id}")
+                top_matches = explicit_matches[:top_k]  # Limit to top_k
             else:
-                impact_level = 'Low'
+                # STAGE 2: Fallback to semantic search
+                logger.info(f"Stage 1: No explicit references for {clause_id}, using semantic search")
+                
+                # Generate embedding for the change
+                if not change_text:
+                    logger.warning(f"No text available for delta {clause_id}, skipping")
+                    continue
+                
+                change_embedding = self._get_embedding(change_text)
+                
+                # Calculate similarities with all QSP sections
+                similarities = []
+                for qsp in qsp_sections:
+                    if 'embedding' not in qsp:
+                        continue
+                    
+                    score = self._cosine_similarity(change_embedding, qsp['embedding'])
+                    
+                    # Only consider matches above threshold (now 0.75)
+                    if score >= self.impact_threshold:
+                        similarities.append((score, qsp))
+                
+                # Sort by similarity and take top matches
+                similarities.sort(reverse=True, key=lambda x: x[0])
+                
+                # Create match objects for semantic matches
+                top_matches = [{
+                    'match_type': 'semantic_similarity',
+                    'confidence': score,
+                    'qsp_section': qsp,
+                    'similarity_score': score
+                } for score, qsp in similarities[:top_k]]
+                
+                logger.info(f"Stage 2: Found {len(top_matches)} semantic match(es) for {clause_id}")
             
-            logger.info(f"Analyzing impact for {clause_id}")
-            
-            # Generate embedding for change
-            change_embedding = self._get_embedding(change_text)
-            
-            # Calculate similarity with all QSP sections
-            similarities = []
-            for qsp in qsp_sections:
-                similarity = self._cosine_similarity(change_embedding, qsp['embedding'])
-                if similarity > self.impact_threshold:
-                    similarities.append({
-                        'section': qsp,
-                        'confidence': similarity
-                    })
-            
-            # Sort by confidence and take top-k
-            similarities.sort(key=lambda x: x['confidence'], reverse=True)
-            top_matches = similarities[:top_k]
-            
-            # Generate impacts with new unified structure
+            # Generate impacts for each match
             for match in top_matches:
-                section = match['section']
+                section = match['qsp_section']
                 confidence = match['confidence']
+                
+                # Determine impact level based on confidence and change type
+                if confidence >= 0.9 or match['match_type'] == 'explicit_reference':
+                    impact_level = 'High'
+                elif confidence >= 0.75:
+                    impact_level = 'Medium'
+                else:
+                    impact_level = 'Low'
                 
                 # Extract document number from doc_name (e.g., "7.3-3 QSP 7.3-3 R9..." -> "7.3-3")
                 doc_name = section['doc_name']
