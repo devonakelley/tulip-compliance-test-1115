@@ -406,6 +406,22 @@ const GapAnalysisSimplified = () => {
                           {getImpactBadge(impact.impact_level)}
                         </td>
                         <td className="px-4 py-3">
+                          {impact.match_type === 'explicit_reference' ? (
+                            <Badge className="bg-green-600 text-white font-semibold">
+                              ✓ Explicit
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-blue-600 text-white">
+                              Semantic
+                            </Badge>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="font-semibold text-gray-900">
+                            {((impact.confidence || 0) * 100).toFixed(0)}%
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
                           <span className="font-mono text-sm font-semibold">
                             {impact.qsp_doc || 'N/A'}
                           </span>
@@ -413,11 +429,6 @@ const GapAnalysisSimplified = () => {
                         <td className="px-4 py-3">
                           <span className="font-mono font-bold text-blue-700">
                             {impact.qsp_clause || impact.section_path || 'N/A'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 max-w-md">
-                          <span className="text-gray-700 text-xs">
-                            {getTextPreview(impact.qsp_text || impact.heading)}
                           </span>
                         </td>
                         <td className="px-4 py-3 max-w-xs">
