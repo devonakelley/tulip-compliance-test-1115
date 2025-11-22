@@ -30,7 +30,7 @@ class ChangeImpactServiceMongo:
         
         self.embedding_model = "text-embedding-3-large"
         self.embedding_dimensions = 1536
-        self.impact_threshold = 0.55
+        self.impact_threshold = 0.75  # Increased from 0.55 to reduce false positives
         
         # MongoDB connection for persistent storage
         mongo_url = os.environ.get('MONGO_URL')
