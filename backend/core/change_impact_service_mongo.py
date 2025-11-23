@@ -337,15 +337,25 @@ class ChangeImpactServiceMongo:
                 
                 # Calculate similarities with all QSP sections
                 similarities = []
+                all_scores = []  # Track all scores for debugging
+                
                 for qsp in qsp_sections:
                     if 'embedding' not in qsp:
                         continue
                     
                     score = self._cosine_similarity(change_embedding, qsp['embedding'])
+                    all_scores.append((score, qsp['doc_name'], qsp.get('section_path', 'unknown')))
                     
                     # Only consider matches above threshold (now 0.75)
                     if score >= self.impact_threshold:
                         similarities.append((score, qsp))
+                
+                # DEBUG: Show top 5 scores regardless of threshold
+                all_scores.sort(reverse=True, key=lambda x: x[0])
+                logger.info(f"🔍 DEBUG - Clause {clause_id} top 5 similarity scores:")
+                for i, (score, doc, section) in enumerate(all_scores[:5]):
+                    logger.info(f"  #{i+1}: {score:.3f} - {doc} | {section}")
+                logger.info(f"  Current threshold: {self.impact_threshold} | Matches above threshold: {len(similarities)}")
                 
                 # Sort by similarity and take top matches
                 similarities.sort(reverse=True, key=lambda x: x[0])
