@@ -61,29 +61,29 @@ async def init_test_data():
     # Create users for Tenant 1
     user1_tenant1 = User(
         email="admin@tulipmedical.com",
-        password_hash=auth_service.hash_password("password123"),
+        hashed_password=auth_service.hash_password("password123"),
         tenant_id=tenant1.id,
         full_name="Admin User - Tulip Medical"
     )
-    
+
     user2_tenant1 = User(
         email="user@tulipmedical.com",
-        password_hash=auth_service.hash_password("password123"),
+        hashed_password=auth_service.hash_password("password123"),
         tenant_id=tenant1.id,
         full_name="Regular User - Tulip Medical"
     )
-    
+
     # Create users for Tenant 2
     user1_tenant2 = User(
         email="admin@medtechsolutions.com",
-        password_hash=auth_service.hash_password("password123"),
+        hashed_password=auth_service.hash_password("password123"),
         tenant_id=tenant2.id,
         full_name="Admin User - MedTech Solutions"
     )
-    
+
     user2_tenant2 = User(
         email="user@medtechsolutions.com",
-        password_hash=auth_service.hash_password("password123"),
+        hashed_password=auth_service.hash_password("password123"),
         tenant_id=tenant2.id,
         full_name="Regular User - MedTech Solutions"
     )
