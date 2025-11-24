@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: certaro-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: ${DB_NAME:-compliance_checker}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    networks:
+      - certaro-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: certaro-backend
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+      - DB_NAME=${DB_NAME:-compliance_checker}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - EMERGENT_LLM_KEY=${EMERGENT_LLM_KEY}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000}
+      - ALGORITHM=${ALGORITHM:-HS256}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
+    volumes:
+      - backend_uploads:/app/uploads
+      - backend_reports:/app/_reports
+      - chromadb_data:/app/chromadb_data
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - certaro-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL:-http://localhost:8001}
+    container_name: certaro-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - certaro-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  certaro-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local
+  backend_uploads:
+    driver: local
+  backend_reports:
+    driver: local
+  chromadb_data:
+    driver: local

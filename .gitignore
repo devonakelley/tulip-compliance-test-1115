@@ -30,8 +30,10 @@ next-env.d.ts
 dist/
 dist
 
-# Environment files (comprehensive coverage)
-
+# Environment files
+*.env
+*.env.*
+!.env.example
 *token.json*
 *credentials.json*
 
@@ -48,9 +50,11 @@ dump.rdb
 
 # Python
 __pycache__/
-*pyc*
+*.pyc
 venv/
 .venv/
+*.egg-info/
+.pytest_cache/
 
 # Development tools
 chainlit.md
@@ -68,6 +72,7 @@ agenthub/agents/youtube/db
 backend/uploads/
 backend/_reports/
 backend/chromadb_data/
+chromadb_data/
 *.sqlite3
 *.db
 
@@ -84,60 +89,11 @@ backend/chromadb_data/
 .cache/
 
 # Mobile development
-android-sdk/ -e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
+android-sdk/
+
+# Emergent
 /.emergent/
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
+
+# Docker
+*.log
+docker-compose.override.yml
