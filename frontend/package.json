@@ -57,7 +57,20 @@
   "scripts": {
     "start": "craco start",
     "build": "craco build",
-    "test": "craco test"
+    "test": "craco test",
+    "test:coverage": "craco test --coverage --watchAll=false",
+    "test:ci": "CI=true craco test --coverage --watchAll=false",
+    "lint": "eslint \"src/**/*.{js,jsx}\"",
+    "lint:fix": "eslint \"src/**/*.{js,jsx}\" --fix",
+    "format": "prettier --write \"src/**/*.{js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"src/**/*.{js,jsx,json,css,md}\"",
+    "e2e": "playwright test",
+    "e2e:headed": "playwright test --headed",
+    "e2e:ui": "playwright test --ui",
+    "e2e:report": "playwright show-report",
+    "e2e:codegen": "playwright codegen http://localhost:3000",
+    "quality": "npm run lint && npm run format:check && npm run test:ci",
+    "prepare": "cd .. && husky install || true"
   },
   "browserslist": {
     "production": [
@@ -75,12 +88,14 @@
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@craco/craco": "^7.1.0",
     "@eslint/js": "9.23.0",
+    "@playwright/test": "^1.56.1",
     "autoprefixer": "^10.4.20",
     "eslint": "9.23.0",
     "eslint-plugin-import": "2.31.0",
     "eslint-plugin-jsx-a11y": "6.10.2",
     "eslint-plugin-react": "7.37.4",
     "globals": "15.15.0",
+    "playwright": "^1.56.1",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17"
   },
