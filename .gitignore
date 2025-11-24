@@ -18,6 +18,17 @@ node_modules/
 
 # Testing
 /coverage
+coverage/
+*.coverage
+.coverage
+htmlcov/
+.tox/
+.pytest_cache/
+test-results/
+playwright-report/
+playwright/.cache/
+/test-results/
+/playwright-report/
 
 # Next.js
 /.next/
@@ -97,3 +108,9 @@ android-sdk/
 # Docker
 *.log
 docker-compose.override.yml
+
+# Pre-commit
+.pre-commit-config.yaml.bak
+
+# Test environment
+.env.test

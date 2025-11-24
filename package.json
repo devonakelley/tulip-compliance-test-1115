@@ -1,0 +1,51 @@
+{
+  "name": "tulip-compliance-test",
+  "version": "1.0.0",
+  "description": "Tulip Compliance Testing Platform - Production Grade Setup",
+  "private": true,
+  "scripts": {
+    "install:all": "cd frontend && npm install --legacy-peer-deps && cd ../backend && pip install -r requirements.txt",
+    "dev:frontend": "cd frontend && npm start",
+    "dev:backend": "cd backend && python server.py",
+    "build:frontend": "cd frontend && npm run build",
+    "test:frontend": "cd frontend && npm test -- --coverage --watchAll=false",
+    "test:backend": "cd backend && pytest --cov=. --cov-report=term",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report",
+    "test:all": "npm run test:frontend && npm run test:backend && npm run test:e2e",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:backend": "cd backend && python -m flake8 . --max-line-length=100 --extend-ignore=E203,W503",
+    "format:frontend": "cd frontend && npm run format",
+    "format:backend": "cd backend && python -m black . && python -m isort .",
+    "quality:check": "npm run lint:frontend && npm run lint:backend",
+    "quality:fix": "npm run format:frontend && npm run format:backend",
+    "pre-commit": "pre-commit run --all-files",
+    "prepare": "command -v pre-commit >/dev/null 2>&1 && pre-commit install || echo 'pre-commit not installed, skipping hook setup'",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "keywords": [
+    "compliance",
+    "regulatory",
+    "testing",
+    "tulip"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@commitlint/cli": "^19.0.0",
+    "@commitlint/config-conventional": "^19.0.0",
+    "@playwright/test": "^1.56.1",
+    "husky": "^9.0.0",
+    "playwright": "^1.56.1",
+    "prettier": "^4.0.0-alpha.8"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0",
+    "python": ">=3.11.0"
+  }
+}

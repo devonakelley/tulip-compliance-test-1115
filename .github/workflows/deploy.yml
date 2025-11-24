@@ -1,0 +1,115 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event.inputs.environment || 'production' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci --legacy-peer-deps
+
+      - name: Build frontend
+        run: cd frontend && npm run build
+        env:
+          CI: true
+          NODE_ENV: production
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests before deployment
+        run: |
+          cd frontend && npm test -- --coverage --watchAll=false
+          cd ../backend && pytest
+        env:
+          CI: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.DOCKER_REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+        if: env.DOCKER_REGISTRY != ''
+
+      - name: Build and push Docker images
+        run: |
+          docker-compose build
+          docker-compose push
+        if: env.DOCKER_REGISTRY != ''
+        env:
+          DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+
+      - name: Deploy to server
+        run: |
+          echo "Add your deployment script here"
+          echo "This could use SSH, kubectl, docker-compose, etc."
+        # Uncomment and configure based on your deployment method:
+        # - uses: appleboy/ssh-action@master
+        #   with:
+        #     host: ${{ secrets.SERVER_HOST }}
+        #     username: ${{ secrets.SERVER_USER }}
+        #     key: ${{ secrets.SSH_PRIVATE_KEY }}
+        #     script: |
+        #       cd /path/to/app
+        #       git pull
+        #       docker-compose up -d
+
+      - name: Create deployment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.sha,
+              environment: '${{ github.event.inputs.environment || 'production' }}',
+              auto_merge: false,
+              required_contexts: []
+            })
+
+      - name: Notify deployment status
+        if: always()
+        run: |
+          echo "Deployment completed with status: ${{ job.status }}"
+          # Add notification logic here (Slack, email, etc.)

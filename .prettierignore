@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Build outputs
+build/
+dist/
+frontend/build/
+
+# Cache
+.cache/
+*.log
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# Test coverage
+coverage/
+
+# Data
+chromadb_data/
+backend/data/
+
+# Documentation
+*.md
