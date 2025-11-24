@@ -13,9 +13,14 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 logger = logging.getLogger(__name__)
 
 # Configuration
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError(
+        "JWT_SECRET_KEY environment variable is required. "
+        "Generate a secure key with: openssl rand -hex 32"
+    )
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))  # 24 hours default
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

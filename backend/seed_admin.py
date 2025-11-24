@@ -17,10 +17,16 @@ logger = logging.getLogger(__name__)
 MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 DB_NAME = os.environ.get('DB_NAME', 'compliance_checker')
 
-# Default admin credentials
-DEFAULT_ADMIN_EMAIL = "admin@tulipmedical.com"
-DEFAULT_ADMIN_PASSWORD = "Tulip123!"
-DEFAULT_COMPANY_NAME = "Tulip Medical Products"
+# Default admin credentials - MUST be set via environment variables
+DEFAULT_ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
+DEFAULT_ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+DEFAULT_COMPANY_NAME = os.getenv("COMPANY_NAME", "Your Company Name")
+
+# Validate required environment variables
+if not DEFAULT_ADMIN_EMAIL:
+    raise ValueError("ADMIN_EMAIL environment variable is required for seeding admin user")
+if not DEFAULT_ADMIN_PASSWORD:
+    raise ValueError("ADMIN_PASSWORD environment variable is required for seeding admin user")
 
 
 async def seed_default_admin():

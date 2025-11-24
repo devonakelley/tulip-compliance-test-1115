@@ -350,12 +350,12 @@ class ChangeImpactServiceMongo:
                     if score >= self.impact_threshold:
                         similarities.append((score, qsp))
                 
-                # DEBUG: Show top 5 scores regardless of threshold
+                # Log top similarity scores for debugging (at debug level)
                 all_scores.sort(reverse=True, key=lambda x: x[0])
-                logger.info(f"🔍 DEBUG - Clause {clause_id} top 5 similarity scores:")
+                logger.debug(f"Clause {clause_id} top 5 similarity scores:")
                 for i, (score, doc, section) in enumerate(all_scores[:5]):
-                    logger.info(f"  #{i+1}: {score:.3f} - {doc} | {section}")
-                logger.info(f"  Current threshold: {self.impact_threshold} | Matches above threshold: {len(similarities)}")
+                    logger.debug(f"  #{i+1}: {score:.3f} - {doc} | {section}")
+                logger.debug(f"  Current threshold: {self.impact_threshold} | Matches above threshold: {len(similarities)}")
                 
                 # Sort by similarity and take top matches
                 similarities.sort(reverse=True, key=lambda x: x[0])

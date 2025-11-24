@@ -3,6 +3,9 @@ from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 import os
 import logging
 from pathlib import Path
@@ -38,6 +41,32 @@ from core.rag_service import rag_service
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
+# Validate required environment variables
+def validate_environment_variables():
+    """Validate that all required environment variables are set"""
+    required_vars = [
+        'MONGO_URL',
+        'DB_NAME',
+        'JWT_SECRET_KEY',
+        'OPENAI_API_KEY'
+    ]
+
+    missing_vars = [var for var in required_vars if not os.getenv(var)]
+
+    if missing_vars:
+        error_msg = (
+            f"Missing required environment variables: {', '.join(missing_vars)}\n"
+            f"Please ensure all required variables are set in your .env file.\n"
+            f"See .env.example for reference."
+        )
+        logger.error(error_msg)
+        raise ValueError(error_msg)
+
+    logger.info("✅ All required environment variables are set")
+
+# Run validation before starting the app
+validate_environment_variables()
+
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
@@ -45,6 +74,11 @@ db = client[os.environ['DB_NAME']]
 
 # Create the main app without a prefix
 app = FastAPI(title="QSP Compliance Checker - Multi-Tenant", version="2.0.0")
+
+# Initialize rate limiter
+limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
