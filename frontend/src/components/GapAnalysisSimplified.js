@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { TrendingUp, Download, AlertCircle, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
+import { TrendingUp, Download, AlertCircle, ChevronDown, ChevronUp, AlertTriangle, Layers } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import LoaderSpinner from './LoaderSpinner';
 import { DownstreamImpacts } from './DownstreamImpacts';
+import { HierarchyTrace, HierarchyTraceSummary } from './HierarchyTrace';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -20,6 +21,7 @@ const GapAnalysisSimplified = () => {
   const [customRationales, setCustomRationales] = useState({});
   const [loadingResults, setLoadingResults] = useState(false);
   const [savingReview, setSavingReview] = useState({});
+  const [useFullHierarchy, setUseFullHierarchy] = useState(true); // Default to full hierarchy
 
   // Load saved results on mount if runId exists in localStorage
   useEffect(() => {
@@ -115,7 +117,8 @@ const GapAnalysisSimplified = () => {
   const handleRunAnalysis = async () => {
     try {
       setAnalyzing(true);
-      toast.loading('Running gap analysis...', { id: 'analysis' });
+      const analysisType = useFullHierarchy ? 'full hierarchy' : 'standard';
+      toast.loading(`Running ${analysisType} gap analysis...`, { id: 'analysis' });
 
       const diffResults = localStorage.getItem('regulatory_diff');
       if (!diffResults) {
@@ -133,7 +136,12 @@ const GapAnalysisSimplified = () => {
 
       const deltas = JSON.parse(diffResults);
 
-      const response = await axios.post(`${API}/api/impact/analyze`, {
+      // Choose endpoint based on analysis type
+      const endpoint = useFullHierarchy
+        ? `${API}/api/impact/analyze_full_hierarchy`
+        : `${API}/api/impact/analyze`;
+
+      const response = await axios.post(endpoint, {
         deltas: deltas.deltas || [],
         top_k: 10
       }, {
@@ -278,22 +286,48 @@ const GapAnalysisSimplified = () => {
 
       {/* Run Analysis Button */}
       <Card className="bg-blue-50 border-blue-200">
-        <CardContent className="pt-6">
+        <CardContent className="pt-6 space-y-4">
+          {/* Full Hierarchy Toggle */}
+          <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+            <div className="flex items-center gap-3">
+              <Layers className="h-5 w-5 text-indigo-600" />
+              <div>
+                <p className="font-medium text-sm">Full 5-Level Hierarchy Analysis</p>
+                <p className="text-xs text-gray-500">
+                  Trace impacts through QM → QSP → WI → Forms → Reference Docs
+                </p>
+              </div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                className="sr-only peer"
+                checked={useFullHierarchy}
+                onChange={(e) => setUseFullHierarchy(e.target.checked)}
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+            </label>
+          </div>
+
           <Button
             onClick={handleRunAnalysis}
             disabled={analyzing || loadingResults}
             size="lg"
-            className="w-full h-14 text-lg"
+            className={`w-full h-14 text-lg ${useFullHierarchy ? 'bg-indigo-600 hover:bg-indigo-700' : ''}`}
           >
             {analyzing ? (
               <>
                 <div className="animate-spin h-6 w-6 border-2 border-white border-t-transparent rounded-full mr-2"></div>
-                Running Gap Analysis...
+                Running {useFullHierarchy ? 'Full Hierarchy' : 'Gap'} Analysis...
               </>
             ) : (
               <>
-                <TrendingUp className="h-6 w-6 mr-2" />
-                Run Gap Analysis
+                {useFullHierarchy ? (
+                  <Layers className="h-6 w-6 mr-2" />
+                ) : (
+                  <TrendingUp className="h-6 w-6 mr-2" />
+                )}
+                {useFullHierarchy ? 'Run Full Hierarchy Analysis' : 'Run Gap Analysis'}
               </>
             )}
           </Button>
@@ -376,7 +410,7 @@ const GapAnalysisSimplified = () => {
                     <th className="px-4 py-3 text-left font-semibold">Confidence</th>
                     <th className="px-4 py-3 text-left font-semibold">QSP Doc</th>
                     <th className="px-4 py-3 text-left font-semibold">QSP Clause</th>
-                    <th className="px-4 py-3 text-left font-semibold">Rationale</th>
+                    <th className="px-4 py-3 text-left font-semibold">Affected Docs</th>
                     <th className="px-4 py-3 text-left font-semibold"></th>
                   </tr>
                 </thead>
@@ -431,10 +465,19 @@ const GapAnalysisSimplified = () => {
                             {impact.qsp_clause || impact.section_path || 'N/A'}
                           </span>
                         </td>
-                        <td className="px-4 py-3 max-w-xs">
-                          <span className="text-gray-600 text-xs">
-                            {impact.rationale || 'Review for compliance'}
-                          </span>
+                        <td className="px-4 py-3">
+                          {impact.hierarchy_trace ? (
+                            <HierarchyTraceSummary
+                              hierarchyTrace={impact.hierarchy_trace}
+                              totalDocumentsAffected={impact.total_documents_affected}
+                            />
+                          ) : impact.total_documents_affected ? (
+                            <Badge variant="secondary">
+                              {impact.total_documents_affected} docs
+                            </Badge>
+                          ) : (
+                            <span className="text-xs text-gray-400">-</span>
+                          )}
                         </td>
                         <td className="px-4 py-3">
                           <button
@@ -452,7 +495,7 @@ const GapAnalysisSimplified = () => {
                       </tr>
                       {expandedRows[idx] && (
                         <tr className="bg-blue-50 border-b">
-                          <td colSpan={9} className="px-4 py-4">
+                          <td colSpan={10} className="px-4 py-4">
                             <div className="space-y-3">
                               <div>
                                 <div className="text-xs font-semibold text-gray-700 mb-1">OLD REGULATORY TEXT:</div>
@@ -496,19 +539,28 @@ const GapAnalysisSimplified = () => {
                                 </div>
                               )}
                               
-                              {/* DOWNSTREAM IMPACTS: Forms and Work Instructions */}
-                              {impact.downstream_impacts && (
+                              {/* FULL HIERARCHY TRACE: All 5 Levels */}
+                              {impact.hierarchy_trace ? (
+                                <div>
+                                  <div className="text-xs font-semibold text-gray-700 mb-2">
+                                    FULL DOCUMENT HIERARCHY TRACE:
+                                  </div>
+                                  <HierarchyTrace
+                                    hierarchyTrace={impact.hierarchy_trace}
+                                    reasoning={impact.reasoning}
+                                    totalDocumentsAffected={impact.total_documents_affected}
+                                  />
+                                </div>
+                              ) : impact.downstream_impacts ? (
                                 <div>
                                   <div className="text-xs font-semibold text-gray-700 mb-2">CASCADE IMPACT ANALYSIS:</div>
                                   <div className="bg-white p-3 rounded border">
                                     <DownstreamImpacts impacts={impact.downstream_impacts} />
                                   </div>
                                 </div>
-                              )}
-                              
-                              {!impact.downstream_impacts && (
+                              ) : (
                                 <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded border-l-4 border-amber-400">
-                                  ⚠️ Cascade analysis not available. Re-generate clause map to enable downstream impact detection.
+                                  ⚠️ Hierarchy trace not available. Use "Full Hierarchy Analysis" for complete document tracing.
                                 </div>
                               )}
                               

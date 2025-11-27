@@ -1,10 +1,13 @@
 """
 Reference Extraction Engine
 Extracts Form, WI, and QSP references from document text
+Supports full 5-level document hierarchy traceability
 """
 import re
 import logging
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Optional
+
+from models.regulatory import DocumentType
 
 logger = logging.getLogger(__name__)
 
@@ -92,13 +95,96 @@ class ReferenceExtractor:
     def _extract_qsps(self, text: str) -> List[str]:
         """
         Extract QSP cross-references like: QSP 7.3-3, QSP 4.2-1
-        
+
         Examples from real docs:
         - "in accordance with QSP 7.3-1 Design and Development"
         - "see QSP 4.2-3 Change Control"
         """
         matches = re.findall(self.qsp_pattern, text, re.IGNORECASE)
         return sorted(set(matches))
+
+    def determine_document_type(self, doc_id: str) -> Optional[DocumentType]:
+        """
+        Determine document type from ID string.
+
+        Supports Tulip Medical naming conventions:
+        - QM1 R26 -> Quality Manual
+        - QSP 7.3-1 -> QSP
+        - WI-003, WI-006 -> Work Instruction
+        - Form 7.3-3-1 -> Form
+        - RFD-001 -> Reference Doc
+
+        Args:
+            doc_id: Document identifier string
+
+        Returns:
+            DocumentType enum or None if unknown
+        """
+        if not doc_id:
+            return None
+
+        doc_id_upper = doc_id.upper()
+
+        # Quality Manual: QM1 R26, QM R5, etc.
+        if 'QM' in doc_id_upper and ('R' in doc_id_upper or 'QUALITY MANUAL' in doc_id_upper):
+            return DocumentType.QUALITY_MANUAL
+        # QSP: QSP 7.3-1, QSP 4.2-1, etc.
+        elif 'QSP' in doc_id_upper:
+            return DocumentType.QSP
+        # Work Instructions: WI-003, WI-006, WI – Training Records
+        elif 'WI-' in doc_id_upper or 'WI ' in doc_id_upper or doc_id_upper.startswith('WI'):
+            return DocumentType.WORK_INSTRUCTION
+        # Forms: Form 7.3-3-1, F-DC-001, Form – Electronic Approval
+        elif 'FORM' in doc_id_upper or doc_id_upper.startswith('F-'):
+            return DocumentType.FORM
+        # Reference Docs: RFD-001, RSK-04.1, CER-002, GSPR-2024
+        elif any(prefix in doc_id_upper for prefix in ['RFD', 'RSK-', 'CER-', 'GSPR-', 'PMS', 'PMCF', 'PMSR', 'DMR']):
+            return DocumentType.REFERENCE_DOC
+        # Evidence: certificates, validation reports, etc.
+        elif any(term in doc_id_upper for term in ['CERT', 'REPORT', 'VALIDATION', 'NAMSA', 'STERIS']):
+            return DocumentType.EVIDENCE
+        else:
+            return None
+
+    def get_document_level(self, doc_type: DocumentType) -> int:
+        """
+        Get hierarchy level for document type.
+
+        Levels based on medical device QMS hierarchy:
+        1 - Quality Manual (QM)
+        2 - Quality System Procedures (QSP)
+        3 - Work Instructions (WI)
+        4 - Forms
+        5 - Reference Documents (RFD)
+        6 - Evidence/Records
+
+        Args:
+            doc_type: DocumentType enum
+
+        Returns:
+            Hierarchy level (1-6), defaults to 6 for unknown
+        """
+        level_map = {
+            DocumentType.QUALITY_MANUAL: 1,
+            DocumentType.QSP: 2,
+            DocumentType.WORK_INSTRUCTION: 3,
+            DocumentType.FORM: 4,
+            DocumentType.REFERENCE_DOC: 5,
+            DocumentType.EVIDENCE: 6
+        }
+        return level_map.get(doc_type, 6)
+
+    def get_level_name(self, level: int) -> str:
+        """Get human-readable name for hierarchy level"""
+        level_names = {
+            1: "Quality Manual",
+            2: "Quality System Procedure (QSP)",
+            3: "Work Instruction (WI)",
+            4: "Form",
+            5: "Reference Document",
+            6: "Evidence/Record"
+        }
+        return level_names.get(level, "Unknown")
 
 
 # Singleton pattern
