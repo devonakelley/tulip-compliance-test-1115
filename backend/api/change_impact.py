@@ -447,40 +447,264 @@ async def get_gap_results(
     try:
         from motor.motor_asyncio import AsyncIOMotorClient
         import os
-        
+
         tenant_id = current_user["tenant_id"]
-        
+
         mongo_url = os.environ.get('MONGO_URL')
         db_name = os.environ.get('DB_NAME', 'compliance_checker')
         mongo_client = AsyncIOMotorClient(mongo_url)
         db = mongo_client[db_name]
-        
+
         # Fetch all results for this run
         results = await db.gap_results.find({
             'run_id': run_id,
             'tenant_id': tenant_id
         }).sort('impact_index', 1).to_list(length=None)
-        
+
         if not results:
             raise HTTPException(status_code=404, detail="No results found for this run")
-        
+
         logger.info(f"Retrieved {len(results)} gap results for run {run_id}")
-        
+
         # Convert ObjectId to string for JSON serialization
         for result in results:
             if '_id' in result:
                 result['_id'] = str(result['_id'])
-        
+
         return {
             'success': True,
             'run_id': run_id,
             'total_impacts_found': len(results),
             'impacts': results
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to get gap results: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/analyze_full_hierarchy")
+async def analyze_full_hierarchy(
+    request: AnalyzeRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Full 5-level document hierarchy impact analysis.
+
+    Traces regulatory changes through:
+    - Level 1: Quality Manual (QM)
+    - Level 2: Quality System Procedures (QSP)
+    - Level 3: Work Instructions (WI)
+    - Level 4: Forms
+    - Level 5: Reference Documents (RFD)
+
+    Returns comprehensive impact report with:
+    - Documents affected at each level
+    - Detailed reasoning for why each level needs review
+    - Summary statistics
+
+    Request body:
+    {
+        "deltas": [
+            {
+                "clause_id": "5.1",
+                "change_text": "Risk management process requirements updated...",
+                "change_type": "modified"
+            }
+        ],
+        "top_k": 5
+    }
+    """
+    try:
+        from motor.motor_asyncio import AsyncIOMotorClient
+        import os
+        from datetime import datetime, timezone
+
+        tenant_id = current_user["tenant_id"]
+        service = get_change_impact_service()
+
+        if not request.deltas:
+            raise HTTPException(status_code=400, detail="No deltas provided")
+
+        logger.info(f"Running full hierarchy analysis for {len(request.deltas)} changes, tenant {tenant_id}")
+
+        # Convert Pydantic models to dicts
+        deltas = [d.dict() for d in request.deltas]
+
+        # Enrich with diff data if available
+        mongo_url = os.environ.get('MONGO_URL')
+        db_name = os.environ.get('DB_NAME', 'compliance_checker')
+        mongo_client = AsyncIOMotorClient(mongo_url)
+
+        diff_result = await mongo_client[db_name].diff_results.find_one(
+            {'tenant_id': tenant_id},
+            sort=[('created_at', -1)]
+        )
+
+        if diff_result and diff_result.get('deltas'):
+            diff_lookup = {d['clause_id']: d for d in diff_result['deltas']}
+            for delta in deltas:
+                clause_id = delta.get('clause_id')
+                if clause_id in diff_lookup:
+                    diff_data = diff_lookup[clause_id]
+                    delta['old_text'] = diff_data.get('old_text', '')[:1000] if diff_data.get('old_text') else ''
+                    delta['new_text'] = diff_data.get('new_text', '')[:1000] if diff_data.get('new_text') else ''
+                    delta['regulatory_doc'] = diff_data.get('regulatory_doc', 'ISO 14971:2020')
+                    delta['reg_title'] = diff_data.get('reg_title', diff_data.get('title', ''))
+
+        # Run full hierarchy analysis
+        result = await service.analyze_full_hierarchy(
+            tenant_id=tenant_id,
+            deltas=deltas
+        )
+
+        # Save results to database
+        if result.get('success') and result.get('impacts'):
+            import uuid
+            run_id = result['run_id']
+
+            for idx, impact in enumerate(result['impacts']):
+                gap_result = {
+                    'id': str(uuid.uuid4()),
+                    'run_id': run_id,
+                    'tenant_id': tenant_id,
+                    'user_id': current_user['id'],
+                    'impact_index': idx,
+                    'regulatory_clause': impact.get('regulatory_clause'),
+                    'reg_clause': impact.get('reg_clause'),
+                    'change_type': impact.get('change_type'),
+                    'impact_level': impact.get('impact_level'),
+                    'match_type': impact.get('match_type'),
+                    'confidence': impact.get('confidence'),
+                    'qsp_doc': impact.get('qsp_doc'),
+                    'qsp_clause': impact.get('qsp_clause'),
+                    'qsp_text': impact.get('qsp_text'),
+                    'qsp_text_full': impact.get('qsp_text_full'),
+                    'old_text': impact.get('old_text'),
+                    'new_text': impact.get('new_text'),
+                    'rationale': impact.get('rationale'),
+                    'hierarchy_trace': impact.get('hierarchy_trace', {}),
+                    'reasoning': impact.get('reasoning', {}),
+                    'total_documents_affected': impact.get('total_documents_affected', 0),
+                    'is_reviewed': False,
+                    'custom_rationale': '',
+                    'created_at': datetime.now(timezone.utc).isoformat(),
+                    'updated_at': datetime.now(timezone.utc).isoformat()
+                }
+
+                await mongo_client[db_name].gap_results.update_one(
+                    {
+                        'tenant_id': tenant_id,
+                        'run_id': run_id,
+                        'impact_index': idx
+                    },
+                    {'$set': gap_result},
+                    upsert=True
+                )
+
+            logger.info(f"Saved {len(result['impacts'])} full hierarchy results to database")
+
+        return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Full hierarchy analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/hierarchy/{tenant_id}")
+async def get_document_hierarchy(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get the full document hierarchy for visualization.
+
+    Returns all 5 levels:
+    - Level 1: Quality Manual sections
+    - Level 2: QSPs
+    - Level 3: Work Instructions
+    - Level 4: Forms
+    - Level 5: Reference Documents
+
+    With their relationships for building a tree view.
+    """
+    try:
+        from motor.motor_asyncio import AsyncIOMotorClient
+        import os
+
+        tenant_id = current_user["tenant_id"]
+
+        mongo_url = os.environ.get('MONGO_URL')
+        db_name = os.environ.get('DB_NAME', 'compliance_checker')
+        mongo_client = AsyncIOMotorClient(mongo_url)
+        db = mongo_client[db_name]
+
+        # Fetch all hierarchy documents
+        docs = await db.document_hierarchy.find({
+            'tenant_id': tenant_id
+        }).to_list(length=None)
+
+        if not docs:
+            return {
+                'success': True,
+                'message': 'No hierarchy data found. Run seed_document_hierarchy.py to initialize.',
+                'hierarchy': {
+                    'level_1_quality_manual': [],
+                    'level_2_qsp': [],
+                    'level_3_work_instructions': [],
+                    'level_4_forms': [],
+                    'level_5_reference_docs': []
+                }
+            }
+
+        # Group by level
+        hierarchy = {
+            'level_1_quality_manual': [],
+            'level_2_qsp': [],
+            'level_3_work_instructions': [],
+            'level_4_forms': [],
+            'level_5_reference_docs': []
+        }
+
+        level_map = {
+            1: 'level_1_quality_manual',
+            2: 'level_2_qsp',
+            3: 'level_3_work_instructions',
+            4: 'level_4_forms',
+            5: 'level_5_reference_docs'
+        }
+
+        for doc in docs:
+            level = doc.get('level', 5)
+            level_key = level_map.get(level, 'level_5_reference_docs')
+
+            # Clean up for JSON
+            if '_id' in doc:
+                doc['_id'] = str(doc['_id'])
+
+            hierarchy[level_key].append({
+                'id': doc['document_id'],
+                'name': doc['document_name'],
+                'type': doc['document_type'],
+                'level': level,
+                'parent_docs': doc.get('parent_docs', []),
+                'child_docs': doc.get('child_docs', [])
+            })
+
+        # Count statistics
+        total_docs = sum(len(docs) for docs in hierarchy.values())
+
+        return {
+            'success': True,
+            'tenant_id': tenant_id,
+            'total_documents': total_docs,
+            'hierarchy': hierarchy
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to get document hierarchy: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 

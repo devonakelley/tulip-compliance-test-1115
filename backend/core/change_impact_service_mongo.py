@@ -1,6 +1,12 @@
 """
 Change Impact Detection Service - MongoDB Version
 Stores QSP sections in MongoDB for persistence
+Supports full 5-level document hierarchy traceability:
+  Level 1: Quality Manual (QM)
+  Level 2: Quality System Procedures (QSP)
+  Level 3: Work Instructions (WI)
+  Level 4: Forms
+  Level 5: Reference Documents (RFD)
 """
 import logging
 from typing import List, Dict, Any, Optional
@@ -12,6 +18,8 @@ import numpy as np
 import re
 from motor.motor_asyncio import AsyncIOMotorClient
 from core.regulatory_reference_extractor import RegulatoryReferenceExtractor
+from core.reference_extractor import reference_extractor
+from models.regulatory import DocumentType
 
 logger = logging.getLogger(__name__)
 
@@ -609,23 +617,352 @@ class ChangeImpactServiceMongo:
         total_forms = 0
         total_wis = 0
         change_types = {}
-        
+
         for impact in impacts:
             # Count downstream impacts
             if 'downstream_impacts' in impact:
                 total_forms += len(impact['downstream_impacts'].get('forms', []))
                 total_wis += len(impact['downstream_impacts'].get('work_instructions', []))
-            
+
             # Count by change type
             change_type = impact.get('change_type', 'unknown')
             change_types[change_type] = change_types.get(change_type, 0) + 1
-        
+
         return {
             'total_qsp_sections': len(impacts),
             'total_forms': total_forms,
             'total_wis': total_wis,
             'by_change_type': change_types
         }
+
+    async def analyze_full_hierarchy(
+        self,
+        tenant_id: str,
+        deltas: List[Dict],
+    ) -> Dict[str, Any]:
+        """
+        Full 5-level hierarchy impact analysis.
+
+        Flow:
+        1. Regulatory Change detected
+        2. Find affected Quality Manual section (Level 1)
+        3. Find affected QSPs (Level 2) - via semantic + explicit matching
+        4. Trace to Work Instructions (Level 3)
+        5. Trace to Forms (Level 4)
+        6. Trace to Reference Documents (Level 5)
+
+        Returns comprehensive impact report with reasoning at each level.
+        """
+        run_id = str(uuid.uuid4())
+        analysis_date = datetime.utcnow().isoformat()
+
+        # Step 1: Run QSP impact detection (Levels 1-2)
+        qsp_results = await self.detect_impacts_async(tenant_id, deltas, top_k=5)
+
+        if not qsp_results.get('success'):
+            return {
+                'run_id': run_id,
+                'success': False,
+                'error': qsp_results.get('error', 'QSP analysis failed'),
+                'analysis_date': analysis_date
+            }
+
+        impacts = qsp_results.get('impacts', [])
+
+        # Step 2: For each QSP impact, trace full hierarchy
+        full_impacts = []
+
+        for impact in impacts:
+            qsp_id = impact.get('qsp_doc', '')
+            qsp_clause = impact.get('qsp_clause', '')
+            regulatory_clause = impact.get('regulatory_clause', '')
+            reg_doc = impact.get('regulatory_doc', '')
+
+            # Build full hierarchy trace
+            hierarchy_trace = await self._trace_full_hierarchy(
+                tenant_id=tenant_id,
+                qsp_id=qsp_id,
+                regulatory_change={
+                    'clause': regulatory_clause,
+                    'doc': reg_doc,
+                    'change_type': impact.get('change_type', 'Modified'),
+                    'old_text': impact.get('old_text', ''),
+                    'new_text': impact.get('new_text', '')
+                }
+            )
+
+            # Generate detailed reasoning for each level
+            reasoning = self._generate_hierarchy_reasoning(
+                impact=impact,
+                hierarchy=hierarchy_trace,
+                reg_doc=reg_doc
+            )
+
+            full_impacts.append({
+                **impact,
+                'hierarchy_trace': hierarchy_trace,
+                'reasoning': reasoning,
+                'total_documents_affected': self._count_affected_docs(hierarchy_trace)
+            })
+
+        # Generate summary statistics
+        summary = self._generate_full_summary(full_impacts)
+
+        return {
+            'run_id': run_id,
+            'success': True,
+            'analysis_date': analysis_date,
+            'regulatory_changes_analyzed': len(deltas),
+            'total_qsp_impacts': len(full_impacts),
+            'summary': summary,
+            'impacts': full_impacts
+        }
+
+    async def _trace_full_hierarchy(
+        self,
+        tenant_id: str,
+        qsp_id: str,
+        regulatory_change: Dict
+    ) -> Dict[str, Any]:
+        """
+        Trace impact through all 5 levels of document hierarchy.
+        """
+        hierarchy = {
+            'level_1_quality_manual': [],
+            'level_2_qsp': [],
+            'level_3_work_instructions': [],
+            'level_4_forms': [],
+            'level_5_reference_docs': []
+        }
+
+        if self.db is None:
+            return hierarchy
+
+        # Find QSP in hierarchy
+        qsp_doc = await self.db.document_hierarchy.find_one({
+            'tenant_id': tenant_id,
+            'document_id': {'$regex': qsp_id, '$options': 'i'}
+        })
+
+        if not qsp_doc:
+            # Try finding by partial match
+            qsp_doc = await self.db.document_hierarchy.find_one({
+                'tenant_id': tenant_id,
+                'document_type': 'QSP',
+                'document_id': {'$regex': qsp_id.replace('QSP-', '').replace('QSP ', ''), '$options': 'i'}
+            })
+
+        if qsp_doc:
+            hierarchy['level_2_qsp'].append({
+                'id': qsp_doc['document_id'],
+                'name': qsp_doc['document_name'],
+                'impact_type': 'direct',
+                'reason': f"Directly impacted by {regulatory_change['doc']} change"
+            })
+
+            # Level 1: Find parent Quality Manual section
+            parent_docs = qsp_doc.get('parent_docs', [])
+            for parent_id in parent_docs:
+                parent_doc = await self.db.document_hierarchy.find_one({
+                    'tenant_id': tenant_id,
+                    'document_id': parent_id
+                })
+                if parent_doc:
+                    hierarchy['level_1_quality_manual'].append({
+                        'id': parent_doc['document_id'],
+                        'name': parent_doc['document_name'],
+                        'impact_type': 'upstream',
+                        'reason': f"Parent QM section containing {qsp_doc['document_id']}"
+                    })
+
+            # Level 3: Find child Work Instructions
+            child_docs = qsp_doc.get('child_docs', [])
+            for child_id in child_docs:
+                child_doc = await self.db.document_hierarchy.find_one({
+                    'tenant_id': tenant_id,
+                    'document_id': child_id
+                })
+                if child_doc and child_doc.get('document_type') == 'WI':
+                    wi_entry = {
+                        'id': child_doc['document_id'],
+                        'name': child_doc['document_name'],
+                        'impact_type': 'downstream',
+                        'reason': f"Implements {qsp_doc['document_id']}"
+                    }
+                    hierarchy['level_3_work_instructions'].append(wi_entry)
+
+                    # Level 4: Find Forms under this WI
+                    wi_children = child_doc.get('child_docs', [])
+                    for form_id in wi_children:
+                        form_doc = await self.db.document_hierarchy.find_one({
+                            'tenant_id': tenant_id,
+                            'document_id': form_id
+                        })
+                        if form_doc and form_doc.get('document_type') == 'FORM':
+                            form_entry = {
+                                'id': form_doc['document_id'],
+                                'name': form_doc['document_name'],
+                                'impact_type': 'downstream',
+                                'parent_wi': child_doc['document_id'],
+                                'reason': f"Used by {child_doc['document_id']}"
+                            }
+                            hierarchy['level_4_forms'].append(form_entry)
+
+                            # Level 5: Find Reference Docs under this Form
+                            form_children = form_doc.get('child_docs', [])
+                            for ref_id in form_children:
+                                ref_doc = await self.db.document_hierarchy.find_one({
+                                    'tenant_id': tenant_id,
+                                    'document_id': ref_id
+                                })
+                                if ref_doc:
+                                    hierarchy['level_5_reference_docs'].append({
+                                        'id': ref_doc['document_id'],
+                                        'name': ref_doc['document_name'],
+                                        'impact_type': 'downstream',
+                                        'parent_form': form_doc['document_id'],
+                                        'reason': f"Referenced by {form_doc['document_id']}"
+                                    })
+
+        # Also query document_references for additional relationships
+        refs = await self.db.document_references.find({
+            'tenant_id': tenant_id,
+            'target_doc_id': {'$regex': qsp_id, '$options': 'i'}
+        }).to_list(length=100)
+
+        for ref in refs:
+            source_type = ref.get('source_doc_type', '')
+            source_id = ref.get('source_doc_id', '')
+
+            if source_type == 'WI' and source_id not in [w['id'] for w in hierarchy['level_3_work_instructions']]:
+                hierarchy['level_3_work_instructions'].append({
+                    'id': source_id,
+                    'name': source_id,
+                    'impact_type': 'downstream',
+                    'reason': f"References {qsp_id}"
+                })
+
+        return hierarchy
+
+    def _generate_hierarchy_reasoning(
+        self,
+        impact: Dict,
+        hierarchy: Dict,
+        reg_doc: str
+    ) -> Dict[str, str]:
+        """
+        Generate detailed reasoning for why each level needs review.
+        """
+        change_type = impact.get('change_type', 'Modified')
+        qsp_clause = impact.get('qsp_clause', '')
+        match_type = impact.get('match_type', 'semantic_similarity')
+        confidence = impact.get('confidence', 0)
+
+        # Base reasoning for QSP
+        if match_type == 'explicit_reference':
+            qsp_reason = (
+                f"HIGH CONFIDENCE: This QSP explicitly cites {reg_doc}. "
+                f"The regulatory requirement has been {change_type.lower()}. "
+                f"Section '{qsp_clause}' must be reviewed and updated to reflect the new requirements."
+            )
+        else:
+            qsp_reason = (
+                f"SEMANTIC MATCH ({confidence*100:.0f}%): This QSP section discusses topics "
+                f"semantically related to the {change_type.lower()} {reg_doc} requirement. "
+                f"Review section '{qsp_clause}' to determine if updates are needed."
+            )
+
+        # Reasoning for each level
+        reasoning = {
+            'level_1_quality_manual': (
+                f"The Quality Manual section may need updates to reflect changes in {reg_doc}. "
+                f"As the top-level document, it establishes the framework that all QSPs must follow."
+            ) if hierarchy['level_1_quality_manual'] else "No Quality Manual sections directly affected.",
+
+            'level_2_qsp': qsp_reason,
+
+            'level_3_work_instructions': (
+                f"These Work Instructions implement the affected QSP. "
+                f"Review each WI to ensure procedures remain compliant with the updated {reg_doc} requirements. "
+                f"Pay special attention to step-by-step procedures that may need modification."
+            ) if hierarchy['level_3_work_instructions'] else "No Work Instructions linked to this QSP.",
+
+            'level_4_forms': (
+                f"These Forms capture data required by the affected procedures. "
+                f"Verify that all required data fields align with updated {reg_doc} requirements. "
+                f"Check if new fields need to be added or existing fields modified."
+            ) if hierarchy['level_4_forms'] else "No Forms linked to affected Work Instructions.",
+
+            'level_5_reference_docs': (
+                f"These Reference Documents may need review to ensure they still provide "
+                f"adequate evidence of compliance with the updated {reg_doc}. "
+                f"Consider if new evidence or documentation is required."
+            ) if hierarchy['level_5_reference_docs'] else "No Reference Documents directly affected."
+        }
+
+        return reasoning
+
+    def _count_affected_docs(self, hierarchy: Dict) -> int:
+        """Count total documents affected across all levels"""
+        total = 0
+        for level_docs in hierarchy.values():
+            if isinstance(level_docs, list):
+                total += len(level_docs)
+        return total
+
+    def _generate_full_summary(self, impacts: List[Dict]) -> Dict:
+        """Generate comprehensive summary for full hierarchy analysis"""
+        summary = {
+            'total_impacts': len(impacts),
+            'by_level': {
+                'level_1_quality_manual': 0,
+                'level_2_qsp': 0,
+                'level_3_work_instructions': 0,
+                'level_4_forms': 0,
+                'level_5_reference_docs': 0
+            },
+            'by_match_type': {
+                'explicit_reference': 0,
+                'semantic_similarity': 0
+            },
+            'by_confidence': {
+                'high': 0,  # >= 0.9 or explicit
+                'medium': 0,  # 0.75-0.9
+                'low': 0  # < 0.75
+            },
+            'total_documents_affected': 0
+        }
+
+        seen_docs = set()
+
+        for impact in impacts:
+            # Count by match type
+            match_type = impact.get('match_type', 'semantic_similarity')
+            if match_type in summary['by_match_type']:
+                summary['by_match_type'][match_type] += 1
+
+            # Count by confidence
+            confidence = impact.get('confidence', 0)
+            if match_type == 'explicit_reference' or confidence >= 0.9:
+                summary['by_confidence']['high'] += 1
+            elif confidence >= 0.75:
+                summary['by_confidence']['medium'] += 1
+            else:
+                summary['by_confidence']['low'] += 1
+
+            # Count by level
+            hierarchy = impact.get('hierarchy_trace', {})
+            for level_key, docs in hierarchy.items():
+                if isinstance(docs, list):
+                    summary['by_level'][level_key] += len(docs)
+                    for doc in docs:
+                        doc_id = doc.get('id', '')
+                        if doc_id and doc_id not in seen_docs:
+                            seen_docs.add(doc_id)
+
+        summary['total_documents_affected'] = len(seen_docs)
+
+        return summary
 
 
 # Singleton instance
