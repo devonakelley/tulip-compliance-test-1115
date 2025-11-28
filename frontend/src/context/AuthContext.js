@@ -18,9 +18,14 @@ export const AuthProvider = ({ children }) => {
 
   // Setup axios interceptor for token
   useEffect(() => {
-    if (token) {
+    if (token && !user) {
+      // Only fetch user if we have token but no user data
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       fetchCurrentUser();
+    } else if (token) {
+      // Token exists and user already set (from login)
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      setLoading(false);
     } else {
       setLoading(false);
     }
@@ -47,19 +52,22 @@ export const AuthProvider = ({ children }) => {
         password
       });
       
-      const { access_token, user_id, tenant_id, email: userEmail } = response.data;
-      
+      const { access_token, user_id, tenant_id, email: userEmail, role } = response.data;
+
       localStorage.setItem('token', access_token);
-      setToken(access_token);
-      
+      axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+
       const userData = {
         id: user_id,
         email: userEmail,
-        tenant_id: tenant_id
+        tenant_id: tenant_id,
+        role: role || 'user'
       };
-      
+
+      // Set both token and user immediately to avoid race conditions
       setUser(userData);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+      setToken(access_token);
+      setLoading(false);
       
       return { success: true };
     } catch (error) {
