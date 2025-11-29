@@ -95,26 +95,24 @@ async def init_test_data():
     await db.users.insert_one(user2_tenant2.model_dump())
     
     print(f"✅ Created users for Tenant 1:")
-    print(f"   - {user1_tenant1.email} (password: password123)")
-    print(f"   - {user2_tenant1.email} (password: password123)")
-    
+    print(f"   - {user1_tenant1.email}")
+    print(f"   - {user2_tenant1.email}")
+
     print(f"✅ Created users for Tenant 2:")
-    print(f"   - {user1_tenant2.email} (password: password123)")
-    print(f"   - {user2_tenant2.email} (password: password123)")
-    
+    print(f"   - {user1_tenant2.email}")
+    print(f"   - {user2_tenant2.email}")
+
     print("\n" + "="*60)
     print("🎉 Test data initialization complete!")
     print("="*60)
-    print("\n📝 **Test Credentials:**\n")
+    print("\n📝 **Test Accounts Created:**\n")
     print(f"**Tenant 1: Tulip Medical (ID: {tenant1.id})**")
-    print(f"  Email: admin@tulipmedical.com")
-    print(f"  Password: password123\n")
-    
+    print(f"  Email: admin@tulipmedical.com\n")
+
     print(f"**Tenant 2: MedTech Solutions (ID: {tenant2.id})**")
-    print(f"  Email: admin@medtechsolutions.com")
-    print(f"  Password: password123\n")
-    
-    print("🔐 Use these credentials to test multi-tenant isolation")
+    print(f"  Email: admin@medtechsolutions.com\n")
+
+    print("🔐 Default test password: See environment configuration")
     print("📤 Each tenant can upload documents independently")
     print("🔍 Data will be isolated by tenant_id\n")
     

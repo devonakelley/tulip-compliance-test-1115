@@ -84,10 +84,11 @@ async def seed_default_admin():
             logger.info("✅ DEFAULT ADMIN USER CREATED")
             logger.info("=" * 60)
             logger.info(f"Email:    {DEFAULT_ADMIN_EMAIL}")
-            logger.info(f"Password: {DEFAULT_ADMIN_PASSWORD}")
+            logger.info(f"Password: {'*' * (len(DEFAULT_ADMIN_PASSWORD) - 4)}{DEFAULT_ADMIN_PASSWORD[-4:]}")
             logger.info(f"Company:  {DEFAULT_COMPANY_NAME}")
             logger.info(f"Role:     admin")
             logger.info("=" * 60)
+            logger.info("⚠️  Password is from ADMIN_PASSWORD env variable")
             logger.info("⚠️  IMPORTANT: Change this password after first login!")
             logger.info("=" * 60)
             

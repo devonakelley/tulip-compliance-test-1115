@@ -1979,6 +1979,11 @@ async def get_mcp_setup_instructions():
         ]
     }
 
+# Add request logging and security middleware
+from core.middleware import RequestLoggingMiddleware, SecurityHeadersMiddleware
+app.add_middleware(RequestLoggingMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
