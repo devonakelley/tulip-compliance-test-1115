@@ -12,6 +12,7 @@ import shutil
 from datetime import datetime
 from core.iso_diff_processor import get_iso_diff_processor
 from core.auth_utils import get_current_user_from_token
+from core.file_validator import validate_file_upload, sanitize_filename
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 logger = logging.getLogger(__name__)
@@ -51,35 +52,54 @@ async def upload_internal_document(
     """
     try:
         tenant_id = current_user["tenant_id"]
-        
+
+        # Read and validate file content
+        file_content = await file.read()
+        safe_filename = sanitize_filename(file.filename)
+
+        is_valid, error_msg = validate_file_upload(
+            file_content,
+            safe_filename,
+            allowed_types=['.pdf', '.docx', '.doc', '.txt']
+        )
+        if not is_valid:
+            raise HTTPException(status_code=400, detail=error_msg)
+
         # Create tenant directory
         tenant_dir = INTERNAL_DOCS_DIR / tenant_id
         tenant_dir.mkdir(exist_ok=True)
-        
+
         # Save file
-        file_path = tenant_dir / file.filename
+        file_path = tenant_dir / safe_filename
         with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+            buffer.write(file_content)
         
-        logger.info(f"Uploaded internal document: {file.filename}")
-        
-        # TODO: Store metadata in MongoDB
-        # await db.uploaded_internal_docs.insert_one({
-        #     'tenant_id': tenant_id,
-        #     'filename': file.filename,
-        #     'version': version,
-        #     'file_path': str(file_path),
-        #     'uploaded_at': datetime.utcnow(),
-        #     'uploaded_by': current_user['user_id']
-        # })
-        
+        logger.info(f"Uploaded internal document: {safe_filename}")
+
+        # Store metadata in MongoDB
+        if db is not None:
+            await db.uploaded_internal_docs.update_one(
+                {'tenant_id': tenant_id, 'filename': safe_filename},
+                {'$set': {
+                    'tenant_id': tenant_id,
+                    'filename': safe_filename,
+                    'version': version,
+                    'file_path': str(file_path),
+                    'uploaded_at': datetime.utcnow(),
+                    'uploaded_by': current_user.get('id') or current_user.get('user_id')
+                }},
+                upsert=True
+            )
+
         return {
             'success': True,
-            'filename': file.filename,
+            'filename': safe_filename,
             'size': file_path.stat().st_size,
             'message': 'Internal document uploaded successfully'
         }
-        
+
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to upload internal document: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -94,7 +114,7 @@ async def upload_regulatory_document(
 ):
     """
     Upload regulatory standard PDF (old or new version)
-    
+
     Args:
         file: PDF file
         doc_type: 'old' or 'new'
@@ -102,38 +122,51 @@ async def upload_regulatory_document(
     """
     try:
         tenant_id = current_user["tenant_id"]
-        
+
         if doc_type not in ['old', 'new']:
             raise HTTPException(status_code=400, detail="doc_type must be 'old' or 'new'")
-        
-        # Validate PDF
-        if not file.filename.lower().endswith('.pdf'):
-            raise HTTPException(status_code=400, detail="Only PDF files are supported")
-        
+
+        # Read and validate file content
+        file_content = await file.read()
+        safe_filename = sanitize_filename(file.filename)
+
+        is_valid, error_msg = validate_file_upload(
+            file_content,
+            safe_filename,
+            allowed_types=['.pdf']
+        )
+        if not is_valid:
+            raise HTTPException(status_code=400, detail=error_msg)
+
         # Create tenant directory
         tenant_dir = REGULATORY_DOCS_DIR / tenant_id
         tenant_dir.mkdir(exist_ok=True)
-        
+
         # Save with standardized name
-        safe_name = f"{doc_type}_{file.filename}"
+        safe_name = f"{doc_type}_{safe_filename}"
         file_path = tenant_dir / safe_name
-        
+
         with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+            buffer.write(file_content)
         
         logger.info(f"Uploaded {doc_type} regulatory document: {file.filename}")
-        
-        # TODO: Store metadata in MongoDB
-        # await db.uploaded_regulatory_docs.insert_one({
-        #     'tenant_id': tenant_id,
-        #     'filename': file.filename,
-        #     'doc_type': doc_type,
-        #     'standard_name': standard_name,
-        #     'file_path': str(file_path),
-        #     'uploaded_at': datetime.utcnow(),
-        #     'uploaded_by': current_user['user_id']
-        # })
-        
+
+        # Store metadata in MongoDB
+        if db is not None:
+            await db.uploaded_regulatory_docs.update_one(
+                {'tenant_id': tenant_id, 'doc_type': doc_type},
+                {'$set': {
+                    'tenant_id': tenant_id,
+                    'filename': file.filename,
+                    'doc_type': doc_type,
+                    'standard_name': standard_name,
+                    'file_path': str(file_path),
+                    'uploaded_at': datetime.utcnow(),
+                    'uploaded_by': current_user.get('id') or current_user.get('user_id')
+                }},
+                upsert=True
+            )
+
         return {
             'success': True,
             'filename': file.filename,
@@ -383,19 +416,23 @@ async def upload_qsp_document(
             f.write(file_content)
         
         # Store parsed data in MongoDB
-        # TODO: Implement MongoDB storage
-        # await db.qsp_documents.insert_one({
-        #     'tenant_id': tenant_id,
-        #     'document_number': parsed_data['document_number'],
-        #     'revision': parsed_data['revision'],
-        #     'filename': file.filename,
-        #     'file_path': str(file_path),
-        #     'total_clauses': parsed_data['total_clauses'],
-        #     'clauses': parsed_data['clauses'],
-        #     'uploaded_at': datetime.utcnow(),
-        #     'uploaded_by': current_user['user_id']
-        # })
-        
+        if db is not None:
+            await db.qsp_documents.update_one(
+                {'tenant_id': tenant_id, 'filename': file.filename},
+                {'$set': {
+                    'tenant_id': tenant_id,
+                    'document_number': parsed_data['document_number'],
+                    'revision': parsed_data['revision'],
+                    'filename': file.filename,
+                    'file_path': str(file_path),
+                    'total_clauses': parsed_data['total_clauses'],
+                    'clauses': parsed_data['clauses'],
+                    'uploaded_at': datetime.utcnow(),
+                    'uploaded_by': current_user.get('id') or current_user.get('user_id')
+                }},
+                upsert=True
+            )
+
         logger.info(f"✅ Uploaded and parsed QSP: {file.filename} - {parsed_data['total_clauses']} clauses")
         
         return {

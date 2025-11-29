@@ -9,6 +9,11 @@ import jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from dotenv import load_dotenv
+from pathlib import Path
+
+# Load environment variables
+load_dotenv(Path(__file__).parent.parent / '.env')
 
 logger = logging.getLogger(__name__)
 
