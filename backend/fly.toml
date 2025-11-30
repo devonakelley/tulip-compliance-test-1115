@@ -1,0 +1,49 @@
+# Fly.io configuration for Certaro Compliance Backend
+# Deploy with: flyctl deploy --config backend/fly.toml
+
+app = "certaro-backend"
+primary_region = "ord"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8001"
+  HOST = "0.0.0.0"
+  LOG_LEVEL = "INFO"
+  ALGORITHM = "HS256"
+  ACCESS_TOKEN_EXPIRE_MINUTES = "1440"
+  CHROMA_PERSIST_DIRECTORY = "/app/chromadb_data"
+  CORS_ORIGINS = "https://certaro-frontend.fly.dev,https://certaro.fly.dev"
+
+[http_service]
+  internal_port = 8001
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[checks]
+  [checks.health]
+    port = 8001
+    type = "http"
+    interval = "30s"
+    timeout = "10s"
+    grace_period = "30s"
+    method = "GET"
+    path = "/health"
+
+[mounts]
+  source = "certaro_data"
+  destination = "/app/chromadb_data"
